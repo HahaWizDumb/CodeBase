@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Book of the Sojourners</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Spectral:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* palette drawn from the indigo vat, the ledger, and the boundary ink */
+  --ground:      #14172a;   /* oxidized indigo, dark shade */
+  --vat:         #3a5a4c;   /* cloth before it meets the air */
+  --calico:      #e6dfd2;   /* unbleached cotton */
+  --calico-dim:  #a49e92;
+  --indigo-mid:  #2e3a6e;
+  --indigo-pale: #7e8cc4;
+  --ochre:       #c9973f;   /* grain, marigold, manuscript gold */
+  --boundary:    #b33a2b;   /* the ink of the award */
+
+  --col: 700px;
+  --display: "Libre Caslon Display", Georgia, "Times New Roman", serif;
+  --body: "Spectral", Georgia, serif;
+  --util: "Courier Prime", "Courier New", monospace;
+
+  --line-stroke: var(--vat);
+  --line-width: 1;
+  --line-dash: 0;
+  --line-opacity: 0.85;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--calico);
+  font-family:var(--body);
+  font-weight:300;
+  font-size:19px;
+  line-height:1.72;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ── the vat: page-load oxidation ───────────────────────────── */
+#oxidize{
+  position:fixed; inset:0; background:var(--vat);
+  z-index:0; pointer-events:none;
+  transition:opacity 3200ms cubic-bezier(.4,0,.2,1);
+}
+#oxidize.aired{opacity:0}
+
+/* ── paper grain ────────────────────────────────────────────── */
+#grain{
+  position:fixed; inset:0; z-index:9; pointer-events:none;
+  opacity:.05; mix-blend-mode:overlay;
+}
+
+/* ── the line ───────────────────────────────────────────────── */
+#linewrap{
+  position:fixed; top:0; left:0; width:140px; height:100vh;
+  z-index:2; pointer-events:none;
+  will-change:transform;
+}
+#linewrap path{
+  fill:none;
+  stroke:var(--line-stroke);
+  stroke-width:var(--line-width);
+  stroke-linecap:round;
+  opacity:var(--line-opacity);
+  transition:stroke 900ms ease, stroke-width 900ms ease, opacity 900ms ease;
+}
+#linewrap.routing path{
+  stroke-dasharray:14 11;
+  animation:travel 2.4s linear infinite;
+}
+@keyframes travel{to{stroke-dashoffset:-50}}
+
+.page{position:relative; z-index:3}
+
+/* ── shared column ──────────────────────────────────────────── */
+.col{
+  width:min(var(--col), calc(100vw - 48px));
+  margin-inline:auto;
+}
+
+/* ── hero ───────────────────────────────────────────────────── */
+.hero{
+  min-height:100svh;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:14vh 0 10vh;
+}
+.hero .eyebrow{
+  font-family:var(--util); font-size:11px; letter-spacing:.24em;
+  text-transform:uppercase; color:var(--calico-dim); margin:0 0 2.2rem;
+}
+.hero h1{
+  font-family:var(--display); font-weight:400;
+  font-size:clamp(2.9rem, 9.5vw, 6.4rem);
+  line-height:.97; letter-spacing:-.015em;
+  margin:0 0 1.8rem; text-wrap:balance;
+}
+.hero h1 em{font-style:italic; color:var(--ochre)}
+.hero .standfirst{
+  font-size:1.12rem; max-width:34em; color:#cfc8ba; margin:0 0 3.4rem;
+}
+.hero .standfirst b{font-weight:500; color:var(--calico)}
+.cue{
+  font-family:var(--util); font-size:11.5px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--calico-dim);
+  display:inline-flex; align-items:center; gap:.9rem;
+}
+.cue::after{
+  content:""; width:1px; height:34px;
+  background:linear-gradient(var(--calico-dim), transparent);
+}
+
+/* ── movements ──────────────────────────────────────────────── */
+.movement{padding:11vh 0 9vh; position:relative}
+.mhead{margin:0 0 4.2rem; position:relative}
+.mhead .dates{
+  font-family:var(--util); font-size:11px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--ochre); margin:0 0 .8rem;
+}
+.mhead h2{
+  font-family:var(--display); font-weight:400;
+  font-size:clamp(1.7rem, 4.4vw, 2.6rem); line-height:1.1;
+  margin:0; letter-spacing:-.01em;
+}
+.mhead .rule{
+  height:1px; background:rgba(230,223,210,.16);
+  margin-top:1.6rem;
+}
+
+/* ── verses ─────────────────────────────────────────────────── */
+.v{position:relative; margin:0 0 2.4rem}
+.v > p{margin:0; text-wrap:pretty}
+.v .n{
+  font-family:var(--display); font-style:italic;
+  color:var(--ochre); font-size:.92em; margin-right:.55em;
+  font-feature-settings:"onum";
+}
+.v em{font-style:italic; color:#efe9dd}
+.v .said{color:#f2ecdf}
+
+.selah{
+  font-family:var(--display); font-style:italic; color:var(--ochre);
+  text-align:center; font-size:1.5rem; letter-spacing:.06em;
+  margin:4.5rem 0 4rem;
+}
+
+/* verse that stands alone */
+.solo{
+  font-family:var(--display); font-weight:400;
+  font-size:clamp(1.45rem, 3.9vw, 2.15rem); line-height:1.36;
+  margin:5rem 0; text-wrap:balance;
+}
+.solo .n{font-size:.72em; vertical-align:.35em}
+
+/* ── margin apparatus: the clerk's entry ────────────────────── */
+.note{
+  font-family:var(--util); font-size:12.5px; line-height:1.62;
+  color:var(--calico-dim);
+}
+.note b{color:var(--indigo-pale); font-weight:700}
+@media (min-width:1180px){
+  .note{
+    position:absolute; top:.35em; left:calc(100% + 56px);
+    width:216px; padding-left:14px;
+    border-left:1px solid rgba(126,140,196,.32);
+  }
+}
+@media (max-width:1179px){
+  .note{
+    margin:1.1rem 0 0; padding-left:14px;
+    border-left:1px solid rgba(126,140,196,.32);
+    max-width:44ch;
+  }
+}
+
+/* ── partition: verses split by the line ────────────────────── */
+.split{position:relative}
+@media (min-width:900px){
+  .split .v{width:calc(50% - 42px)}
+  .split .v.east{margin-left:calc(50% + 42px)}
+  .split .v .note{
+    position:static; margin:1rem 0 0; width:auto;
+    padding-left:14px; border-left:1px solid rgba(179,58,43,.4);
+  }
+}
+
+/* ── the trains ─────────────────────────────────────────────── */
+.trains{
+  padding:16vh 0; text-align:center;
+}
+.trains p{
+  font-family:var(--display);
+  font-size:clamp(1.5rem, 4.6vw, 2.6rem); line-height:1.32;
+  margin:0 auto; max-width:20ch; text-wrap:balance;
+}
+
+/* ── the reversal ───────────────────────────────────────────── */
+.reversal{
+  padding:18vh 0; text-align:center; position:relative;
+}
+.reversal .lede{
+  font-family:var(--util); font-size:11px; letter-spacing:.24em;
+  text-transform:uppercase; color:var(--calico-dim); margin:0 0 3rem;
+}
+.reversal blockquote{
+  margin:0; font-family:var(--display);
+  font-size:clamp(2rem, 8vw, 4.6rem); line-height:1.06;
+  color:var(--boundary); letter-spacing:-.02em; text-wrap:balance;
+}
+.reversal cite{
+  display:block; margin-top:3rem; font-style:normal;
+  font-family:var(--util); font-size:12px; letter-spacing:.14em;
+  color:var(--calico-dim); text-transform:uppercase;
+}
+
+/* ── the ledger ─────────────────────────────────────────────── */
+.ledger{
+  margin:5rem 0; font-family:var(--util); font-size:13.5px;
+  border-top:1px solid rgba(230,223,210,.2);
+  border-bottom:1px solid rgba(230,223,210,.2);
+}
+.ledger .lrow{
+  display:grid; grid-template-columns:1fr 1fr;
+  border-bottom:1px solid rgba(230,223,210,.09);
+}
+.ledger .lrow:last-child{border-bottom:0}
+.ledger .lcell{padding:.85rem 1.1rem}
+.ledger .lcell:first-child{border-right:1px solid rgba(230,223,210,.2)}
+.ledger .lhead .lcell{
+  color:var(--ochre); letter-spacing:.18em; text-transform:uppercase;
+  font-size:10.5px; padding-block:.7rem;
+}
+.ledger .fact{color:#ded7c9}
+.ledger .filed{color:var(--calico-dim); font-style:italic}
+
+/* ── the closing ground ─────────────────────────────────────── */
+.closing{padding:12vh 0 0}
+.groundwrap{padding:2rem 0 18vh}
+#ground{width:100%; height:60px; display:block; overflow:visible}
+#ground path{
+  fill:none; stroke:var(--ochre); stroke-width:2; stroke-linecap:round;
+  stroke-dasharray:2000; stroke-dashoffset:2000;
+  transition:stroke-dashoffset 2600ms cubic-bezier(.22,1,.36,1);
+}
+#ground.drawn path{stroke-dashoffset:0}
+
+.colophon{
+  border-top:1px solid rgba(230,223,210,.14);
+  padding:3rem 0 6rem; font-family:var(--util);
+  font-size:12px; line-height:1.8; color:var(--calico-dim);
+}
+.colophon h3{
+  font-family:var(--util); font-size:10.5px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--ochre); font-weight:400;
+  margin:0 0 1.2rem;
+}
+.colophon p{margin:0 0 1rem; max-width:62ch}
+.colophon a{color:var(--indigo-pale)}
+.colophon a:focus-visible,.skip:focus-visible{
+  outline:2px solid var(--ochre); outline-offset:3px;
+}
+
+.skip{
+  position:absolute; left:-9999px; top:0;
+  background:var(--ochre); color:var(--ground); padding:.7rem 1.1rem;
+  font-family:var(--util); font-size:12px; z-index:50;
+}
+.skip:focus{left:12px; top:12px}
+
+/* ── reveal ─────────────────────────────────────────────────── */
+.rise{opacity:0; transform:translateY(22px); transition:opacity 900ms ease, transform 900ms cubic-bezier(.22,1,.36,1)}
+.rise.seen{opacity:1; transform:none}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  #oxidize{display:none}
+  .rise{opacity:1; transform:none; transition:none}
+  #linewrap.routing path{animation:none}
+  #ground path{transition:none; stroke-dashoffset:0}
+}
+</style>
+</head>
+<body>
+
+<div id="oxidize"></div>
+
+<svg id="grain" aria-hidden="true">
+  <filter id="gf"><feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="3" stitchTiles="stitch"/></filter>
+  <rect width="100%" height="100%" filter="url(#gf)"/>
+</svg>
+
+<svg id="linewrap" aria-hidden="true" preserveAspectRatio="none"><path id="linepath" d=""/></svg>
+
+<a class="skip" href="#chronicle">Skip to the chronicle</a>
+
+<main class="page">
+
+  <!-- ══ HERO ══════════════════════════════════════════════ -->
+  <header class="hero">
+    <div class="col">
+      <p class="eyebrow">A chronicle in thirty verses</p>
+      <h1>The Book of the <em>Sojourners</em></h1>
+      <p class="standfirst">An empire spent four hundred years in other people's countries. Then it drew a line, went home, and asked why the people followed. <b>Follow the line down.</b></p>
+      <span class="cue">Scroll</span>
+    </div>
+  </header>
+
+  <div id="chronicle"></div>
+
+  <!-- ══ I. THE COMPANY ════════════════════════════════════ -->
+  <section class="movement" data-movement="1">
+    <div class="col">
+      <div class="mhead rise">
+        <p class="dates">I &nbsp;·&nbsp; 1600 – 1858 &nbsp;·&nbsp; The Company</p>
+        <h2>They came to buy, and stayed to rule</h2>
+        <div class="rule"></div>
+      </div>
+
+      <div class="v rise"><p><span class="n">1</span>Now there came unto the land of the five rivers and the great delta a company of merchants out of a small isle in the cold sea, and they were few, and they said, <span class="said">We seek only a place to lay down our cloth and take up thine.</span></p></div>
+
+      <div class="v rise"><p><span class="n">2</span>And the princes of the land said, Let them come, for they are few. And the merchants raised a fort, and about the fort a wall, and within the wall an army, and the army was greater than the trade.
+        <span class="note">The East India Company's private army numbered roughly <b>260,000</b> by 1803 — about twice the size of the British Army itself.</span></p></div>
+
+      <div class="v rise"><p><span class="n">3</span>In the space of an hundred years the company that came to buy became the company that ruled, and the land was written into a ledger, and the ledger was carried across the water.</p></div>
+
+      <div class="v rise"><p><span class="n">4</span>And the looms of Bengal, which had clothed the nations, fell silent; and the cotton went out raw and returned as cloth, and the price of the returning was set in the isle. And the weavers went into the fields, and the fields were sown with indigo and with poppy and with what the isle desired, and not with grain.
+        <span class="note">India's share of world manufacturing output fell from roughly <b>25% in 1750 to about 2% by 1900</b> (Bairoch's estimates). Bengal's indigo cultivators revolted in <b>1859</b>.</span></p></div>
+
+      <div class="v rise"><p><span class="n">5</span>Then came the years when the rain failed. And there was corn in the granaries and ships in the harbour, and the ships were laden, and they sailed. And the people ate the seed, and after the seed they ate nothing, and their bones were counted in the ledger under the heading of <em>unfortunate seasons.</em></p></div>
+
+      <div class="ledger rise">
+        <div class="lrow lhead"><div class="lcell">What happened</div><div class="lcell">How it was filed</div></div>
+        <div class="lrow"><div class="lcell fact">Bengal, 1770 — around a third of the province dies</div><div class="lcell filed">Company dividends maintained; revenue collection enforced</div></div>
+        <div class="lrow"><div class="lcell fact">Bengal, 1943 — some 3 million dead</div><div class="lcell filed">Rice kept leaving the province; the War Cabinet declined offers of relief grain</div></div>
+        <div class="lrow"><div class="lcell fact">Repeated famine across the late nineteenth century</div><div class="lcell filed">Recorded as a failure of the rains</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ II. THE BLOOD TAX ═════════════════════════════════ -->
+  <section class="movement" data-movement="2">
+    <div class="col">
+      <div class="mhead rise">
+        <p class="dates">II &nbsp;·&nbsp; 1914 – 1919 &nbsp;·&nbsp; The blood tax</p>
+        <h2>Send us thy sons</h2>
+        <div class="rule"></div>
+      </div>
+
+      <div class="v rise"><p><span class="n">6</span>And it came to pass in the days of the great wars of the north, that the isle sent word to the land, saying, <span class="said">Send us thy sons.</span></p></div>
+
+      <div class="v rise"><p><span class="n">7</span>And the sons went — a million and a half, and after them two millions more — unto the mud of Flanders and the sands of Africa and the jungles of the east, and they died for a king they had never seen, in a cause that was not theirs, in a freedom they were not given.
+        <span class="note">About <b>1.5 million</b> Indians served in the First World War; some <b>2.5 million</b> volunteered in the Second — the largest volunteer army ever raised.</span></p></div>
+
+      <div class="v rise"><p><span class="n">8</span>And the survivors returned, and said one to another, <span class="said">We have bled for their liberty; where then is ours?</span></p></div>
+
+      <div class="v rise"><p><span class="n">9</span>And they gathered, and there was a garden in Amritsar, and it had one gate.
+        <span class="note">13 April 1919. Jallianwala Bagh. <b>1,650 rounds</b> fired into an enclosed garden. Official count: 379 dead. The Congress inquiry put it above a thousand.</span></p></div>
+
+      <p class="selah rise">Selah.</p>
+    </div>
+  </section>
+
+  <!-- ══ III. THE LINE ═════════════════════════════════════ -->
+  <section class="movement" data-movement="3">
+    <div class="col">
+      <div class="mhead rise">
+        <p class="dates">III &nbsp;·&nbsp; 1947 &nbsp;·&nbsp; The award</p>
+        <h2>A barrister, a map, and a pencil</h2>
+        <div class="rule"></div>
+      </div>
+
+      <div class="v rise"><p><span class="n">10</span>And after long striving the isle grew weary, for its treasury was spent and its own cities were rubble, and it said, <span class="said">Take back thy land.</span></p></div>
+
+      <div class="v rise"><p><span class="n">11</span>And a barrister came out of the isle, and he had forty days, and he had never set foot upon that ground, and he was given a map and a pencil.
+        <span class="note">Cyril Radcliffe landed on <b>8 July 1947</b> and had roughly five weeks. He had never been to India. He worked from outdated maps and census returns.</span></p></div>
+
+      <div class="split">
+        <div class="v west rise"><p><span class="n">12</span>And he drew a line through villages and through fields and through the courtyards of houses, and he did not know what he had drawn, and he burned his papers and went home and would not speak of it.
+          <span class="note">The award was withheld until <b>17 August</b> — two days after independence. Radcliffe destroyed his working papers and refused his fee.</span></p></div>
+
+        <div class="v east rise"><p><span class="n">13</span>And upon that line fifteen millions walked, going each to the country that had been made for them.
+          <span class="note">Estimates of displacement run from <b>12 to 20 million</b> people — the largest mass migration in recorded history.</span></p></div>
+      </div>
+    </div>
+
+    <div class="trains rise">
+      <p><span class="n">14</span>And the trains came into the stations, and the trains were full, and no man cried out from within them, for there was none living to cry.</p>
+    </div>
+
+    <div class="col">
+      <div class="v rise"><p><span class="n">15</span>And a million lay down in the fields between the two flags, and the flags were new, and the rivers were red, and the land was free.
+        <span class="note">Death tolls are contested: commonly cited between <b>200,000 and 2 million</b>. No authority ever counted them.</span></p></div>
+    </div>
+  </section>
+
+  <!-- ══ IV. THE INVITATION ════════════════════════════════ -->
+  <section class="movement" data-movement="4">
+    <div class="col">
+      <div class="mhead rise">
+        <p class="dates">IV &nbsp;·&nbsp; 1948 – 1967 &nbsp;·&nbsp; The invitation</p>
+        <h2>It held out its hand</h2>
+        <div class="rule"></div>
+      </div>
+
+      <div class="v rise"><p><span class="n">16</span>Now in those days the isle across the water lay broken, and there were not hands enough to raise it. Its mills stood idle, its buses stood still, and the sick had none to tend them.</p></div>
+
+      <div class="v rise"><p><span class="n">17</span>And the isle wrote a law, and said: whosoever is of the Commonwealth is a subject of the Crown, and may come and dwell and labour among us.
+        <span class="note">The <b>British Nationality Act 1948</b> gave some 800 million Commonwealth subjects the right to enter and settle in Britain.</span></p></div>
+
+      <div class="v rise"><p><span class="n">18</span>For it had held them by the collar for two centuries, and now it held out its hand.</p></div>
+
+      <div class="v rise"><p><span class="n">19</span>And they came. From Sylhet and from Mirpur, from Punjab and Gujarat, they came unto Bradford and unto Southall and unto Whitechapel, and they took up the night shifts that no man of the isle would take.
+        <span class="note">Textile mills ran night shifts staffed almost entirely by South Asian labour. The NHS recruited nurses directly from the Commonwealth from its founding year.</span></p></div>
+
+      <div class="v rise"><p><span class="n">20</span>And they were as Ruth, who said unto Naomi, <em>whither thou goest, I will go</em> — for Ruth followed her mother-in-law home, and the home was not hers, and she gleaned in the corners of another man's field.</p></div>
+
+      <div class="v rise"><p><span class="n">21</span>And Mirpur was drowned beneath a dam, and its people were scattered, and the engineers who drowned it were of the isle; and so they followed the water to its source.
+        <span class="note">The <b>Mangla Dam</b>, completed 1967, was British-engineered and part-funded. It displaced around 110,000 people in Mirpur. Compensation included work vouchers for Britain. Mirpuris remain a large share of British Pakistanis.</span></p></div>
+    </div>
+  </section>
+
+  <!-- ══ V. THE DOOR ═══════════════════════════════════════ -->
+  <section class="movement" data-movement="5">
+    <div class="col">
+      <div class="mhead rise">
+        <p class="dates">V &nbsp;·&nbsp; 1962 – 1981 &nbsp;·&nbsp; The door</p>
+        <h2>Shut behind the labourer</h2>
+        <div class="rule"></div>
+      </div>
+
+      <div class="v rise"><p><span class="n">22</span>And the men of the isle stood in their doorways and said: <span class="said">Why are ye come into our land? Why do ye trouble our streets with thy speech and thy cooking-smoke? Get thee back unto thine own country, for it is a poor country.</span>
+        <span class="note">Enoch Powell gave the "rivers of blood" speech on <b>20 April 1968</b>. As Minister of Health from 1960 he had personally overseen the recruitment of Commonwealth doctors and nurses to staff the NHS.</span></p></div>
+
+      <div class="v rise"><p><span class="n">23</span>And the sojourner answered and said: <span class="said">My country is poor because thou wast in it. The loom thou brakest, the grain thou tookest, the line thou drewest, the debt thou leftest. I did not come unto thy house uninvited; I have come home with thee.</span></p></div>
+    </div>
+
+    <div class="reversal rise">
+      <div class="col">
+        <p class="lede">Verse 24</p>
+        <blockquote>We are here because ye were there.</blockquote>
+        <cite>Attributed to A. Sivanandan, Institute of Race Relations</cite>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="v rise"><p><span class="n">25</span>And the men of the isle were sore afraid, and made laws, and each law was narrower than the last, until the door that had been opened for the labour was shut behind the labourer.</p></div>
+
+      <div class="ledger rise">
+        <div class="lrow lhead"><div class="lcell">The law</div><div class="lcell">What it narrowed</div></div>
+        <div class="lrow"><div class="lcell fact">Commonwealth Immigrants Act 1962</div><div class="lcell filed">Entry tied to employment vouchers</div></div>
+        <div class="lrow"><div class="lcell fact">Commonwealth Immigrants Act 1968</div><div class="lcell filed">Passed in days; required a UK-born parent or grandparent</div></div>
+        <div class="lrow"><div class="lcell fact">Immigration Act 1971</div><div class="lcell filed">Right of abode restricted to "patrials"</div></div>
+        <div class="lrow"><div class="lcell fact">British Nationality Act 1981</div><div class="lcell filed">Ended birthright citizenship as it had stood</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ VI. THE STRANGER IN THE GATES ═════════════════════ -->
+  <section class="movement" data-movement="6">
+    <div class="col">
+      <div class="mhead rise">
+        <p class="dates">VI &nbsp;·&nbsp; Now &nbsp;·&nbsp; The stranger in the gates</p>
+        <h2>The reversal you did not expect</h2>
+        <div class="rule"></div>
+      </div>
+
+      <div class="v rise"><p><span class="n">26</span>But it is written: <em>Thou shalt not oppress a stranger, for ye know the heart of a stranger, seeing ye were strangers in the land of Egypt.</em>
+        <span class="note">Exodus 23:9, King James Version.</span></p></div>
+
+      <div class="v rise"><p><span class="n">27</span>And this is the reversal, and it is not the one thou didst expect: it is not the sojourner who was in Egypt. It is the house he came to. For that house went out into all the earth and dwelt in the lands of others, uninvited, four hundred years, and called it civilisation.</p></div>
+
+      <div class="v rise"><p><span class="n">28</span>And now the stranger is in its gates, and it knows not the heart of a stranger, though it wrote the book of it in blood.</p></div>
+
+      <div class="v rise"><p><span class="n">29</span>And the children of the sojourners were born in the isle, and they spoke its tongue as their own, and were told: <span class="said">go home.</span></p></div>
+
+      <p class="solo rise" id="last"><span class="n">30</span>And they said: <em>this is home.</em> And that word was the last conquest, and it was not won by an army.</p>
+    </div>
+
+    <div class="groundwrap">
+      <svg id="ground" viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,30 L1000,30"/>
+      </svg>
+    </div>
+  </section>
+
+  <footer class="colophon">
+    <div class="col">
+      <h3>On the record</h3>
+      <p>The verses are written in the register of the King James Bible — the empire's own scripture, in the empire's own English. The type is Libre Caslon, after the letterform the East India Company printed its proclamations in. The marginal notes are set in typescript, as a clerk would enter them.</p>
+      <p>Figures in the margins are drawn from standard historical estimates and are contested where noted. Casualty counts for the Bengal famines and for Partition have no agreed authority; the ranges given are the ones historians argue between.</p>
+      <p>The page opens in the green of an indigo vat and settles into blue, as dyed cloth does when it meets the air.</p>
+    </div>
+  </footer>
+
+</main>
+
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── oxidation ─────────────────────────────────────────── */
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      document.getElementById('oxidize').classList.add('aired');
+    });
+  });
+
+  /* ── reveal on scroll ──────────────────────────────────── */
+  var rises = document.querySelectorAll('.rise');
+  if('IntersectionObserver' in window){
+    var ro = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){ e.target.classList.add('seen'); ro.unobserve(e.target); }
+      });
+    }, {rootMargin:'0px 0px -12% 0px', threshold:0.05});
+    rises.forEach(function(el){ ro.observe(el); });
+  } else {
+    rises.forEach(function(el){ el.classList.add('seen'); });
+  }
+
+  /* ── the closing groundline ────────────────────────────── */
+  var ground = document.getElementById('ground');
+  if('IntersectionObserver' in window){
+    var go = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){ ground.classList.add('drawn'); go.unobserve(e.target); }
+      });
+    }, {threshold:0.4});
+    go.observe(ground);
+  } else { ground.classList.add('drawn'); }
+
+  /* ── the line ──────────────────────────────────────────── */
+  var wrap = document.getElementById('linewrap');
+  var path = document.getElementById('linepath');
+  var root = document.documentElement;
+
+  // fixed pseudo-random offsets so the wobble is a drawn stroke, not static noise
+  var seeds = [];
+  for(var i=0;i<420;i++){
+    seeds.push(Math.sin(i*12.9898)*43758.5453 % 1);
+  }
+
+  var STATES = {
+    1:{stroke:'var(--vat)',        width:1,   amp:0,   opacity:.85, route:false},
+    2:{stroke:'var(--ochre)',      width:2,   amp:.6,  opacity:.9,  route:false},
+    3:{stroke:'var(--boundary)',   width:3.2, amp:7,   opacity:1,   route:false},
+    4:{stroke:'var(--indigo-pale)',width:2,   amp:2,   opacity:.9,  route:true },
+    5:{stroke:'var(--calico)',     width:4.5, amp:0,   opacity:.95, route:false},
+    6:{stroke:'var(--ochre)',      width:2,   amp:0,   opacity:0,   route:false}
+  };
+
+  var current = 1, amp = 0, targetAmp = 0;
+  var lineX = 0, targetX = 0, h = window.innerHeight;
+
+  function measure(){
+    h = window.innerHeight;
+    var colW = Math.min(700, window.innerWidth - 48);
+    var gutter = (window.innerWidth - colW)/2;
+    // rest position: in the left margin of the text column
+    var base = gutter - 62;
+    if(base < 16) base = 16;
+    restX = base - 70;              // svg is 140 wide, stroke sits at its centre
+    centreX = window.innerWidth/2 - 70;
+  }
+  var restX = 0, centreX = 0;
+  measure();
+  lineX = targetX = restX;
+
+  function build(a){
+    var step = 10, d = 'M 70 0';
+    for(var y=step, k=0; y<=h+step; y+=step, k++){
+      var o = (seeds[k % seeds.length]) * a;
+      d += ' L ' + (70 + o).toFixed(2) + ' ' + y;
+    }
+    return d;
+  }
+
+  function applyState(n){
+    var s = STATES[n]; if(!s) return;
+    root.style.setProperty('--line-stroke', s.stroke);
+    root.style.setProperty('--line-width', s.width);
+    root.style.setProperty('--line-opacity', s.opacity);
+    wrap.classList.toggle('routing', s.route && !reduce);
+    targetAmp = reduce ? 0 : s.amp;
+  }
+  applyState(1);
+
+  var movements = document.querySelectorAll('.movement');
+  if('IntersectionObserver' in window){
+    var mo = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting && e.intersectionRatio > 0.12){
+          var n = parseInt(e.target.getAttribute('data-movement'),10);
+          if(n !== current){ current = n; applyState(n); }
+        }
+      });
+    }, {threshold:[0.12,0.4], rootMargin:'-30% 0px -30% 0px'});
+    movements.forEach(function(m){ mo.observe(m); });
+  }
+
+  var partition = document.querySelector('[data-movement="3"]');
+
+  function frame(){
+    // the line walks to the centre of the page during Partition, then back
+    if(partition){
+      var r = partition.getBoundingClientRect();
+      var span = r.height + h;
+      var p = (h - r.top) / span;          // 0 → 1 across the movement
+      p = Math.max(0, Math.min(1, p));
+      var pull = Math.sin(Math.PI * p);    // in and out
+      targetX = restX + (centreX - restX) * pull;
+    }
+    lineX += (targetX - lineX) * 0.08;
+    amp   += (targetAmp - amp) * 0.06;
+    wrap.style.transform = 'translateX(' + lineX.toFixed(1) + 'px)';
+    path.setAttribute('d', build(amp));
+    requestAnimationFrame(frame);
+  }
+
+  wrap.setAttribute('viewBox','0 0 140 ' + h);
+  path.setAttribute('d', build(0));
+
+  window.addEventListener('resize', function(){
+    measure();
+    wrap.setAttribute('viewBox','0 0 140 ' + h);
+  }, {passive:true});
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
