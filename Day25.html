@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kael Voss • A Day in the Flux</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .heading-font {
+            font-family: 'Playfair Display', serif;
+        }
+        .hero-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e2937 100%);
+        }
+        .timeline-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); }
+            70% { box-shadow: 0 0 0 12px rgba(234, 179, 8, 0); }
+        }
+        .section-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .section-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200">
+    <!-- NAV -->
+    <nav class="fixed top-0 w-full bg-zinc-950/80 backdrop-blur-lg z-50 border-b border-amber-500/20">
+        <div class="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center text-xl">🌀</div>
+                <h1 class="heading-font text-2xl font-bold tracking-tight">KAEL VOSS</h1>
+            </div>
+            <div class="flex gap-8 text-sm uppercase tracking-widest">
+                <a href="#dawn" class="hover:text-amber-400 transition-colors">Dawn</a>
+                <a href="#flow" class="hover:text-amber-400 transition-colors">The Flow</a>
+                <a href="#battle" class="hover:text-amber-400 transition-colors">Battle</a>
+                <a href="#soul" class="hover:text-amber-400 transition-colors">Soul</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero-bg min-h-screen flex items-center relative overflow-hidden">
+        <div class="max-w-6xl mx-auto px-6 pt-24 grid md:grid-cols-2 gap-12 items-center">
+            <div class="space-y-8">
+                <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-full text-amber-400 text-sm">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-400"></span>
+                    </span>
+                    28 • MIXED • SEEKER
+                </div>
+                
+                <h1 class="heading-font text-7xl md:text-8xl font-bold leading-none tracking-tighter">
+                    A DAY IN<br>THE FLUX
+                </h1>
+                
+                <p class="text-xl text-zinc-400 max-w-md">
+                    Where ancient wisdom collides with modern fire. 
+                    Yoga, study, combat, manga, Tchaikovsky, and the eternal peace pipe.
+                </p>
+                
+                <div class="flex gap-4">
+                    <a href="#dawn" class="px-8 py-4 bg-amber-400 text-zinc-950 font-semibold rounded-xl hover:bg-amber-300 transition-colors flex items-center gap-2">
+                        <i class="fas fa-sun"></i> BEGIN THE JOURNEY
+                    </a>
+                </div>
+                
+                <div class="flex gap-6 text-sm pt-8">
+                    <div>
+                        <span class="block text-amber-400 text-xs">CURRENTLY LISTENING</span>
+                        <span class="font-mono">Tchaikovsky — 1812 Overture</span>
+                    </div>
+                    <div>
+                        <span class="block text-amber-400 text-xs">CURRENT READ</span>
+                        <span>One Piece Vol. 109 + "The Bhagavad Gita"</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="relative">
+                <img src="/home/workdir/attachments/2059080027656830976.png" 
+                     alt="Kael Voss - The Floundering Sage"
+                     class="rounded-3xl shadow-2xl border border-amber-400/30">
+                <div class="absolute -bottom-6 -left-6 bg-zinc-900/90 backdrop-blur p-6 rounded-2xl border border-amber-400/30 max-w-[220px]">
+                    <p class="italic text-amber-200">"In the chaos of the pose, I find the harmony of all things."</p>
+                    <p class="text-xs mt-4 text-right">— Kael Voss</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-10 left-1/2 flex flex-col items-center">
+            <div class="text-xs tracking-widest mb-2">SCROLL FOR THE DAY</div>
+            <i class="fas fa-chevron-down animate-bounce text-2xl"></i>
+        </div>
+    </header>
+
+    <!-- DAWN -->
+    <section id="dawn" class="py-24 bg-zinc-900">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex items-center gap-4 mb-12">
+                <div class="text-5xl">🌅</div>
+                <div>
+                    <span class="uppercase tracking-widest text-amber-400 text-sm">04:44 AM</span>
+                    <h2 class="heading-font text-5xl font-bold">Dawn Awakening</h2>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="section-card bg-zinc-800/50 border border-amber-400/10 p-8 rounded-3xl">
+                    <h3 class="text-2xl mb-4">Yoga in Motion</h3>
+                    <p class="text-zinc-400">Floundering through advanced asanas while the sun rises. Every wobble is a prayer. Balance is not the absence of falling — it's the art of recovering.</p>
+                    <div class="mt-8 text-6xl">🧘🏾‍♂️</div>
+                </div>
+                <div class="section-card bg-zinc-800/50 border border-amber-400/10 p-8 rounded-3xl">
+                    <h3 class="text-2xl mb-4">Peace Pipe Ritual</h3>
+                    <p class="text-zinc-400">First draw of the day. Sacred tobacco and sage. Connecting spirit to body while the world is still quiet.</p>
+                    <div class="mt-8 text-6xl">🌿</div>
+                </div>
+                <div class="section-card bg-zinc-800/50 border border-amber-400/10 p-8 rounded-3xl">
+                    <h3 class="text-2xl mb-4">Morning Tchaikovsky</h3>
+                    <p class="text-zinc-400">1812 Overture or Swan Lake fills the room as the body moves and the mind aligns with the Creator.</p>
+                    <div class="mt-8 text-6xl">🎻</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- THE FLOW -->
+    <section id="flow" class="py-24 bg-black">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="px-6 py-2 bg-amber-400/10 text-amber-400 rounded-full text-sm">THE ETERNAL STUDY</span>
+                <h2 class="heading-font text-6xl mt-4">Mind in the Books</h2>
+            </div>
+            
+            <div class="grid md:grid-cols-12 gap-8 items-center">
+                <div class="md:col-span-5 space-y-8">
+                    <div class="flex gap-6">
+                        <div class="text-6xl">📖</div>
+                        <div>
+                            <h3 class="text-2xl">Ancient + Modern</h3>
+                            <p class="text-zinc-400">Stack of theology, history, philosophy, and One Piece manga side-by-side. The complex simplicity of all cultures converging.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-6">
+                        <div class="text-6xl">💻</div>
+                        <div>
+                            <h3 class="text-2xl">Sparking Zero</h3>
+                            <p class="text-zinc-400">Quick matches between chapters. Goku's spirit fuels the warrior within.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="md:col-span-2 flex justify-center text-8xl text-amber-400/30">🌀</div>
+                
+                <div class="md:col-span-5">
+                    <div class="bg-zinc-900 p-10 rounded-3xl border border-dashed border-amber-400/30">
+                        <p class="italic text-xl leading-relaxed">"I study not to know more, but to remember what humanity has always known — and to live it better with the tools of today."</p>
+                        <div class="mt-8 text-right text-sm text-amber-400">— Kael Voss, 4:44 AM Journal</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BATTLE -->
+    <section id="battle" class="py-24 bg-zinc-900">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex justify-end items-center gap-4 mb-12">
+                <div>
+                    <span class="uppercase tracking-widest text-amber-400 text-sm">NOON</span>
+                    <h2 class="heading-font text-5xl font-bold text-right">The Inner &amp; Outer Combat</h2>
+                </div>
+                <div class="text-6xl">⚔️</div>
+            </div>
+            
+            <div class="text-center max-w-2xl mx-auto">
+                <p class="text-xl text-zinc-400">
+                    Training the body like a warrior while keeping the heart of a monk. 
+                    Sparring sessions, shadow boxing, and metaphorical battles against distraction and ego.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOUL -->
+    <section id="soul" class="py-24 bg-gradient-to-b from-black to-zinc-950">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="heading-font text-6xl leading-tight">Nightfall Integration</h2>
+                    <div class="space-y-8 mt-12">
+                        <div class="flex gap-6">
+                            <i class="fas fa-pray text-4xl text-amber-400 mt-1"></i>
+                            <div>
+                                <h4 class="text-xl">Worship &amp; Contemplation</h4>
+                                <p class="text-zinc-400">Returning to the Creator. Ancient prayers meet modern gratitude. All paths lead to the One Source.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-6">
+                            <i class="fas fa-moon text-4xl text-amber-400 mt-1"></i>
+                            <div>
+                                <h4 class="text-xl">Dream Journal</h4>
+                                <p class="text-zinc-400">Recording visions where history, technology, and spirit dance together.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-zinc-800/30 border border-amber-400/20 p-10 rounded-3xl">
+                    <div class="text-center space-y-6">
+                        <div class="text-7xl">🌌</div>
+                        <p class="text-2xl italic">"I am the bridge between what was, what is, and what is becoming. Floundering beautifully through it all."</p>
+                        <div class="pt-8 border-t border-amber-400/20 text-amber-400 font-mono text-sm">28 years old • Mixed heritage • Eternal student &amp; warrior</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-black py-20 border-t border-amber-400/10">
+        <div class="max-w-6xl mx-auto px-6 text-center">
+            <div class="flex justify-center gap-8 text-3xl mb-8">
+                <span>📖</span>
+                <span>🎮</span>
+                <span>🧘🏾‍♂️</span>
+                <span>⚔️</span>
+                <span>🌿</span>
+                <span>🎼</span>
+            </div>
+            <p class="text-zinc-500">One man. Many worlds. All connected.</p>
+            <p class="text-xs text-zinc-600 mt-12">Made with reverence • May 2026</p>
+        </div>
+    </footer>
+
+    <script>
+        // Tailwind script already included via CDN
+        console.log("%cKael Voss's Day in the Flux loaded ✨", "color: #fbbf24; font-family: monospace");
+    </script>
+</body>
+</html>
