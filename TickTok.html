@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MONEY FLOW TERMINAL • LIVE TICKER</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        :root {
+            --terminal-green: #00ff9d;
+            --terminal-red: #ff0055;
+            --terminal-amber: #ffcc00;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a0a;
+            color: var(--terminal-green);
+            font-family: 'VT323', monospace;
+            font-size: 1.4rem;
+            line-height: 1.4;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            image-rendering: pixelated;
+        }
+
+        /* Top ticker bar */
+        .ticker-bar {
+            background: #111;
+            border-bottom: 4px solid var(--terminal-amber);
+            padding: 8px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            box-shadow: 0 0 20px var(--terminal-amber);
+        }
+
+        .ticker-content {
+            display: inline-flex;
+            animation: ticker-slide 40s linear infinite;
+        }
+
+        .ticker-item {
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.6rem;
+        }
+
+        .ticker-item.up { color: var(--terminal-green); }
+        .ticker-item.down { color: var(--terminal-red); }
+
+        @keyframes ticker-slide {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Header */
+        header {
+            background: #111;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 6px double var(--terminal-amber);
+            font-size: 2rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            background: var(--terminal-amber);
+            color: #000;
+            padding: 4px 12px;
+            font-size: 2.2rem;
+            letter-spacing: 4px;
+            box-shadow: 0 0 15px var(--terminal-amber);
+        }
+
+        .market-status {
+            color: var(--terminal-green);
+            animation: blink 1.5s infinite;
+        }
+
+        /* Main terminal area */
+        .terminal {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+            overflow: auto;
+        }
+
+        .board {
+            background: #000;
+            border: 6px solid #222;
+            box-shadow: 
+                0 0 0 8px #111,
+                0 0 30px rgba(0, 255, 157, 0.3);
+            padding: 15px;
+        }
+
+        .board-header {
+            display: flex;
+            justify-content: space-between;
+            background: #111;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+            border-bottom: 3px solid var(--terminal-amber);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #222;
+        }
+
+        th {
+            background: #111;
+            color: var(--terminal-amber);
+            font-size: 1.6rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        tr:hover {
+            background: rgba(0, 255, 157, 0.1);
+        }
+
+        .symbol {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .price {
+            font-size: 2.2rem;
+        }
+
+        .up { color: var(--terminal-green); }
+        .down { color: var(--terminal-red); }
+
+        /* Money flow column styling */
+        .flow {
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .flow.up::before { content: "↑"; color: var(--terminal-green); }
+        .flow.down::before { content: "↓"; color: var(--terminal-red); }
+
+        /* Airport-style row labels */
+        .status {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 1.3rem;
+            text-align: center;
+            width: 110px;
+        }
+
+        .status.gainer { background: var(--terminal-green); color: #000; }
+        .status.loser { background: var(--terminal-red); color: #fff; }
+
+        /* Footer terminal line */
+        footer {
+            background: #111;
+            padding: 10px 20px;
+            font-size: 1.3rem;
+            display: flex;
+            justify-content: space-between;
+            border-top: 4px solid var(--terminal-amber);
+            color: var(--terminal-amber);
+        }
+
+        .blink {
+            animation: blink 0.8s infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Scrolling ticker -->
+    <div class="ticker-bar">
+        <div class="ticker-content" id="tickerContent">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <div class="logo">MFT</div>
+            <div>
+                MONEY FLOW TERMINAL<br>
+                <span style="font-size:1.4rem; color:#ffcc00;">NYSE • NASDAQ • LIVE DATA FEED</span>
+            </div>
+        </div>
+        <div>
+            <span id="currentTime" style="font-size:2.2rem;"></span>
+        </div>
+        <div class="market-status" id="marketStatus">
+            ● MARKET OPEN • TRADING IN PROGRESS
+        </div>
+    </header>
+
+    <div class="terminal">
+
+        <!-- Main stock board (airport departure style) -->
+       
