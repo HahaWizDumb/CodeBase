@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USA Benefits Starter Pack • Official Resources</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; }
+        .benefit-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .benefit-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
+        .nav-link { transition: all 0.2s; }
+        .nav-link:hover { background-color: #f3f4f6; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-72 bg-white border-r border-gray-200 flex flex-col">
+            <div class="p-6 border-b">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white text-2xl">
+                        🇺🇸
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Benefits Hub</h1>
+                        <p class="text-xs text-gray-500">U.S. Government Starter Pack</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4">
+                <button onclick="startProfiler()" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 text-lg">
+                    <i class="fas fa-user-check"></i>
+                    Start Benefits Profiler
+                </button>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto p-3">
+                <div onclick="navigateTo('home')" class="nav-link cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl mb-1 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-home w-5"></i>
+                    <span class="font-medium">Home Dashboard</span>
+                </div>
+                <div onclick="navigateTo('healthcare')" class="nav-link cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl mb-1 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-heart w-5"></i>
+                    <span class="font-medium">Healthcare</span>
+                </div>
+                <div onclick="navigateTo('food')" class="nav-link cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl mb-1 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-utensils w-5"></i>
+                    <span class="font-medium">Food & Nutrition</span>
+                </div>
+                <div onclick="navigateTo('housing')" class="nav-link cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl mb-1 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-home w-5"></i>
+                    <span class="font-medium">Housing Assistance</span>
+                </div>
+                <div onclick="navigateTo('income')" class="nav-link cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl mb-1 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-dollar-sign w-5"></i>
+                    <span class="font-medium">Income Support</span>
+                </div>
+                <div onclick="navigateTo('education')" class="nav-link cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl mb-1 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-graduation-cap w-5"></i>
+                    <span class="font-medium">Education & Training</span>
+                </div>
+                <div onclick="navigateTo('retirement')" class="nav-link cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl mb-1 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-user-shield w-5"></i>
+                    <span class="font-medium">Retirement & Disability</span>
+                </div>
+            </nav>
+
+            <div class="p-4 border-t mt-auto">
+                <div class="text-xs text-gray-500 bg-gray-50 p-4 rounded-2xl">
+                    <strong>Important:</strong> This is an informational tool only. 
+                    Always verify eligibility on official government websites.
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Top Bar -->
+            <header class="bg-white border-b sticky top-0 z-50">
+                <div class="max-w-7xl mx-auto px-8 py-5 flex items-center justify-between">
+                    <h2 id="page-title" class="text-3xl font-semibold text-gray-900">Welcome to Your Benefits Starter Pack</h2>
+                    
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <div class="text-sm font-medium">United States</div>
+                            <div class="text-xs text-gray-500">Federal & State Benefits</div>
+                        </div>
+                        <a href="https://www.usa.gov/" target="_blank"
+                           class="text-blue-600 hover:text-blue-700 flex items-center gap-2 text-sm font-medium">
+                            <i class="fas fa-external-link-alt"></i>
+                            USA.gov
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Home Dashboard -->
+            <div id="home-section" class="max-w-7xl mx-auto px-8 py-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    <div class="bg-white p-6 rounded-3xl border border-gray-100">
+                        <div class="text-4xl mb-4">🏥</div>
+                        <h3 class="font-semibold text-lg mb-1">Healthcare</h3>
+                        <p class="text-gray-600 text-sm">Medicaid, Medicare, ACA Marketplace</p>
+                        <button onclick="navigateTo('healthcare')" 
+                                class="mt-6 text-blue-600 text-sm font-medium flex items-center gap-2">
+                            Explore <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-3xl border border-gray-100">
+                        <div class="text-4xl mb-4">🛒</div>
+                        <h3 class="font-semibold text-lg mb-1">Food Assistance</h3>
+                        <p class="text-gray-600 text-sm">SNAP, WIC, Food Banks</p>
+                        <button onclick="navigateTo('food')" 
+                                class="mt-6 text-blue-600 text-sm font-medium flex items-center gap-2">
+                            Explore <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-3xl border border-gray-100">
+                        <div class="text-4xl mb-4">🏠</div>
+                        <h3 class="font-semibold text-lg mb-1">Housing Help</h3>
+                        <p class="text-gray-600 text-sm">Section 8, Rental Assistance</p>
+                        <button onclick="navigateTo('housing')" 
+                                class="mt-6 text-blue-600 text-sm font-medium flex items-center gap-2">
+                            Explore <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-semibold mb-6">Quick Benefits Profiler</h3>
+                <div id="mini-profiler" class="bg-white rounded-3xl p-8 border">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+
+            <!-- Profiler Modal -->
+            <div id="profiler-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[100]">
+                <div class="bg-white rounded-3xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+                    <div class="p-8 border-b flex justify-between items-center">
+                        <h2 class="text-3xl font-bold">Benefits Eligibility Profiler</h2>
+                        <button onclick="closeProfiler()" class="text-3xl leading-none text-gray-400 hover:text-gray-600">×</button>
+                    </div>
+                    
+                    <div class="flex-1 overflow-auto p-8" id="profiler-content">
+                        <!-- Dynamic content loaded by JS -->
+                    </div>
+                    
+                    <div class="p-6 border-t bg-gray-50 flex justify-between items-center">
+                        <button onclick="closeProfiler()" 
+                                class="px-8 py-3 text-gray-600 font-medium">Cancel</button>
+                        <button onclick="nextQuestion()" id="next-btn"
+                                class="px-10 py-3 bg-blue-600 text-white rounded-2xl font-semibold flex items-center gap-2">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Sections (hidden by default) -->
+            <div id="category-sections" class="max-w-7xl mx-auto px-8 py-8 hidden">
+                <!-- Populated dynamically by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tailwind script already loaded via CDN
+        
+        let currentQuestion = 0;
+        let profile = {};
+        
+        const questions = [
+            {
+                q: "What is your age group?",
+                options: ["Under 18", "18-24", "25-34", "35-54", "55-64", "65+"],
+                key: "age"
+            },
+            {
+                q: "What is your approximate annual household income?",
+                options: ["Below $25,000", "$25k-$50k", "$50k-$80k", "$80k-$150k", "Above $150k"],
+                key: "income"
+            },
+            {
+                q: "Do you have children under 18 in your household?",
+                options: ["Yes", "No"],
+                key: "children"
+            },
+            {
+                q: "Are you currently employed?",
+                options: ["Full-time", "Part-time", "Unemployed", "Retired/Disabled"],
+                key: "employment"
+            },
+            {
+                q: "Do you have a disability?",
+                options: ["Yes", "No"],
+                key: "disability"
+            },
+            {
+                q: "Are you a U.S. military veteran?",
+                options: ["Yes", "No"],
+                key: "veteran"
+            }
+        ];
+        
+        const benefitsDB = {
+            healthcare: [
+                {
+                    title: "Medicaid & CHIP",
+                    desc: "Health coverage for low-income individuals and families",
+                    link: "https://www.healthcare.gov/medicaid-chip/",
+                    icon: "🏥"
+                },
+                {
+                    title: "ACA Health Insurance Marketplace",
+                    desc: "Subsidized private health plans",
+                    link: "https://www.healthcare.gov/",
+                    icon: "🛡️"
+                },
+                {
+                    title: "Medicare",
+                    desc: "For people 65+ or with certain disabilities",
+                    link: "https://www.medicare.gov/",
+                    icon: "👴"
+                }
+            ],
+            food: [
+                {
+                    title: "SNAP (Food Stamps)",
+                    desc: "Supplemental Nutrition Assistance Program",
+                    link: "https://www.fns.usda.gov/snap/supplemental-nutrition-assistance-program",
+                    icon: "🛒"
+                },
+                {
+                    title: "WIC",
+                    desc: "Women, Infants, and Children nutrition program",
+                    link: "https://www.fns.usda.gov/wic",
+                    icon: "👶"
+                }
+            ],
+            housing: [
+                {
+                    title: "HUD Housing Assistance",
+                    desc: "Section 8 Housing Choice Voucher Program",
+                    link: "https://www.hud.gov/topics/housing_choice_voucher_program_section_8",
+                    icon: "🏠"
+                },
+                {
+                    title: "Rental Assistance",
+                    desc: "Emergency Rental Assistance",
+                    link: "https://www.hud.gov/topics/rental_assistance",
+                    icon: "🔑"
+                }
+            ],
+            income: [
+                {
+                    title: "Unemployment Insurance",
+                    desc: "State unemployment benefits",
+                    link: "https://www.careeronestop.org/LocalUnemploymentInsurance/",
+                    icon: "💼"
+                },
+                {
+                    title: "Earned Income Tax Credit (EITC)",
+                    desc: "Tax refund for working families",
+                    link: "https://www.irs.gov/credits-deductions/individuals/earned-income-tax-credit-eitc",
+                    icon: "💰"
+                }
+            ],
+            education: [
+                {
+                    title: "Federal Student Aid (FAFSA)",
+                    desc: "Pell Grants, loans, and work-study",
+                    link: "https://studentaid.gov/",
+                    icon: "🎓"
+                }
+            ],
+            retirement: [
+                {
+                    title: "Social Security",
+                    desc: "Retirement, Disability, Survivors benefits",
+                    link: "https://www.ssa.gov/",
+                    icon: "📋"
+                },
+                {
+                    title: "SSI (Supplemental Security Income)",
+                    desc: "For disabled, blind, or elderly with limited income",
+                    link: "https://www.ssa.gov/ssi/",
+                    icon: "♿"
+                }
+            ]
+        };
+        
+        function renderMiniProfiler() {
+            document.getElementById('mini-profiler').innerHTML = `
+                <div class="text-center">
+                    <p class="text-gray-600 mb-6">Answer a few questions to get personalized benefit recommendations</p>
+                    <button onclick="startProfiler()" 
+                            class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-4 rounded-3xl font-semibold text-lg shadow-lg shadow-blue-200">
+                        Launch Full Profiler →
+                    </button>
+                </div>
+            `;
+        }
+        
+        function startProfiler() {
+            currentQuestion = 0;
+            profile = {};
+            document.getElementById('profiler-modal').classList.remove('hidden');
+            renderCurrentQuestion();
+        }
+        
+        function closeProfiler() {
+            document.getElementById('profiler-modal').classList.add('hidden');
+        }
+        
+        function renderCurrentQuestion() {
+            const q = questions[currentQuestion];
+            let html = `
+                <div class="mb-8">
+                    <div class="flex justify-between text-sm text-gray-500 mb-2">
+                        <span>Question ${currentQuestion + 1} of ${questions.length}</span>
+                        <span class="text-blue-600">${Math.round((currentQuestion / questions.length) * 100)}% complete</span>
+                    </div>
+                    <div class="w-full bg-gray-200 h-2 rounded-full">
+                        <div class="bg-blue-600 h-2 rounded-full transition-all" style="width: ${Math.round((currentQuestion / questions.length) * 100)}%"></div>
+                    </div>
+                </div>
+                
+                <h3 class="text-2xl font-semibold mb-8">${q.q}</h3>
+                
+                <div class="grid grid-cols-1 gap-3" id="options-container">
+            `;
+            
+            q.options.forEach((option, index) => {
+                html += `
+                    <button onclick="selectAnswer('${q.key}', '${option}')" 
+                            class="text-left border-2 border-gray-200 hover:border-blue-500 rounded-2xl p-5 text-lg transition-all">
+                        ${option}
+                    </button>
+                `;
+            });
+            
+            html += `</div>`;
+            document.getElementById('profiler-content').innerHTML = html;
+            
+            document.getElementById('next-btn').style.display = 'none';
+        }
+        
+        function selectAnswer(key, value) {
+            profile[key] = value;
+            
+            // Highlight selected
+            const buttons = document.querySelectorAll('#options-container button');
+            buttons.forEach(btn => {
+                if (btn.textContent.trim() === value) {
+                    btn.classList.add('border-blue-600', 'bg-blue-50');
+                }
+            });
+            
+            document.getElementById('next-btn').style.display = 'flex';
+        }
+        
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion >= questions.length) {
+                showResults();
+            } else {
+                renderCurrentQuestion();
+            }
+        }
+        
+        function showResults() {
+            let recommendations = [];
+            
+            // Simple logic for suggestions
+            if (profile.income && (profile.income.includes("Below") || profile.income.includes("$25k"))) {
+                recommendations.push(...benefitsDB.healthcare);
+                recommendations.push(...benefitsDB.food);
+                recommendations.push(...benefitsDB.housing);
+            }
+            
+            if (profile.children === "Yes") {
+                recommendations.push(benefitsDB.food[1]); // WIC
+            }
+            
+            if (profile.age && profile.age === "65+") {
+                recommendations.push(benefitsDB.retirement[0]);
+            }
+            
+            if (profile.disability === "Yes") {
+                recommendations.push(benefitsDB.retirement[1]);
+            }
+            
+            if (profile.veteran === "Yes") {
+                recommendations.push({
+                    title: "VA Benefits",
+                    desc: "Veterans Affairs healthcare, education, housing",
+                    link: "https://www.va.gov/",
+                    icon: "🪖"
+                });
+            }
+            
+            // Remove duplicates
+            recommendations = [...new Map(recommendations.map(item => [item.title, item])).values()];
+            
+            let html = `
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🎯</div>
+                    <h2 class="text-3xl font-bold">Your Personalized Recommendations</h2>
+                    <p class="text-gray-600 mt-2">Based on your profile. Always confirm eligibility.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-6">
+            `;
+            
+            recommendations.forEach(ben => {
+                html += `
+                    <div class="benefit-card border border-gray-200 rounded-3xl p-6 flex gap-6 items-start">
+                        <div class="text-5xl w-16">${ben.icon}</div>
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-xl">${ben.title}</h4>
+                            <p class="text-gray-600 mt-1">${ben.desc}</p>
+                            <a href="${ben.link}" target="_blank" 
+                               class="inline-flex items-center gap-2 mt-4 text-blue-600 hover:text-blue-700 font-medium">
+                                Apply / Learn More <i class="fas fa-external-link-alt text-sm"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                </div>
+                <div class="mt-10 text-center">
+                    <button onclick="closeProfiler(); navigateTo('home')" 
+                            class="bg-gray-900 text-white px-8 py-4 rounded-2xl font-medium">
+                        Return to Dashboard
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('profiler-content').innerHTML = html;
+            document.getElementById('next-btn').style.display = 'none';
+        }
+        
+        function navigateTo(section) {
+            document.getElementById('home-section').classList.add('hidden');
+            document.getElementById('category-sections').classList.remove('hidden');
+            
+            let content = '';
+            
+            if (section === 'home') {
+                document.getElementById('home-section').classList.remove('hidden');
+                document.getElementById('category-sections').classList.add('hidden');
+                document.getElementById('page-title').textContent = 'Welcome to Your Benefits Starter Pack';
+                return;
+            }
+            
+            const categories = {
+                healthcare: { title: 'Healthcare Benefits', data: benefitsDB.healthcare },
+                food: { title: 'Food & Nutrition Assistance', data: benefitsDB.food },
+                housing: { title: 'Housing Assistance', data: benefitsDB.housing },
+                income: { title: 'Income & Tax Support', data: benefitsDB.income },
+                education: { title: 'Education Benefits', data: benefitsDB.education },
+                retirement: { title: 'Retirement & Disability', data: benefitsDB.retirement }
+            };
+            
+            const cat = categories[section];
+            document.getElementById('page-title').textContent = cat.title;
+            
+            content += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
+            
+            cat.data.forEach(ben => {
+                content += `
+                    <div class="benefit-card bg-white border border-gray-100 rounded-3xl p-8">
+                        <div class="text-6xl mb-6">${ben.icon}</div>
+                        <h3 class="text-2xl font-semibold mb-3">${ben.title}</h3>
+                        <p class="text-gray-600 mb-8">${ben.desc}</p>
+                        <a href="${ben.link}" target="_blank" 
+                           class="inline-flex items-center justify-center w-full bg-gray-900 hover:bg-black text-white py-4 rounded-2xl font-medium">
+                            Visit Official Site →
+                        </a>
+                    </div>
+                `;
+            });
+            
+            content += `</div>`;
+            
+            // Add more resources
+            content += `
+                <div class="mt-16 bg-white rounded-3xl p-8 border">
+                    <h4 class="font-semibold text-lg mb-4">Additional Official Resources</h4>
+                    <ul class="space-y-4 text-blue-600">
+                        <li><a href="https://www.usa.gov/benefits" target="_blank" class="flex items-center gap-3">• Benefits.gov - Central Benefits Portal</a></li>
+                        <li><a href="https://www.ssa.gov/" target="_blank" class="flex items-center gap-3">• Social Security Administration</a></li>
+                        <li><a href="https://www.fns.usda.gov/" target="_blank" class="flex items-center gap-3">• USDA Food & Nutrition Service</a></li>
+                        <li><a href="https://www.hud.gov/" target="_blank" class="flex items-center gap-3">• Department of Housing & Urban Development</a></li>
+                    </ul>
+                </div>
+            `;
+            
+            document.getElementById('category-sections').innerHTML = content;
+        }
+        
+        // Initialize
+        window.onload = function() {
+            renderMiniProfiler();
+            // Show home by default
+            navigateTo('home');
+        };
+    </script>
+</body>
+</html>
