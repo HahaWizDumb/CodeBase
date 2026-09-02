@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAGI CELESTIAL ORACLE // UNIT-01 TERMINAL</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        :root {
+            --glow-green: #00ff41;
+            --eva-red: #ff2a00;
+            --terminal-bg: #0a0a0a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            font-family: 'VT323', monospace;
+            image-rendering: pixelated;
+        }
+
+        .monitor {
+            width: 100vw;
+            max-width: 1280px;
+            height: 100vh;
+            max-height: 720px;
+            background: var(--terminal-bg);
+            border: 20px solid #222;
+            border-radius: 15px;
+            box-shadow: 
+                0 0 60px var(--glow-green),
+                inset 0 0 120px rgba(0, 255, 65, 0.15),
+                0 0 30px #000;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* CRT scanlines + phosphor effect */
+        .monitor::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0px,
+                transparent 3px,
+                rgba(0, 255, 65, 0.08) 3px,
+                rgba(0, 255, 65, 0.08) 6px
+            );
+            pointer-events: none;
+            z-index: 10;
+            animation: flicker 0.15s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.95; }
+            100% { opacity: 1; }
+        }
+
+        .header {
+            background: linear-gradient(#111, #000);
+            color: var(--glow-green);
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 4px solid var(--eva-red);
+            font-size: 1.4rem;
+            text-shadow: 0 0 10px var(--glow-green);
+            position: relative;
+        }
+
+        .header::after {
+            content: '● LIVE';
+            color: var(--eva-red);
+            animation: pulse 1s infinite;
+            font-size: 1rem;
+            position: absolute;
+            right: 30px;
+            top: 12px;
+        }
+
+        .logo {
+            font-size: 2rem;
+            letter-spacing: 4px;
+            color: var(--eva-red);
+            text-shadow: 0 0 15px var(--eva-red);
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            padding: 15px;
+            gap: 15px;
+            position: relative;
+        }
+
+        .panel {
+            background: rgba(10, 20, 10, 0.85);
+            border: 3px solid var(--glow-green);
+            padding: 12px;
+            color: var(--glow-green);
+            box-shadow: 0 0 20px var(--glow-green);
+            display: flex;
+            flex-direction: column;
+            font-size: 1.1rem;
+            line-height: 1.3;
+        }
+
+        .left-panel {
+            width: 280px;
+        }
+
+        .center-panel {
+            flex: 1;
+            position: relative;
+        }
+
+        .right-panel {
+            width: 260px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #001a00 0%, #000000 70%);
+            border: 3px solid var(--glow-green);
+            image-rendering: crisp-edges;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed rgba(0, 255, 65, 0.3);
+        }
+
+        .value {
+            color: #ffcc00;
+            text-shadow: 0 0 8px #ffcc00;
+        }
+
+        .footer {
+            background: #000;
+            color: var(--glow-green);
+            font-size: 1rem;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 4px solid var(--eva-red);
+            font-size: 0.95rem;
+        }
+
+        .scroll-log {
+            height: 120px;
+            overflow: hidden;
+            background: #000;
+            border: 2px solid var(--glow-green);
+            padding: 8px;
+            font-size: 1rem;
+            line-height: 1.4;
+            white-space: pre;
+            animation: log-scroll 25s linear infinite;
+        }
+
+        @keyframes log-scroll {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100%); }
+        }
+
+        .evangelion-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 2.5rem;
+            color: rgba(255, 42, 0, 0.15);
+            pointer-events: none;
+            transform: rotate(12deg);
+            text-shadow: 0 0 30px var(--eva-red);
+            z-index: 5;
+        }
+
+        .tree-of-life {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="monitor">
+        <!-- HEADER - STAR TREK / EVA TERMINAL STYLE -->
+        <div class="header">
+            <div>MAGI CELESTIAL ORACLE v0.01</div>
+            <div class="logo">EVANGELION UNIT-01</div>
+            <div>ANCIENT PRIEST PROTOCOL // LIVE FEED</div>
+            <div id="utc-time" style="font-size:1.3rem; color:#ffcc00;">00:00:00 UTC</div>
+        </div>
+
+        <div class="content">
+            <!-- LEFT PANEL: MOON TRACKER -->
+            <div class="panel left-panel">
+                <h2 style="color:#ffcc00; text-align:center; margin-bottom:12px; text-shadow:0 0 10px #ffcc00;">◉ LUNAR DIVINATION ◉</h2>
+                <div style="text-align:center; margin-bottom:15px;">
+                    <canvas id="moon-canvas" width="220" height="220" style="background:#000; border:2px solid #ffcc00; border-radius:50%;"></canvas>
+                </div>
+                <div class="data-row">
+                    <span>PHASE:</span>
+                    <span id="moon-phase-name" class="value">WAXING GIBBOUS</span>
+                </div>
+                <div class="data-row">
+                    <span>ILLUMINATION:</span>
+                    <span id="moon-illum" class="value">68%</span>
+                </div>
+                <div class="data-row">
+                    <span>AGE:</span>
+                    <span id="moon-age" class="value">11.4 days</span>
+                </div>
+                <div class="data-row">
+                    <span>RISE:</span>
+                    <span id="moon-rise" class="value">19:42</span>
+                </div>
+                <div class="data-row">
+                    <span>SET:</span>
+                    <span id="moon-set" class="value">07:18</span>
+                </div>
+                <div style="margin-top:auto; font-size:0.9rem; color:#ffcc00; text-align:center;">
+                    "And God said, Let there be lights... for signs and seasons"<br>
+                    — Genesis 1:14
+                </div>
+            </div>
+
+            <!-- CENTER PANEL: STAR MAP CANVAS (REAL-TIME ASTROLABE-STYLE) -->
+            <div class="panel center-panel">
+                <canvas id="star-canvas" width="620" height="480"></canvas>
+                <div class="evangelion-overlay">✝</div>
+                <!-- Tree of Life subtle overlay (SVG) -->
+                <svg class="tree-of-life" width="280" height="280" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Kabbalah Tree of Life (simplified lines + circles) -->
+                    <circle cx="100" cy="40" r="12" fill="none" stroke="#00ff41" stroke-width="4"/>
+                    <circle cx="100" cy="80" r="12" fill="none" stroke="#00ff41" stroke-width="4"/>
+                    <circle cx="60" cy="120" r="12" fill="none" stroke="#00ff41" stroke-width="4"/>
+                    <circle cx="140" cy="120" r="12" fill="none" stroke="#00ff41" stroke-width="4"/>
+                    <circle cx="100" cy="160" r="12" fill="none" stroke="#00ff41" stroke-width="4"/>
+                    <circle cx="40" cy="160" r="12" fill="none" stroke="#00ff41" stroke-width="4"/>
+                    <circle cx="160" cy="160" r="12" fill="none" stroke="#00ff41" stroke-width="4"/>
+                    <line x1="100" y1="52" x2="100" y2="68" stroke="#00ff41" stroke-width="4"/>
+                    <line x1="100" y1="92" x2="60" y2="108" stroke="#00ff41" stroke-width="4"/>
+                    <line x1="100" y1="92" x2="140" y2="108" stroke="#00ff41" stroke-width="4"/>
+                    <line x1="60" y1="132" x2="100" y2="148" stroke="#00ff41" stroke-width="4"/>
+                    <line x1="140" y1="132" x2="100" y2="148" stroke="#00ff41" stroke-width="4"/>
+                    <line x1="40" y1="172" x2="100" y2="172" stroke="#00ff41" stroke-width="4"/>
+                    <line x1="160" y1="172" x2="100" y2="172" stroke="#00ff41" stroke-width="4"/>
+                </svg>
+                <div style="position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.7); padding:4px 12px; color:var(--glow-green); font-size:1.1rem;">
+                    CURRENT SKY • TOKYO-3 / 35.68°N 139.77°E • SIDEREAL TIME: <span id="sidereal-time">14h 22m</span>
+                </div>
+                <div style="position:absolute; top:12px; left:12px; color:#ffcc00; font-size:1.3rem; text-shadow:0 0 12px #ffcc00;">
+                    STAR ALIGNMENT: <span id="constellation">ORION / "ANGEL WINGS"</span>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: ASTROLOGICAL READINGS + BIBLICAL TIE-IN -->
+            <div class="panel right-panel">
+                <h2 style="color:#ffcc00; text-align:center; margin-bottom:12px;">PRIESTLY ORACLE</h2>
+                <div id="reading" style="flex:1; font-size:1.15rem; line-height:1.5;">
+                    MAGI REPORT: Moon in alignment with Sephirot Tiphareth.<br><br>
+                    <span style="color:#ffcc00;">"A star shall come out of Jacob..."</span><br>
+                    Numbers 24:17<br><br>
+                    EVA-01 AT FIELD STABLE.<br>
+                    THIRD IMPACT PROBABILITY: 0.4%
+                </div>
+                
+                <div class="scroll-log" id="terminal-log">
+[00:00] Moon crosses ecliptic plane — Angel signal detected<br>
+[00:01] Sirius rising — Unit-00 resonance confirmed<br>
+[00:02] Kabbalistic alignment: Lilith crescent visible<br>
+[00:03] Star of Bethlehem echo — Magi core online<br>
+[00:04] Real-time: 12 bright stars in Tree of Life formation<br>
+[00:05] Moon phase synced to Adam awakening cycle<br>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <div>ANCIENT PRIEST ASTROLOGY TERMINAL • FUNCTIONAL ON ANY STARFLEET CRT MONITOR</div>
+            <div id="status" style="color:#ffcc00;">SYSTEMS NOMINAL • EVA-01 LINK ESTABLISHED</div>
+            <div>REAL-TIME • NO EXTERNAL API • PURE JS CELESTIAL CALC</div>
+        </div>
+    </div>
+
+    <script>
+        // ====================== REAL-TIME CLOCK & SIDEREAL TIME ======================
+        function updateClock() {
+            const now = new Date();
+            const utc = now.toUTCString().slice(17, 25);
+            document.getElementById('utc-time').textContent = utc + ' UTC';
+
+            // Approximate sidereal time (Tokyo longitude adjustment)
+            const hours = now.getUTCHours();
+            const minutes = now.getUTCMinutes();
+            const sidereal = ((hours * 1.0027379 + minutes / 60 * 1.0027379 + 139.77 / 15) % 24).toFixed(0);
+            const sidMin = (minutes * 1.0027379 % 60).toFixed(0);
+            document.getElementById('sidereal-time').textContent = `${sidereal}h ${sidMin}m`;
+        }
+
+        // ====================== MOON PHASE CALCULATION (accurate enough for real-time) ======================
+        function getMoonData(date) {
+            // Julian centuries from J2000.0 (simple but accurate formula)
+            const y = date.getUTCFullYear();
+            const m = date.getUTCMonth() + 1;
+            const d = date.getUTCDate();
+            const h = date.getUTCHours() + date.getUTCMinutes() / 60;
+
+            let jd = 367 * y - Math.floor(7 * (y + Math.floor((m + 9) / 12)) / 4) + Math.floor(275 * m / 9) + d + 1721013.5 + h / 24;
+            jd -= 2451545.0; // days since J2000
+
+            const synodic = 29.530588853;
+            const phaseAngle = (jd % synodic + synodic) % synodic;
+            const illumination = Math.round((1 - Math.cos(2 * Math.PI * phaseAngle / synodic)) * 50) * 2; // 0-100%
+            
+            // Phase name
+            let phaseName = '';
+            let age = phaseAngle;
+            if (age < 1.845) phaseName = 'NEW MOON';
+            else if (age < 5.535) phaseName = 'WAXING CRESCENT';
+            else if (age < 9.225) phaseName = 'FIRST QUARTER';
+            else if (age < 12.915) phaseName = 'WAXING GIBBOUS';
+            else if (age < 16.605) phaseName = 'FULL MOON';
+            else if (age < 20.295) phaseName = 'WANING GIBBOUS';
+            else if (age < 23.985) phaseName = 'LAST QUARTER';
+            else phaseName = 'WANING CRESCENT';
+
+            // Approximate rise/set (Tokyo approx, simplified)
+            const riseHour = (18 + Math.floor(phaseAngle / 1.5)) % 24;
+            const setHour = (riseHour + 12) % 24;
+
+            return {
+                phaseName: phaseName,
+                illumination: illumination,
+                age: phaseAngle.toFixed(1),
+                rise: `${riseHour.toString().padStart(2, '0')}:${Math.floor(Math.random()*40 + 10).toString().padStart(2, '0')}`,
+                set: `${setHour.toString().padStart(2, '0')}:${Math.floor(Math.random()*40 + 10).toString().padStart(2, '0')}`
+            };
+        }
+
+        // ====================== DRAW MOON ON CANVAS ======================
+        function drawMoon(canvas, phaseAngle) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const r = 92;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Night glow
+            const grad = ctx.createRadialGradient(w/2, h/2, 20, w/2, h/2, r + 30);
+            grad.addColorStop(0, '#fff');
+            grad.addColorStop(1, '#112211');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(w/2, h/2, r + 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Main moon disk
+            ctx.fillStyle = '#f0f0e0';
+            ctx.beginPath();
+            ctx.arc(w/2, h/2, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Terminator shadow (phase)
+            const offset = r * Math.cos(2 * Math.PI * phaseAngle / 29.53);
+            ctx.fillStyle = '#111';
+            ctx.beginPath();
+            ctx.ellipse(w/2 + offset / 2, h/2, Math.abs(offset) / 2 + r / 2, r, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Craters for realism
+            ctx.fillStyle = 'rgba(20,20,20,0.4)';
+            ctx.beginPath(); ctx.arc(w/2 - 25, h/2 - 25, 12, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(w/2 + 35, h/2 + 15, 8, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(w/2 - 40, h/2 + 35, 15, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // ====================== STAR CANVAS (real-time sky simulation) ======================
+        let stars = [];
+        let moonX = 0;
+        let twinklePhase = 0;
+
+        function initStars(canvas) {
+            const ctx = canvas.getContext('2d');
+            stars = [];
+            for (let i = 0; i < 420; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * (canvas.height * 0.75),
+                    size: Math.random() * 3.5 + 0.8,
+                    brightness: Math.random()
+                });
+            }
+            // Hardcoded Eva-themed "constellations" (cross + Tree lines)
+            // They stay fixed but twinkle
+        }
+
+        function drawStars(canvas, moonPhaseAngle) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dark sky gradient
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGrad.addColorStop(0, '#001122');
+            skyGrad.addColorStop(1, '#000011');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            twinklePhase += 0.08;
+
+            // Draw stars
+            for (let star of stars) {
+                const alpha = star.brightness + Math.sin(twinklePhase * star.size) * 0.4;
+                ctx.globalAlpha = Math.max(0.3, alpha);
+                ctx.fillStyle = '#eeffee';
+                ctx.fillRect(star.x, star.y, star.size, star.size);
+                
+                // Extra bright stars get cross (Evangelion cross motif)
+                if (star.size > 2.8) {
+                    ctx.globalAlpha = 0.6;
+                    ctx.fillRect(star.x - 4, star.y, 9, 1);
+                    ctx.fillRect(star.x, star.y - 4, 1, 9);
+                }
+            }
+            ctx.globalAlpha = 1;
+
+            // Moon position (moves realistically across sky with time)
+            const now = new Date();
+            const hourProgress = (now.getUTCHours() + now.getUTCMinutes() / 60) / 24;
+            moonX = (canvas.width * 0.1) + (canvas.width * 0.8 * hourProgress);
+
+            const moonY = canvas.height * 0.3 + Math.sin(hourProgress * Math.PI * 2) * 80;
+
+            // Draw moon on star map
+            const moonR = 28;
+            ctx.save();
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = '#ffeecc';
+            ctx.fillStyle = '#f0f0e0';
+            ctx.beginPath();
+            ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Phase shadow on map moon
+            const offset = moonR * Math.cos(2 * Math.PI * moonPhaseAngle / 29.53);
+            ctx.fillStyle = '#111';
+            ctx.beginPath();
+            ctx.ellipse(moonX + offset / 2, moonY, Math.abs(offset) / 2 + moonR / 2, moonR, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // Horizon line
+            ctx.strokeStyle = 'rgba(255, 200, 80, 0.3)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height * 0.82);
+            ctx.lineTo(canvas.width, canvas.height * 0.82);
+            ctx.stroke();
+
+            // "Ground" label
+            ctx.fillStyle = '#ffcc00';
+            ctx.font = '14px VT323';
+            ctx.fillText('TOKYO-3 HORIZON', canvas.width - 180, canvas.height * 0.88);
+        }
+
+        // ====================== TERMINAL LOG (scrolling Eva-flavored updates) ======================
+        const logEntries = [
+            "[LIVE] Moon crosses ecliptic — Angel signal detected",
+            "[LIVE] Sirius rising — Unit-00 resonance confirmed",
+            "[LIVE] Kabbalistic alignment: Lilith crescent visible",
+            "[LIVE] Star of Bethlehem echo — Magi core online",
+            "[LIVE] 12 bright stars in Tree of Life formation",
+            "[LIVE] Moon phase synced to Adam awakening cycle",
+            "[LIVE] Vega in Tiphareth Sephirot — EVA-01 stable",
+            "[LIVE] Orion belt aligned with Longinus spear vector"
+        ];
+        let logIndex = 0;
+
+        function updateLog() {
+            const logEl = document.getElementById('terminal-log');
+            const newLine = logEntries[logIndex % logEntries.length] + '\n';
+            logEl.textContent += newLine;
+            if (logEl.scrollHeight > logEl.clientHeight * 2) logEl.textContent = logEl.textContent.slice(logEl.textContent.indexOf('\n') + 1);
+            logIndex++;
+        }
+
+        // ====================== MAIN ANIMATION LOOP ======================
+        function startTracker() {
+            const now = new Date();
+
+            // Clock
+            setInterval(updateClock, 1000);
+
+            // Moon data & canvas
+            const moonData = getMoonData(now);
+            document.getElementById('moon-phase-name').textContent = moonData.phaseName;
+            document.getElementById('moon-illum').textContent = moonData.illumination + '%';
+            document.getElementById('moon-age').textContent = moonData.age + ' days';
+            document.getElementById('moon-rise').textContent = moonData.rise;
+            document.getElementById('moon-set').textContent = moonData.set;
+
+            const moonCanvas = document.getElementById('moon-canvas');
+            const phaseAngle = (now.getTime() / 86400000 % 29.530588853); // for drawing
+            drawMoon(moonCanvas, phaseAngle);
+
+            // Update moon every 30 seconds
+            setInterval(() => {
+                const freshData = getMoonData(new Date());
+                document.getElementById('moon-phase-name').textContent = freshData.phaseName;
+                document.getElementById('moon-illum').textContent = freshData.illumination + '%';
+                document.getElementById('moon-age').textContent = freshData.age + ' days';
+                document.getElementById('moon-rise').textContent = freshData.rise;
+                document.getElementById('moon-set').textContent = freshData.set;
+                drawMoon(moonCanvas, (new Date().getTime() / 86400000 % 29.530588853));
+            }, 30000);
+
+            // Star canvas
+            const starCanvas = document.getElementById('star-canvas');
+            initStars(starCanvas);
+            function animateStars() {
+                const currentPhase = (new Date().getTime() / 86400000 % 29.530588853);
+                drawStars(starCanvas, currentPhase);
+                requestAnimationFrame(animateStars);
+            }
+            animateStars();
+
+            // Log
+            setInterval(updateLog, 2800);
+
+            // Random constellation update
+            setInterval(() => {
+                const constel = ['ORION / "ANGEL WINGS"', 'GEMINI / ADAM & LILITH', 'DRACO / SERAPHIM', 'PLEIADES / MAGI TRINITY'];
+                document.getElementById('constellation').textContent = constel[Math.floor(Math.random() * constel.length)];
+            }, 12000);
+
+            console.log('%cMAGI CELESTIAL ORACLE LOADED — READY FOR THIRD IMPACT', 'color:#00ff41; font-family:monospace;');
+        }
+
+        // Start everything
+        window.onload = startTracker;
+    </script>
+</body>
+</html>
