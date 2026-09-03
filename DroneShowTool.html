@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swarm Composer — Drone Light Show Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+  :root{
+    --bg: #05070d;
+    --surface: #0c111e;
+    --surface-2: #121a2b;
+    --border: #202a42;
+    --border-soft: #1a2236;
+    --text: #e8ecf5;
+    --text-dim: #8791a8;
+    --text-faint: #566079;
+    --accent: #ffb454;
+    --accent-dim: #8a6a35;
+    --accent-soft: rgba(255,180,84,0.12);
+    --info: #5bb8e6;
+    --danger: #ff6f6f;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; height:100%; background:var(--bg); color:var(--text); font-family:var(--font-body); overflow:hidden; }
+
+  ::selection{ background:var(--accent); color:#1a1200; }
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:var(--border); border-radius:4px; }
+
+  input[type=range]{ accent-color: var(--accent); width:100%; }
+  input[type=number], input[type=text]{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+    font-family:var(--font-mono); font-size:13px; padding:6px 8px; border-radius:6px; width:100%;
+  }
+  input[type=number]:focus, input[type=text]:focus{ outline:1px solid var(--accent); border-color:var(--accent); }
+  button{ font-family:var(--font-body); cursor:pointer; }
+
+  .app{ display:flex; flex-direction:column; height:100vh; }
+
+  /* ---------- HEADER ---------- */
+  header{
+    height:56px; flex:none; display:flex; align-items:center; justify-content:space-between;
+    padding:0 18px; border-bottom:1px solid var(--border); background:linear-gradient(180deg,#0a0e19,#070a12);
+    z-index:20;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand svg{ display:block; }
+  .brand-text{ display:flex; flex-direction:column; line-height:1.05; }
+  .brand-text .name{ font-family:var(--font-display); font-weight:700; font-size:16px; letter-spacing:0.02em; }
+  .brand-text .tag{ font-size:10.5px; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; }
+  .status-pill{
+    display:flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:11px;
+    color:var(--text-dim); border:1px solid var(--border); padding:5px 10px 5px 8px; border-radius:100px;
+    letter-spacing:0.05em;
+  }
+  .status-dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 2.2s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+
+  /* ---------- MAIN LAYOUT ---------- */
+  main{ flex:1; display:flex; min-height:0; }
+
+  /* ---------- SIDEBAR ---------- */
+  aside{
+    width:308px; flex:none; background:var(--surface); border-right:1px solid var(--border);
+    overflow-y:auto; padding:18px 16px 40px;
+  }
+  .section{ margin-bottom:26px; }
+  .section-title{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--accent); margin:0 0 12px; display:flex; align-items:center; gap:8px;
+  }
+  .section-title::after{ content:''; flex:1; height:1px; background:var(--border-soft); }
+
+  .row{ display:flex; gap:10px; margin-bottom:10px; }
+  .field{ flex:1; }
+  .field label{ display:block; font-size:11px; color:var(--text-dim); margin-bottom:5px; }
+
+  .preset-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+  .preset-btn{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim);
+    border-radius:6px; padding:8px 6px; font-size:11.5px; font-family:var(--font-mono);
+    transition:all .15s ease; text-align:center;
+  }
+  .preset-btn:hover{ border-color:var(--accent-dim); color:var(--text); }
+  .preset-btn.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+
+  .stat-box{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin-bottom:14px;
+  }
+  .stat-box .big{ font-family:var(--font-display); font-size:26px; font-weight:700; color:var(--accent); line-height:1; }
+  .stat-box .small{ font-size:11px; color:var(--text-dim); margin-top:4px; letter-spacing:0.03em; }
+  .stat-box.warn .big{ color:var(--danger); }
+  .stat-box .warn-msg{ font-size:10.5px; color:var(--danger); margin-top:6px; display:none; }
+  .stat-box.warn .warn-msg{ display:block; }
+
+  .slider-row{ margin-bottom:14px; }
+  .slider-label{ display:flex; justify-content:space-between; font-size:11.5px; color:var(--text-dim); margin-bottom:6px; }
+  .slider-label span:last-child{ font-family:var(--font-mono); color:var(--text); }
+
+  .switch-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .switch-row .lbl{ font-size:12.5px; color:var(--text); }
+  .switch-row .sub{ font-size:10.5px; color:var(--text-faint); margin-top:2px; }
+  .switch{ position:relative; width:38px; height:21px; flex:none; }
+  .switch input{ opacity:0; width:0; height:0; position:absolute; }
+  .slider-toggle{
+    position:absolute; inset:0; background:var(--surface-2); border:1px solid var(--border); border-radius:20px;
+    transition:.15s; cursor:pointer;
+  }
+  .slider-toggle::before{
+    content:''; position:absolute; width:15px; height:15px; left:2px; top:2px; background:var(--text-faint);
+    border-radius:50%; transition:.15s;
+  }
+  .switch input:checked + .slider-toggle{ background:var(--accent-soft); border-color:var(--accent); }
+  .switch input:checked + .slider-toggle::before{ transform:translateX(17px); background:var(--accent); }
+
+  .upload-btn{
+    display:block; width:100%; text-align:center; background:var(--surface-2); border:1px dashed var(--border);
+    color:var(--text-dim); border-radius:8px; padding:16px 10px; font-size:12px; transition:all .15s ease;
+  }
+  .upload-btn:hover{ border-color:var(--accent-dim); color:var(--text); }
+  .filename{ font-family:var(--font-mono); font-size:11px; color:var(--accent); margin-top:8px; word-break:break-all; }
+  .secondary-btn{
+    width:100%; margin-top:8px; background:transparent; border:1px solid var(--border); color:var(--text-dim);
+    border-radius:8px; padding:8px; font-size:11.5px; transition:all .15s ease;
+  }
+  .secondary-btn:hover{ border-color:var(--accent-dim); color:var(--text); }
+
+  .thumb-wrap{ margin-top:12px; display:flex; align-items:center; gap:10px; }
+  #thumbCanvas{ image-rendering:pixelated; width:64px; height:48px; border:1px solid var(--border); border-radius:4px; background:#000; }
+  .thumb-label{ font-size:10.5px; color:var(--text-faint); line-height:1.4; }
+
+  /* ---------- VIEWPORT ---------- */
+  .viewport{ position:relative; flex:1; min-width:0; background:radial-gradient(ellipse at 50% 30%, #0b1120 0%, #05070d 70%); }
+  #canvasHost{ position:absolute; inset:0; }
+  #canvasHost canvas{ display:block; width:100%; height:100%; }
+
+  .hud{ position:absolute; pointer-events:none; font-family:var(--font-mono); color:var(--text-dim); font-size:11px; letter-spacing:0.04em; }
+  .hud-tl{ top:14px; left:16px; }
+  .hud-tr{ top:14px; right:16px; text-align:right; }
+  .hud-bl{ bottom:14px; left:16px; }
+  .hud b{ color:var(--accent); font-weight:600; }
+  .hud .line{ margin-bottom:2px; }
+
+  .corner{ position:absolute; width:18px; height:18px; border-color:var(--border-soft); opacity:.9; pointer-events:none; }
+  .corner.tl{ top:10px; left:10px; border-top:1px solid var(--accent-dim); border-left:1px solid var(--accent-dim); }
+  .corner.tr{ top:10px; right:10px; border-top:1px solid var(--accent-dim); border-right:1px solid var(--accent-dim); }
+  .corner.bl{ bottom:10px; left:10px; border-bottom:1px solid var(--accent-dim); border-left:1px solid var(--accent-dim); }
+  .corner.br{ bottom:10px; right:10px; border-bottom:1px solid var(--accent-dim); border-right:1px solid var(--accent-dim); }
+
+  /* ---------- CODE DRAWER ---------- */
+  .drawer-toggle{
+    position:absolute; bottom:0; left:0; right:0; height:34px; display:flex; align-items:center; justify-content:center;
+    gap:8px; background:var(--surface); border-top:1px solid var(--border); font-family:var(--font-mono);
+    font-size:11px; color:var(--text-dim); z-index:10;
+  }
+  .drawer-toggle:hover{ color:var(--text); }
+  .drawer{
+    position:absolute; left:0; right:0; bottom:0; height:0; background:var(--surface); border-top:1px solid var(--border);
+    overflow:hidden; transition:height .22s ease; z-index:15; display:flex; flex-direction:column;
+  }
+  .drawer.open{ height:46%; }
+  .drawer-bar{ flex:none; display:flex; align-items:center; justify-content:space-between; padding:8px 14px; border-bottom:1px solid var(--border-soft); }
+  .tabs{ display:flex; gap:6px; }
+  .tab-btn{
+    background:transparent; border:1px solid var(--border); color:var(--text-dim); font-family:var(--font-mono);
+    font-size:11px; padding:5px 12px; border-radius:6px;
+  }
+  .tab-btn.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+  .drawer-actions{ display:flex; gap:8px; align-items:center; }
+  .dl-btn{
+    background:var(--accent); color:#1a1200; border:none; font-family:var(--font-mono); font-weight:700;
+    font-size:11px; padding:6px 12px; border-radius:6px;
+  }
+  .dl-btn:hover{ filter:brightness(1.08); }
+  .close-drawer{ background:transparent; border:1px solid var(--border); color:var(--text-dim); border-radius:6px; padding:5px 9px; font-size:12px; }
+  .code-body{ flex:1; overflow:auto; padding:14px 18px; }
+  .code-body pre{ margin:0; font-family:var(--font-mono); font-size:12px; line-height:1.6; color:#c9d4e8; white-space:pre; }
+  .code-body .kw{ color:var(--info); }
+  .code-body .str{ color:var(--accent); }
+  .code-body .com{ color:var(--text-faint); }
+  .truncate-note{ color:var(--text-faint); font-size:10.5px; margin-top:10px; font-style:italic; }
+
+  @media (max-width: 880px){
+    aside{ position:absolute; z-index:30; height:100%; box-shadow:20px 0 40px rgba(0,0,0,.5); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <circle cx="13" cy="5" r="2.3" fill="#ffb454"/>
+        <circle cx="5" cy="19" r="2.3" fill="#5bb8e6"/>
+        <circle cx="21" cy="19" r="2.3" fill="#ffb454"/>
+        <path d="M13 7L6 17M13 7L20 17M6.5 19H19.5" stroke="#3a4560" stroke-width="1"/>
+      </svg>
+      <div class="brand-text">
+        <div class="name">SWARM COMPOSER</div>
+        <div class="tag">Drone Light Show Studio</div>
+      </div>
+    </div>
+    <div class="status-pill"><span class="status-dot"></span>FORMATION READY</div>
+  </header>
+
+  <main>
+    <aside>
+
+      <div class="section">
+        <div class="section-title">Fleet</div>
+        <div class="row">
+          <div class="field">
+            <label>Columns</label>
+            <input type="number" id="colsInput" min="2" max="100" value="20">
+          </div>
+          <div class="field">
+            <label>Rows</label>
+            <input type="number" id="rowsInput" min="2" max="80" value="15">
+          </div>
+        </div>
+        <div class="preset-grid">
+          <button class="preset-btn" data-cols="10" data-rows="10">10×10 · 100</button>
+          <button class="preset-btn active" data-cols="20" data-rows="15">20×15 · 300</button>
+          <button class="preset-btn" data-cols="30" data-rows="20">30×20 · 600</button>
+          <button class="preset-btn" data-cols="40" data-rows="30">40×30 · 1200</button>
+        </div>
+        <div class="stat-box" id="statBox">
+          <div class="big" id="statTotal">300</div>
+          <div class="small">DRONES ACTIVE · RES <span id="statRes">20×15</span></div>
+          <div class="warn-msg">High count — preview may lag on lower-end GPUs.</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Formation</div>
+
+        <div class="slider-row">
+          <div class="slider-label"><span>Spacing</span><span id="spacingVal">1.4 m</span></div>
+          <input type="range" id="spacingSlider" min="0.6" max="3" step="0.1" value="1.4">
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-label"><span>Drone Size</span><span id="sizeVal">0.28 m</span></div>
+          <input type="range" id="sizeSlider" min="0.1" max="0.6" step="0.02" value="0.28">
+        </div>
+
+        <div class="switch-row">
+          <div>
+            <div class="lbl">Depth Mosaic</div>
+            <div class="sub">Bright pixels pop toward viewer</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="depthToggle"><span class="slider-toggle"></span></label>
+        </div>
+
+        <div class="slider-row" id="depthIntensityRow" style="opacity:.4">
+          <div class="slider-label"><span>Depth Intensity</span><span id="depthVal">3.0 m</span></div>
+          <input type="range" id="depthSlider" min="0.5" max="8" step="0.5" value="3" disabled>
+        </div>
+
+        <div class="switch-row">
+          <div>
+            <div class="lbl">Auto-Rotate</div>
+            <div class="sub">Slowly orbit the formation</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="rotateToggle"><span class="slider-toggle"></span></label>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Source Image</div>
+        <label class="upload-btn" for="fileInput">
+          ⤒ Click to upload an image<br><span style="color:var(--text-faint)">JPG, PNG · cropped to fit grid</span>
+        </label>
+        <input type="file" id="fileInput" accept="image/*" style="display:none">
+        <div class="filename" id="filenameDisplay"></div>
+        <button class="secondary-btn" id="samplePatternBtn">Use Generated Sample Pattern</button>
+        <div class="thumb-wrap">
+          <canvas id="thumbCanvas" width="20" height="15"></canvas>
+          <div class="thumb-label">Low-res mosaic sample — this is exactly what each drone will render as a single pixel of color.</div>
+        </div>
+      </div>
+
+    </aside>
+
+    <div class="viewport">
+      <div id="canvasHost"></div>
+
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+
+      <div class="hud hud-tl">
+        <div class="line">SWARM<b> COMPOSER</b></div>
+        <div class="line" id="hudDrones">300 UNITS · GRID 20×15</div>
+      </div>
+      <div class="hud hud-tr">
+        <div class="line" id="hudMode">MODE: FLAT ARRAY</div>
+        <div class="line" id="hudSource">SOURCE: SAMPLE PATTERN</div>
+      </div>
+      <div class="hud hud-bl">DRAG ROTATE · SCROLL ZOOM · RIGHT-DRAG PAN</div>
+
+      <div class="drawer-toggle" id="drawerToggle">▲ EXPORT FLIGHT CODE</div>
+      <div class="drawer" id="drawer">
+        <div class="drawer-bar">
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="json">JSON</button>
+            <button class="tab-btn" data-tab="script">FLIGHT SCRIPT</button>
+            <button class="tab-btn" data-tab="csv">CSV</button>
+          </div>
+          <div class="drawer-actions">
+            <button class="dl-btn" id="downloadBtn">↓ Download File</button>
+            <button class="close-drawer" id="closeDrawer">Close ▼</button>
+          </div>
+        </div>
+        <div class="code-body"><pre id="codeOutput"></pre></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ---------------- STATE ----------------
+const CONFIG = { cols:20, rows:15, spacingX:1.4, spacingY:1.4, droneSize:0.28, depthMode:false, depthIntensity:3 };
+let currentImageEl = null;
+let currentSourceLabel = 'SAMPLE PATTERN';
+let dronesData = [];
+let activeTab = 'json';
+
+// ---------------- THREE SETUP ----------------
+const host = document.getElementById('canvasHost');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+host.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotateSpeed = 1.1;
+
+// starfield
+{
+  const starGeo = new THREE.BufferGeometry();
+  const starCount = 1400;
+  const positions = new Float32Array(starCount * 3);
+  for(let i=0;i<starCount;i++){
+    const r = 60 + Math.random()*120;
+    const theta = Math.random()*Math.PI*2;
+    const phi = Math.acos((Math.random()*2)-1);
+    positions[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+    positions[i*3+1] = r * Math.cos(phi) * 0.6;
+    positions[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const starMat = new THREE.PointsMaterial({ color:0x9fb3d6, size:0.5, sizeAttenuation:true, transparent:true, opacity:0.55 });
+  scene.add(new THREE.Points(starGeo, starMat));
+}
+
+// floor grid
+let floorGrid = new THREE.GridHelper(80, 40, 0x3a2d15, 0x141b2b);
+floorGrid.position.y = -14;
+scene.add(floorGrid);
+
+let mainMesh = null, haloMesh = null;
+
+function resizeRenderer(){
+  const w = host.clientWidth, h = host.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resizeRenderer).observe(host);
+resizeRenderer();
+
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+function frameCamera(cols, rows){
+  const width = (cols-1) * CONFIG.spacingX;
+  const height = (rows-1) * CONFIG.spacingY;
+  const dist = Math.max(width, height) * 1.25 + 6;
+  camera.position.set(dist*0.55, dist*0.32, dist*0.85);
+  controls.target.set(0,0,0);
+  camera.lookAt(0,0,0);
+  controls.update();
+}
+
+// ---------------- COLOR HELPERS ----------------
+function rgbToHex(r,g,b){
+  return '#' + [r,g,b].map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+}
+function hslToRgb(h,s,l){
+  h/=360;
+  const a = s*Math.min(l,1-l);
+  const f = n => {
+    const k=(n+h/(1/12))%12;
+    return l - a*Math.max(-1, Math.min(k-3, Math.min(9-k,1)));
+  };
+  return [Math.round(f(0)*255), Math.round(f(8)*255), Math.round(f(4)*255)];
+}
+
+function generateSamplePattern(cols, rows){
+  const out = [];
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const hue = ((c/cols)*300 + (r/rows)*60) % 360;
+      const light = 0.42 + 0.18*Math.sin((c/cols)*Math.PI*2 + (r/rows)*Math.PI);
+      out.push(hslToRgb(hue, 0.75, Math.max(0.25,Math.min(0.72,light))));
+    }
+  }
+  return out;
+}
+
+function sampleImageToGrid(img, cols, rows){
+  const canvas = document.createElement('canvas');
+  canvas.width = cols; canvas.height = rows;
+  const ctx = canvas.getContext('2d', { willReadFrequently:true });
+  ctx.imageSmoothingEnabled = true;
+
+  const imgRatio = img.width / img.height;
+  const gridRatio = cols / rows;
+  let sx=0, sy=0, sw=img.width, sh=img.height;
+  if(imgRatio > gridRatio){
+    sw = img.height * gridRatio;
+    sx = (img.width - sw) / 2;
+  } else {
+    sh = img.width / gridRatio;
+    sy = (img.height - sh) / 2;
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cols, rows);
+  const data = ctx.getImageData(0,0,cols,rows).data;
+  const out = [];
+  for(let i=0;i<cols*rows;i++){
+    out.push([data[i*4], data[i*4+1], data[i*4+2]]);
+  }
+  return out;
+}
+
+// ---------------- BUILD FORMATION ----------------
+function buildFormation(refit){
+  const { cols, rows } = CONFIG;
+  const total = cols * rows;
+
+  const colorData = currentImageEl ? sampleImageToGrid(currentImageEl, cols, rows) : generateSamplePattern(cols, rows);
+
+  if(mainMesh){ scene.remove(mainMesh); mainMesh.geometry.dispose(); mainMesh.material.dispose(); }
+  if(haloMesh){ scene.remove(haloMesh); haloMesh.geometry.dispose(); haloMesh.material.dispose(); }
+
+  const geo = new THREE.SphereGeometry(1, 8, 8);
+  const mat = new THREE.MeshBasicMaterial({ color:0xffffff, toneMapped:false });
+  mainMesh = new THREE.InstancedMesh(geo, mat, total);
+
+  const haloGeo = new THREE.SphereGeometry(1, 8, 8);
+  const haloMat = new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0.16, blending:THREE.AdditiveBlending, depthWrite:false, toneMapped:false });
+  haloMesh = new THREE.InstancedMesh(haloGeo, haloMat, total);
+
+  const dummy = new THREE.Object3D();
+  dronesData = [];
+  let idx = 0;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const [red,green,blue] = colorData[idx];
+      const lum = (0.299*red + 0.587*green + 0.114*blue) / 255;
+      const x = (c - (cols-1)/2) * CONFIG.spacingX;
+      const y = ((rows-1)/2 - r) * CONFIG.spacingY;
+      const z = CONFIG.depthMode ? (lum - 0.5) * CONFIG.depthIntensity : 0;
+
+      dummy.position.set(x,y,z);
+      dummy.scale.setScalar(CONFIG.droneSize);
+      dummy.updateMatrix();
+      mainMesh.setMatrixAt(idx, dummy.matrix);
+
+      dummy.scale.setScalar(CONFIG.droneSize * 2.3);
+      dummy.updateMatrix();
+      haloMesh.setMatrixAt(idx, dummy.matrix);
+
+      const color = new THREE.Color(red/255, green/255, blue/255);
+      mainMesh.setColorAt(idx, color);
+      haloMesh.setColorAt(idx, color);
+
+      dronesData.push({ id: idx+1, col:c, row:r, x, y, z, r:red, g:green, b:blue, hex: rgbToHex(red,green,blue) });
+      idx++;
+    }
+  }
+  mainMesh.instanceMatrix.needsUpdate = true;
+  mainMesh.instanceColor.needsUpdate = true;
+  haloMesh.instanceMatrix.needsUpdate = true;
+  haloMesh.instanceColor.needsUpdate = true;
+  scene.add(mainMesh, haloMesh);
+
+  floorGrid.position.y = -((rows-1)/2 * CONFIG.spacingY) - 5;
+
+  updateThumbnail(colorData, cols, rows);
+  updateStats(total);
+  refreshCodePreview();
+  if(refit) frameCamera(cols, rows);
+}
+
+function updateThumbnail(colorData, cols, rows){
+  const canvas = document.getElementById('thumbCanvas');
+  canvas.width = cols; canvas.height = rows;
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.createImageData(cols, rows);
+  for(let i=0;i<cols*rows;i++){
+    imgData.data[i*4] = colorData[i][0];
+    imgData.data[i*4+1] = colorData[i][1];
+    imgData.data[i*4+2] = colorData[i][2];
+    imgData.data[i*4+3] = 255;
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function updateStats(total){
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statRes').textContent = `${CONFIG.cols}×${CONFIG.rows}`;
+  document.getElementById('hudDrones').textContent = `${total} UNITS · GRID ${CONFIG.cols}×${CONFIG.rows}`;
+  document.getElementById('hudMode').textContent = `MODE: ${CONFIG.depthMode ? 'DEPTH MOSAIC' : 'FLAT ARRAY'}`;
+  document.getElementById('hudSource').textContent = `SOURCE: ${currentSourceLabel}`;
+  document.getElementById('statBox').classList.toggle('warn', total > 5000);
+}
+
+// ---------------- CODE EXPORT ----------------
+function buildJSON(){
+  const payload = dronesData.map(d => ({
+    id:d.id, col:d.col, row:d.row,
+    position:{ x:+d.x.toFixed(2), y:+d.y.toFixed(2), z:+d.z.toFixed(2) },
+    color:d.hex
+  }));
+  return JSON.stringify({
+    fleet: dronesData.length,
+    resolution:{ cols:CONFIG.cols, rows:CONFIG.rows },
+    formation: CONFIG.depthMode ? 'depth_mosaic' : 'flat_array',
+    drones: payload
+  }, null, 2);
+}
+
+function buildScript(){
+  const cap = 200;
+  const lines = dronesData.slice(0, cap).map(d =>
+    `    Drone(id=${d.id}, position=(${d.x.toFixed(2)}, ${d.y.toFixed(2)}, ${d.z.toFixed(2)}), color="${d.hex}"),`
+  );
+  const truncated = dronesData.length > cap;
+  return `"""
+Auto-generated flight & LED choreography script
+Fleet size : ${dronesData.length} drones
+Resolution : ${CONFIG.cols} x ${CONFIG.rows}
+Formation  : ${CONFIG.depthMode ? 'depth_mosaic' : 'flat_array'}
+Generated by Swarm Composer
+"""
+
+from swarm_sdk import DroneShow, Drone
+
+show = DroneShow(
+    drone_count=${dronesData.length},
+    spacing=(${CONFIG.spacingX}, ${CONFIG.spacingY}),
+    formation="${CONFIG.depthMode ? 'depth_mosaic' : 'flat_array'}",
+)
+
+FRAME = [
+${lines.join('\n')}${truncated ? `\n    # … ${dronesData.length - cap} additional drones omitted from preview, included in full export` : ''}
+]
+
+show.load_frame(FRAME)
+show.set_transition(duration_s=8, easing="ease_in_out")
+show.execute(hold_s=15)
+`;
+}
+
+function buildCSV(){
+  const header = 'id,col,row,x,y,z,r,g,b,hex';
+  const rows = dronesData.map(d => `${d.id},${d.col},${d.row},${d.x.toFixed(2)},${d.y.toFixed(2)},${d.z.toFixed(2)},${d.r},${d.g},${d.b},${d.hex}`);
+  return [header, ...rows].join('\n');
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function highlight(text, tab){
+  let h = escapeHtml(text);
+  if(tab === 'script'){
+    h = h.replace(/\b(from|import|def)\b/g, '<span class="kw">$1</span>');
+    h = h.replace(/"""[\s\S]*?"""/g, m => `<span class="com">${m}</span>`);
+    h = h.replace(/"(.*?)"/g, '"<span class="str">$1</span>"');
+  }
+  if(tab === 'json'){
+    h = h.replace(/"([a-zA-Z_]+)":/g, '<span class="kw">"$1"</span>:');
+    h = h.replace(/: "(#[0-9a-fA-F]{6}|[a-z_]+)"/g, ': "<span class="str">$1</span>"');
+  }
+  return h;
+}
+
+function refreshCodePreview(){
+  const builders = { json: buildJSON, script: buildScript, csv: buildCSV };
+  const text = builders[activeTab]();
+  document.getElementById('codeOutput').innerHTML = highlight(text, activeTab);
+}
+
+function downloadCurrentTab(){
+  const builders = { json: buildJSON, script: buildScript, csv: buildCSV };
+  const exts = { json:'json', script:'py', csv:'csv' };
+  const mimes = { json:'application/json', script:'text/x-python', csv:'text/csv' };
+  const text = builders[activeTab]();
+  const blob = new Blob([text], { type: mimes[activeTab] });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `swarm_show_${CONFIG.cols}x${CONFIG.rows}.${exts[activeTab]}`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ---------------- UI WIRING ----------------
+function debounce(fn, wait){
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+}
+
+const colsInput = document.getElementById('colsInput');
+const rowsInput = document.getElementById('rowsInput');
+
+function applyGridInputs(){
+  CONFIG.cols = Math.max(2, Math.min(100, parseInt(colsInput.value) || 2));
+  CONFIG.rows = Math.max(2, Math.min(80, parseInt(rowsInput.value) || 2));
+  colsInput.value = CONFIG.cols;
+  rowsInput.value = CONFIG.rows;
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('active', +b.dataset.cols === CONFIG.cols && +b.dataset.rows === CONFIG.rows);
+  });
+  buildFormation(true);
+}
+colsInput.addEventListener('change', applyGridInputs);
+rowsInput.addEventListener('change', applyGridInputs);
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    colsInput.value = btn.dataset.cols;
+    rowsInput.value = btn.dataset.rows;
+    applyGridInputs();
+  });
+});
+
+const spacingSlider = document.getElementById('spacingSlider');
+const spacingVal = document.getElementById('spacingVal');
+spacingSlider.addEventListener('input', debounce(() => {
+  CONFIG.spacingX = CONFIG.spacingY = parseFloat(spacingSlider.value);
+  spacingVal.textContent = CONFIG.spacingX.toFixed(1) + ' m';
+  buildFormation(true);
+}, 120));
+
+const sizeSlider = document.getElementById('sizeSlider');
+const sizeVal = document.getElementById('sizeVal');
+sizeSlider.addEventListener('input', debounce(() => {
+  CONFIG.droneSize = parseFloat(sizeSlider.value);
+  sizeVal.textContent = CONFIG.droneSize.toFixed(2) + ' m';
+  buildFormation(false);
+}, 100));
+
+const depthToggle = document.getElementById('depthToggle');
+const depthSlider = document.getElementById('depthSlider');
+const depthVal = document.getElementById('depthVal');
+const depthRow = document.getElementById('depthIntensityRow');
+depthToggle.addEventListener('change', () => {
+  CONFIG.depthMode = depthToggle.checked;
+  depthSlider.disabled = !CONFIG.depthMode;
+  depthRow.style.opacity = CONFIG.depthMode ? '1' : '0.4';
+  buildFormation(false);
+});
+depthSlider.addEventListener('input', debounce(() => {
+  CONFIG.depthIntensity = parseFloat(depthSlider.value);
+  depthVal.textContent = CONFIG.depthIntensity.toFixed(1) + ' m';
+  buildFormation(false);
+}, 100));
+
+document.getElementById('rotateToggle').addEventListener('change', e => {
+  controls.autoRotate = e.target.checked;
+});
+
+// image upload
+const fileInput = document.getElementById('fileInput');
+const filenameDisplay = document.getElementById('filenameDisplay');
+fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      currentImageEl = img;
+      currentSourceLabel = file.name.toUpperCase();
+      filenameDisplay.textContent = '✓ ' + file.name;
+      buildFormation(false);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('samplePatternBtn').addEventListener('click', () => {
+  currentImageEl = null;
+  currentSourceLabel = 'SAMPLE PATTERN';
+  filenameDisplay.textContent = '';
+  buildFormation(false);
+});
+
+// drawer
+const drawer = document.getElementById('drawer');
+const drawerToggle = document.getElementById('drawerToggle');
+drawerToggle.addEventListener('click', () => {
+  drawer.classList.add('open');
+  drawerToggle.style.display = 'none';
+});
+document.getElementById('closeDrawer').addEventListener('click', () => {
+  drawer.classList.remove('open');
+  drawerToggle.style.display = 'flex';
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTab = btn.dataset.tab;
+    refreshCodePreview();
+  });
+});
+
+document.getElementById('downloadBtn').addEventListener('click', downloadCurrentTab);
+
+// ---------------- INIT ----------------
+buildFormation(true);
+</script>
+</body>
+</html>

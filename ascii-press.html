@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASCII Press — image to text art</title>
+<style>
+  :root{
+    --paper:#EEF0E4;
+    --bar:#D9E4CE;
+    --paper-edge:#C9CDBB;
+    --ink:#23272B;
+    --ink-soft:#5C6360;
+    --red:#A93B2A;
+    --blue:#33566E;
+    --panel:#E4E5DA;
+    --sans: "Helvetica Neue", Helvetica, Arial, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:#B7BCAC;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(0,0,0,.045) 0 1px, transparent 1px 6px);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:14px;
+    line-height:1.45;
+  }
+
+  .rig{
+    display:grid;
+    grid-template-columns:330px minmax(0,1fr);
+    gap:18px;
+    padding:18px;
+    min-height:100%;
+    align-items:start;
+  }
+
+  /* ---------- control panel: a printer's front plate ---------- */
+  .panel{
+    background:var(--panel);
+    border:1px solid #A9AE9D;
+    border-top:3px solid var(--ink);
+    box-shadow:0 1px 0 #fff inset, 0 6px 18px rgba(0,0,0,.18);
+    position:sticky; top:18px;
+    max-height:calc(100vh - 36px);
+    overflow:auto;
+  }
+  .plate{
+    padding:14px 16px 12px;
+    border-bottom:1px solid #B6BAA9;
+    background:linear-gradient(#EDEEE4,#E1E2D6);
+  }
+  .plate h1{
+    margin:0;
+    font-family:var(--mono);
+    font-size:19px;
+    letter-spacing:-.4px;
+    font-weight:700;
+  }
+  .plate p{margin:4px 0 0;color:var(--ink-soft);font-size:12.5px;max-width:36ch}
+
+  fieldset{
+    border:0;border-top:1px solid #C4C8B7;
+    margin:0;padding:14px 16px 16px;
+  }
+  legend{
+    padding:0 6px 0 0;
+    margin-left:-2px;
+    font-size:12px;
+    color:var(--red);
+    font-weight:700;
+  }
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 9px}
+  .row:last-child{margin-bottom:0}
+  label{font-size:12.5px;color:var(--ink)}
+  .val{font-family:var(--mono);font-size:12px;color:var(--blue);min-width:44px;text-align:right}
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;
+    width:100%;height:18px;background:transparent;margin:0;
+  }
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:#8E9484}
+  input[type=range]::-moz-range-track{height:2px;background:#8E9484}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:12px;height:18px;margin-top:-8px;
+    background:var(--ink);border:0;border-radius:1px;cursor:grab;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:12px;height:18px;background:var(--ink);border:0;border-radius:1px;cursor:grab;
+  }
+  input[type=range]:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+
+  .slider{margin:0 0 12px}
+  .slider .row{margin-bottom:1px}
+
+  select,input[type=text]{
+    font-family:var(--mono);font-size:12.5px;
+    background:#F6F7EF;color:var(--ink);
+    border:1px solid #A9AE9D;border-radius:0;
+    padding:5px 6px;width:100%;
+  }
+  select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+  .switches{display:flex;flex-wrap:wrap;gap:6px}
+  .sw{
+    display:inline-flex;align-items:center;gap:6px;
+    border:1px solid #A9AE9D;background:#F6F7EF;
+    padding:5px 8px;font-size:12px;cursor:pointer;user-select:none;
+  }
+  .sw input{margin:0;accent-color:var(--red)}
+  .sw:has(input:checked){background:var(--ink);color:#F1F2E9;border-color:var(--ink)}
+
+  button{
+    font-family:var(--sans);font-size:12.5px;
+    border:1px solid #A9AE9D;background:#F6F7EF;color:var(--ink);
+    padding:7px 10px;cursor:pointer;border-radius:0;
+  }
+  button:hover{background:#fff}
+  button:active{transform:translateY(1px)}
+  button.primary{background:var(--ink);color:#F1F2E9;border-color:var(--ink);font-weight:600}
+  button.primary:hover{background:#000}
+  .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .btns .wide{grid-column:1/-1}
+
+  .drop{
+    border:2px dashed #9BA18F;background:#F6F7EF;
+    padding:16px;text-align:center;cursor:pointer;
+  }
+  .drop:hover{border-color:var(--ink);background:#fff}
+  .drop strong{display:block;font-size:13px}
+  .drop span{font-size:12px;color:var(--ink-soft)}
+  body.dragging .drop{border-color:var(--red);background:#fff}
+
+  /* ---------- the paper ---------- */
+  .paper{
+    position:relative;
+    background:var(--paper);
+    border:1px solid var(--paper-edge);
+    box-shadow:0 8px 24px rgba(0,0,0,.22);
+    min-height:calc(100vh - 36px);
+    display:flex;flex-direction:column;
+  }
+  .sprocket{
+    position:absolute;top:0;bottom:0;width:26px;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 8px, var(--paper-edge) 8px 9px, transparent 9px 24px);
+    pointer-events:none;
+  }
+  .sprocket.l{left:0;border-right:1px dashed var(--paper-edge)}
+  .sprocket.r{right:0;border-left:1px dashed var(--paper-edge)}
+  .sprocket i{
+    position:absolute;left:50%;transform:translateX(-50%);
+    width:9px;height:9px;border-radius:50%;
+    background:#BFC4B2;box-shadow:0 1px 0 #fff;
+  }
+
+  .paperhead{
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+    padding:12px 40px;border-bottom:1px solid var(--paper-edge);
+  }
+  .paperhead h2{margin:0;font-family:var(--mono);font-size:13px;font-weight:700}
+  .meta{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+  .paperhead .spacer{flex:1}
+  .viewsel{display:flex;gap:4px}
+  .viewsel button{padding:3px 8px;font-size:12px}
+  .viewsel button[aria-pressed=true]{background:var(--ink);color:#F1F2E9;border-color:var(--ink)}
+
+  .sheet{
+    flex:1;overflow:auto;padding:14px 34px;
+    background-image:repeating-linear-gradient(
+      180deg, transparent 0 var(--band), var(--bar) var(--band) calc(var(--band)*2));
+    background-position:0 14px;
+  }
+  #out{
+    margin:0;font-family:var(--mono);
+    white-space:pre;
+    color:var(--ink);
+    letter-spacing:0;
+  }
+  /* output themes */
+  .sheet.phosphor{background:#0C0F0C;background-image:none}
+  .sheet.phosphor #out{color:#9BE8A0;text-shadow:0 0 6px rgba(120,255,150,.35)}
+  .sheet.blank{background:#fff;background-image:none}
+  .sheet.blank #out{color:#111}
+  .sheet.negative{background:#111;background-image:none}
+  .sheet.negative #out{color:#EDEDE4}
+
+  .empty{
+    padding:60px 40px;color:var(--ink-soft);font-size:13px;max-width:50ch;
+  }
+  .hidden{display:none !important}
+
+  .stack{display:flex;flex-direction:column;gap:8px}
+  .hint{font-size:11.5px;color:var(--ink-soft);margin:6px 0 0}
+  video{display:none}
+
+  @media (max-width:900px){
+    .rig{grid-template-columns:1fr;padding:10px;gap:10px}
+    .panel{position:static;max-height:none}
+    .paper{min-height:70vh}
+    .paperhead,.sheet{padding-left:14px;padding-right:14px}
+    .sprocket{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <!-- ============ CONTROLS ============ -->
+  <section class="panel" aria-label="Controls">
+    <div class="plate">
+      <h1>ASCII&nbsp;Press</h1>
+      <p>Drop in a picture and it comes back out as characters. Everything runs in your browser.</p>
+    </div>
+
+    <fieldset>
+      <legend>Source</legend>
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose an image">
+        <strong>Choose an image</strong>
+        <span>or drag one here, or paste from the clipboard</span>
+      </div>
+      <input type="file" id="file" accept="image/*" class="hidden">
+      <div class="btns" style="margin-top:8px">
+        <button id="demo">Use sample</button>
+        <button id="cam">Start camera</button>
+      </div>
+      <p class="hint" id="srcname">Showing the built-in sample.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Resolution</legend>
+      <div class="slider">
+        <div class="row"><label for="cols">Characters across</label><span class="val" id="colsv">150</span></div>
+        <input type="range" id="cols" min="20" max="400" step="1" value="150">
+      </div>
+      <div class="slider">
+        <div class="row"><label for="aspect">Character shape</label><span class="val" id="aspectv">0.50</span></div>
+        <input type="range" id="aspect" min="0.3" max="1" step="0.01" value="0.5">
+      </div>
+      <p class="hint">Character shape is the width-to-height ratio of one cell. Lower values squash the picture vertically to compensate for tall letters.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Tone</legend>
+      <div class="slider">
+        <div class="row"><label for="bright">Brightness</label><span class="val" id="brightv">0</span></div>
+        <input type="range" id="bright" min="-0.5" max="0.5" step="0.01" value="0">
+      </div>
+      <div class="slider">
+        <div class="row"><label for="contrast">Contrast</label><span class="val" id="contrastv">0</span></div>
+        <input type="range" id="contrast" min="-0.8" max="2" step="0.02" value="0">
+      </div>
+      <div class="slider">
+        <div class="row"><label for="gamma">Midtones</label><span class="val" id="gammav">1.00</span></div>
+        <input type="range" id="gamma" min="0.3" max="3" step="0.01" value="1">
+      </div>
+      <div class="switches">
+        <label class="sw"><input type="checkbox" id="invert"> Invert</label>
+        <label class="sw"><input type="checkbox" id="dither"> Dither</label>
+        <label class="sw"><input type="checkbox" id="edges"> Trace edges</label>
+      </div>
+      <div class="slider hidden" id="edgewrap" style="margin-top:10px">
+        <div class="row"><label for="ethresh">Edge sensitivity</label><span class="val" id="ethreshv">0.30</span></div>
+        <input type="range" id="ethresh" min="0.02" max="1" step="0.01" value="0.3">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Characters</legend>
+      <div class="stack">
+        <select id="charset" aria-label="Character set">
+          <option value="standard">Standard ramp — @%#*+=-:.</option>
+          <option value="detailed">Detailed ramp — 70 levels</option>
+          <option value="blocks">Solid blocks — █▓▒░</option>
+          <option value="shades">Shades and dots</option>
+          <option value="minimal">Minimal — @+.</option>
+          <option value="digits">Digits — 9 to 0</option>
+          <option value="braille">Braille density</option>
+          <option value="custom">Custom…</option>
+        </select>
+        <input type="text" id="custom" class="hidden" value="@%#*+=-:. " spellcheck="false" aria-label="Custom characters, darkest first">
+      </div>
+      <p class="hint">Characters run darkest to lightest. A trailing space is what gives you highlights.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Colour</legend>
+      <div class="stack">
+        <select id="colormode" aria-label="Colour mode">
+          <option value="mono">Ink only</option>
+          <option value="source">Take colour from the image</option>
+        </select>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Take a copy</legend>
+      <div class="btns">
+        <button id="copy" class="primary wide">Copy text</button>
+        <button id="dltxt">Save .txt</button>
+        <button id="dlpng">Save .png</button>
+        <button id="dlhtml" class="wide">Save as web page</button>
+      </div>
+      <div class="slider" style="margin-top:12px">
+        <div class="row"><label for="fsize">Type size on screen</label><span class="val" id="fsizev">7px</span></div>
+        <input type="range" id="fsize" min="3" max="20" step="0.5" value="7">
+      </div>
+    </fieldset>
+  </section>
+
+  <!-- ============ OUTPUT ============ -->
+  <section class="paper" aria-label="Output">
+    <div class="sprocket l" aria-hidden="true"></div>
+    <div class="sprocket r" aria-hidden="true"></div>
+
+    <div class="paperhead">
+      <h2>Output</h2>
+      <span class="meta" id="dims">—</span>
+      <span class="spacer"></span>
+      <div class="viewsel" role="group" aria-label="Paper">
+        <button data-theme="bar" aria-pressed="true">Greenbar</button>
+        <button data-theme="blank" aria-pressed="false">White</button>
+        <button data-theme="phosphor" aria-pressed="false">Phosphor</button>
+        <button data-theme="negative" aria-pressed="false">Negative</button>
+      </div>
+    </div>
+
+    <div class="sheet" id="sheet" style="--band:22px"><pre id="out"></pre></div>
+  </section>
+</div>
+
+<video id="video" playsinline muted></video>
+
+<script>
+(() => {
+  "use strict";
+
+  // darkest -> lightest
+  const RAMPS = {
+    standard: "@%#*+=-:. ",
+    detailed: "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ",
+    blocks:   "\u2588\u2593\u2592\u2591 ",
+    shades:   "\u2588\u2593\u2592\u2591\u2022\u00b7 ",
+    minimal:  "@+. ",
+    digits:   "9876543210 ",
+    braille:  "\u28ff\u28fe\u28f6\u28e6\u28c6\u2846\u2844\u2840\u2800"
+  };
+  const EDGE_CHARS = ["|", "/", "-", "\\"]; // stroke drawn perpendicular to the gradient
+
+  const $ = id => document.getElementById(id);
+  const el = {
+    out: $("out"), sheet: $("sheet"), dims: $("dims"), srcname: $("srcname"),
+    file: $("file"), drop: $("drop"), video: $("video"), custom: $("custom"),
+    edgewrap: $("edgewrap")
+  };
+
+  const work = document.createElement("canvas");
+  const wctx = work.getContext("2d", { willReadFrequently: true });
+
+  let source = null;          // {type:'img'|'video', el, w, h}
+  let camStream = null;
+  let camLoop = 0;
+  let lastPlain = "";
+  let lastGrid = null;        // {cols, rows, chars:[], colors:[]|null}
+
+  const num = id => parseFloat($(id).value);
+  const on = id => $(id).checked;
+
+  function charset() {
+    const key = $("charset").value;
+    const s = key === "custom" ? el.custom.value : RAMPS[key];
+    return (s && s.length >= 2) ? s : RAMPS.standard;
+  }
+
+  /* ---------- measure the font so the preview keeps the right proportions ---------- */
+  const mcan = document.createElement("canvas");
+  const mctx = mcan.getContext("2d");
+  function charWidthRatio(px) {
+    const fam = getComputedStyle(el.out).fontFamily;
+    mctx.font = px + "px " + fam;
+    return mctx.measureText("M".repeat(20)).width / 20 / px;
+  }
+
+  /* ---------- the conversion ---------- */
+  function build() {
+    if (!source) return;
+    const cols = Math.max(2, Math.round(num("cols")));
+    const aspect = num("aspect");
+    const sw = source.w, sh = source.h;
+    if (!sw || !sh) return;
+
+    let rows = Math.max(1, Math.round(cols * (sh / sw) * aspect));
+    rows = Math.min(rows, 1200);
+
+    work.width = cols; work.height = rows;
+    wctx.clearRect(0, 0, cols, rows);
+    try { wctx.drawImage(source.el, 0, 0, cols, rows); }
+    catch (e) { return; }
+
+    let px;
+    try { px = wctx.getImageData(0, 0, cols, rows).data; }
+    catch (e) { showError("This image came from another site and the browser won't let the page read its pixels. Save it and upload the file instead."); return; }
+
+    const n = cols * rows;
+    const lum = new Float32Array(n);
+    const r8 = new Uint8ClampedArray(n), g8 = new Uint8ClampedArray(n), b8 = new Uint8ClampedArray(n);
+
+    const bright = num("bright"), contrast = num("contrast"), gamma = num("gamma"), inv = on("invert");
+    const k = 1 + contrast;
+
+    for (let i = 0; i < n; i++) {
+      const o = i * 4;
+      const a = px[o + 3] / 255;
+      const r = px[o] * a + 255 * (1 - a) * 0;   // treat transparency as black
+      const g = px[o + 1] * a, b = px[o + 2] * a;
+      r8[i] = px[o]; g8[i] = px[o + 1]; b8[i] = px[o + 2];
+      let l = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      l = (l - 0.5) * k + 0.5 + bright;
+      l = l < 0 ? 0 : l > 1 ? 1 : l;
+      l = Math.pow(l, gamma);
+      lum[i] = inv ? 1 - l : l;
+    }
+
+    const set = charset();
+    const levels = set.length - 1;
+
+    // Sobel before quantising, so edges follow the real image
+    let mag = null, dir = null;
+    if (on("edges")) {
+      mag = new Float32Array(n); dir = new Uint8Array(n);
+      const at = (x, y) => lum[Math.min(rows - 1, Math.max(0, y)) * cols + Math.min(cols - 1, Math.max(0, x))];
+      for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+        const gx = -at(x-1,y-1) - 2*at(x-1,y) - at(x-1,y+1) + at(x+1,y-1) + 2*at(x+1,y) + at(x+1,y+1);
+        const gy = -at(x-1,y-1) - 2*at(x,y-1) - at(x+1,y-1) + at(x-1,y+1) + 2*at(x,y+1) + at(x+1,y+1);
+        const i = y * cols + x;
+        mag[i] = Math.hypot(gx, gy) / 4;
+        let ang = Math.atan2(gy, gx) * 180 / Math.PI;   // gradient direction
+        if (ang < 0) ang += 180;
+        // edge runs perpendicular to the gradient
+        dir[i] = Math.round(ang / 45) % 4;
+      }
+    }
+
+    const idx = new Int16Array(n);
+    if (on("dither")) {
+      const buf = Float32Array.from(lum);
+      for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+        const i = y * cols + x;
+        const old = buf[i];
+        const q = Math.round(Math.min(1, Math.max(0, old)) * levels);
+        idx[i] = q;
+        const err = old - q / levels;
+        if (x + 1 < cols) buf[i + 1] += err * 7 / 16;
+        if (y + 1 < rows) {
+          if (x > 0) buf[i + cols - 1] += err * 3 / 16;
+          buf[i + cols] += err * 5 / 16;
+          if (x + 1 < cols) buf[i + cols + 1] += err * 1 / 16;
+        }
+      }
+    } else {
+      for (let i = 0; i < n; i++) idx[i] = Math.round(lum[i] * levels);
+    }
+
+    const eth = num("ethresh");
+    const chars = new Array(n);
+    for (let i = 0; i < n; i++) {
+      if (mag && mag[i] > eth) chars[i] = EDGE_CHARS[dir[i]];
+      else chars[i] = set.charAt(idx[i]); // idx 0 = darkest pixel -> first (densest) character
+    }
+
+    const colored = $("colormode").value === "source";
+    lastGrid = { cols, rows, chars, r8, g8, b8, colored };
+
+    // plain text (always kept, for copy / txt / png)
+    const lines = new Array(rows);
+    for (let y = 0; y < rows; y++) {
+      let s = "";
+      for (let x = 0; x < cols; x++) s += chars[y * cols + x];
+      lines[y] = s.replace(/\s+$/, "");
+    }
+    lastPlain = lines.join("\n");
+
+    if (colored) el.out.innerHTML = colorHTML(lastGrid);
+    else el.out.textContent = lastPlain;
+
+    el.dims.textContent = cols + " \u00d7 " + rows + " characters \u00b7 " + n.toLocaleString() + " cells";
+    applyType();
+  }
+
+  function colorHTML(G) {
+    const { cols, rows, chars, r8, g8, b8 } = G;
+    const esc = { "&": "&amp;", "<": "&lt;", ">": "&gt;" };
+    let html = "";
+    for (let y = 0; y < rows; y++) {
+      let run = "", cur = "";
+      for (let x = 0; x < cols; x++) {
+        const i = y * cols + x;
+        const hex = "#" + ((1 << 24) + (r8[i] << 16) + (g8[i] << 8) + b8[i]).toString(16).slice(1);
+        const ch = chars[i].replace(/[&<>]/g, c => esc[c]);
+        if (hex !== cur) {
+          if (run) html += '<span style="color:' + cur + '">' + run + "</span>";
+          cur = hex; run = ch;
+        } else run += ch;
+      }
+      if (run) html += '<span style="color:' + cur + '">' + run + "</span>";
+      html += "\n";
+    }
+    return html;
+  }
+
+  function applyType() {
+    const px = num("fsize");
+    const ratio = charWidthRatio(px);
+    const lh = (px * ratio) / num("aspect");   // keeps on-screen proportions honest
+    el.out.style.fontSize = px + "px";
+    el.out.style.lineHeight = lh + "px";
+    el.sheet.style.setProperty("--band", (lh * 3) + "px");
+  }
+
+  function showError(msg) {
+    el.out.textContent = msg;
+    el.dims.textContent = "\u2014";
+  }
+
+  /* ---------- sources ---------- */
+  function useImage(img, name) {
+    stopCam();
+    source = { type: "img", el: img, w: img.naturalWidth || img.width, h: img.naturalHeight || img.height };
+    el.srcname.textContent = name;
+    build();
+  }
+
+  function loadFile(f) {
+    if (!f || !/^image\//.test(f.type)) return;
+    const url = URL.createObjectURL(f);
+    const img = new Image();
+    img.onload = () => { useImage(img, f.name + " \u00b7 " + img.naturalWidth + "\u00d7" + img.naturalHeight); URL.revokeObjectURL(url); };
+    img.onerror = () => showError("That file could not be opened as an image.");
+    img.src = url;
+  }
+
+  el.drop.addEventListener("click", () => el.file.click());
+  el.drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.file.click(); } });
+  el.file.addEventListener("change", e => loadFile(e.target.files[0]));
+
+  ["dragenter", "dragover"].forEach(t => document.addEventListener(t, e => { e.preventDefault(); document.body.classList.add("dragging"); }));
+  ["dragleave", "drop"].forEach(t => document.addEventListener(t, e => { e.preventDefault(); if (t === "drop" || e.relatedTarget === null) document.body.classList.remove("dragging"); }));
+  document.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) loadFile(f); });
+  document.addEventListener("paste", e => {
+    for (const item of e.clipboardData.files) { loadFile(item); return; }
+  });
+
+  /* ---------- camera ---------- */
+  function stopCam() {
+    if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+    cancelAnimationFrame(camLoop);
+    $("cam").textContent = "Start camera";
+  }
+  $("cam").addEventListener("click", async () => {
+    if (camStream) { stopCam(); el.srcname.textContent = "Camera stopped."; return; }
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+    } catch (err) { el.srcname.textContent = "The camera is unavailable or permission was declined."; return; }
+    el.video.srcObject = camStream;
+    await el.video.play();
+    source = { type: "video", el: el.video, w: el.video.videoWidth, h: el.video.videoHeight };
+    $("cam").textContent = "Stop camera";
+    el.srcname.textContent = "Live camera \u00b7 " + source.w + "\u00d7" + source.h;
+    let last = 0;
+    const tick = t => {
+      camLoop = requestAnimationFrame(tick);
+      if (t - last < 66) return;      // ~15 fps
+      last = t;
+      source.w = el.video.videoWidth; source.h = el.video.videoHeight;
+      build();
+    };
+    camLoop = requestAnimationFrame(tick);
+  });
+
+  /* ---------- sample picture: a small ray-traced scene ---------- */
+  function sample() {
+    const W = 480, H = 360;
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const ctx = c.getContext("2d");
+    const im = ctx.createImageData(W, H);
+    const d = im.data;
+    const sp = [
+      { c: [0, 1, 0], r: 1, col: [178, 172, 158] },
+      { c: [-1.65, 0.45, 1.35], r: 0.45, col: [150, 74, 58] }
+    ];
+    const norm = v => { const m = Math.hypot(v[0], v[1], v[2]); return [v[0] / m, v[1] / m, v[2] / m]; };
+    const ln = norm([-2.2, 3.2, 2.6]);
+    const eye = [0, 1.0, 5.2];
+
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const u = (x / W - 0.5) * 2 * (W / H), v = -(y / H - 0.5) * 2;
+      const dr = norm([u, v - 0.04, -2.9]);
+
+      let t = Infinity, hit = null, kind = 0;
+      for (const s of sp) {
+        const oc = [eye[0] - s.c[0], eye[1] - s.c[1], eye[2] - s.c[2]];
+        const b = 2 * (oc[0] * dr[0] + oc[1] * dr[1] + oc[2] * dr[2]);
+        const cc = oc[0] ** 2 + oc[1] ** 2 + oc[2] ** 2 - s.r * s.r;
+        const disc = b * b - 4 * cc;
+        if (disc > 0) { const tt = (-b - Math.sqrt(disc)) / 2; if (tt > 0.01 && tt < t) { t = tt; hit = s; kind = 1; } }
+      }
+      const tf = -eye[1] / dr[1];
+      if (tf > 0.01 && tf < t) { t = tf; kind = 2; hit = null; }
+
+      const q = Math.min(1, y / H * 1.15);
+      const sky = [246 - 40 * q, 248 - 34 * q, 252 - 28 * q];
+      let col = sky;
+
+      if (kind) {
+        const p = [eye[0] + dr[0] * t, eye[1] + dr[1] * t, eye[2] + dr[2] * t];
+        let nrm, base;
+        if (kind === 1) {
+          nrm = norm([p[0] - hit.c[0], p[1] - hit.c[1], p[2] - hit.c[2]]);
+          base = hit.col;
+        } else {
+          nrm = [0, 1, 0];
+          const chk = (Math.floor(p[0] * 1.1) + Math.floor(p[2] * 1.1)) & 1;
+          base = chk ? [198, 200, 194] : [148, 151, 152];
+          const fog = Math.min(1, 10 / (1 + Math.hypot(p[0] - eye[0], p[2] - eye[2]) ** 1.5));
+          base = base.map((ch, ci) => ch * fog + sky[ci] * (1 - fog));
+        }
+        let dif = Math.max(0, nrm[0] * ln[0] + nrm[1] * ln[1] + nrm[2] * ln[2]);
+        for (const s of sp) {                       // one shadow ray towards the light
+          const oc = [p[0] - s.c[0], p[1] - s.c[1], p[2] - s.c[2]];
+          const b = 2 * (oc[0] * ln[0] + oc[1] * ln[1] + oc[2] * ln[2]);
+          const cc = oc[0] ** 2 + oc[1] ** 2 + oc[2] ** 2 - s.r * s.r;
+          const disc = b * b - 4 * cc;
+          if (disc > 0 && (-b - Math.sqrt(disc)) / 2 > 0.02) { dif *= 0.3; break; }
+        }
+        const h = norm([ln[0] - dr[0], ln[1] - dr[1], ln[2] - dr[2]]);
+        const spec = Math.pow(Math.max(0, nrm[0] * h[0] + nrm[1] * h[1] + nrm[2] * h[2]), 48) * (kind === 1 ? 1 : 0.15);
+        col = base.map(ch => Math.min(255, ch * (0.24 + 0.82 * dif) + 255 * spec));
+      }
+
+      const i = (y * W + x) * 4;
+      d[i] = col[0]; d[i + 1] = col[1]; d[i + 2] = col[2]; d[i + 3] = 255;
+    }
+    ctx.putImageData(im, 0, 0);
+    const img = new Image();
+    img.onload = () => useImage(img, "Built-in sample \u00b7 480\u00d7360");
+    img.src = c.toDataURL();
+  }
+  $("demo").addEventListener("click", sample);
+
+  /* ---------- export ---------- */
+  function download(blob, name) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+
+  $("copy").addEventListener("click", async () => {
+    const b = $("copy");
+    try { await navigator.clipboard.writeText(lastPlain); b.textContent = "Copied"; }
+    catch (e) { b.textContent = "Copying was blocked"; }
+    setTimeout(() => { b.textContent = "Copy text"; }, 1400);
+  });
+
+  $("dltxt").addEventListener("click", () => {
+    download(new Blob([lastPlain], { type: "text/plain;charset=utf-8" }), "ascii-art.txt");
+  });
+
+  $("dlhtml").addEventListener("click", () => {
+    const dark = el.sheet.classList.contains("phosphor") || el.sheet.classList.contains("negative");
+    const body = lastGrid && lastGrid.colored ? colorHTML(lastGrid)
+      : lastPlain.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    const px = num("fsize"), lh = (px * charWidthRatio(px)) / num("aspect");
+    const doc = '<!DOCTYPE html><meta charset="utf-8"><title>ASCII art</title>'
+      + "<style>body{margin:0;background:" + (dark ? "#0C0F0C" : "#EEF0E4") + ";}"
+      + "pre{margin:0;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:" + px
+      + "px;line-height:" + lh + "px;color:" + (dark ? "#9BE8A0" : "#23272B") + ";white-space:pre}</style><pre>"
+      + body + "</pre>";
+    download(new Blob([doc], { type: "text/html;charset=utf-8" }), "ascii-art.html");
+  });
+
+  $("dlpng").addEventListener("click", () => {
+    if (!lastGrid) return;
+    const G = lastGrid;
+    const px = Math.max(8, num("fsize") * 2);
+    const c = document.createElement("canvas");
+    const ctx = c.getContext("2d");
+    const fam = "ui-monospace, Menlo, Consolas, monospace";
+    ctx.font = px + "px " + fam;
+    const cw = ctx.measureText("M".repeat(20)).width / 20;
+    const lh = cw / num("aspect");
+    c.width = Math.ceil(G.cols * cw) + 24;
+    c.height = Math.ceil(G.rows * lh) + 24;
+    const ctx2 = c.getContext("2d");
+    const dark = el.sheet.classList.contains("phosphor") || el.sheet.classList.contains("negative");
+    ctx2.fillStyle = dark ? "#0C0F0C" : (el.sheet.classList.contains("blank") ? "#FFFFFF" : "#EEF0E4");
+    ctx2.fillRect(0, 0, c.width, c.height);
+    ctx2.font = px + "px " + fam;
+    ctx2.textBaseline = "top";
+    const ink = dark ? "#9BE8A0" : "#23272B";
+    for (let y = 0; y < G.rows; y++) {
+      for (let x = 0; x < G.cols; x++) {
+        const i = y * G.cols + x;
+        const ch = G.chars[i];
+        if (ch === " ") continue;
+        ctx2.fillStyle = G.colored
+          ? "rgb(" + G.r8[i] + "," + G.g8[i] + "," + G.b8[i] + ")"
+          : ink;
+        ctx2.fillText(ch, 12 + x * cw, 12 + y * lh);
+      }
+    }
+    c.toBlob(b => download(b, "ascii-art.png"), "image/png");
+  });
+
+  /* ---------- wiring ---------- */
+  const fmt = {
+    cols: v => Math.round(v), aspect: v => v.toFixed(2), bright: v => (v > 0 ? "+" : "") + v.toFixed(2),
+    contrast: v => (v > 0 ? "+" : "") + v.toFixed(2), gamma: v => v.toFixed(2),
+    ethresh: v => v.toFixed(2), fsize: v => v + "px"
+  };
+  Object.keys(fmt).forEach(id => {
+    const input = $(id), out = $(id + "v");
+    const sync = () => { out.textContent = fmt[id](parseFloat(input.value)); };
+    input.addEventListener("input", () => { sync(); id === "fsize" ? applyType() : build(); });
+    sync();
+  });
+
+  ["invert", "dither", "edges", "charset", "colormode", "custom"].forEach(id => {
+    $(id).addEventListener("input", () => {
+      if (id === "charset") el.custom.classList.toggle("hidden", $("charset").value !== "custom");
+      if (id === "edges") el.edgewrap.classList.toggle("hidden", !on("edges"));
+      build();
+    });
+  });
+
+  document.querySelectorAll(".viewsel button").forEach(b => {
+    b.addEventListener("click", () => {
+      document.querySelectorAll(".viewsel button").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+      el.sheet.className = "sheet " + (b.dataset.theme === "bar" ? "" : b.dataset.theme);
+    });
+  });
+
+  window.addEventListener("beforeunload", stopCam);
+  sample();
+})();
+</script>
+</body>
+</html>

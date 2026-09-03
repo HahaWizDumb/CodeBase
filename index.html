@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJ TRAP LORD • 2007 MIXTAPE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Impact&family=Creepster&family=Press+Start+2P&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a url('https://picsum.photos/id/1015/1920/1080') center/cover no-repeat fixed;
+            color: #00ff00;
+            font-family: 'Impact', sans-serif;
+            overflow-x: hidden;
+            image-rendering: pixelated;
+        }
+
+        /* Falling money / chain overlay effect */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            background: 
+                linear-gradient(transparent, rgba(255,215,0,0.15)),
+                repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255, 0, 255, 0.08) 20px, rgba(255, 0, 255, 0.08) 40px);
+            z-index: 1;
+            animation: trapvibe 8s linear infinite;
+        }
+
+        @keyframes trapvibe {
+            0% { background-position: 0 0; }
+            100% { background-position: 200px 200px; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 900px;
+            margin: 40px auto;
+            background: rgba(10, 10, 10, 0.85);
+            border: 8px solid #ffd700;
+            box-shadow: 0 0 30px #ff00ff, 0 0 60px #00ffff;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(#000, #330033);
+            border-bottom: 6px solid #ff00ff;
+        }
+
+        h1 {
+            font-size: 4.5rem;
+            color: #ffd700;
+            text-shadow: 
+                4px 4px 0 #ff00ff,
+                -4px -4px 0 #00ffff,
+                0 0 20px #ffd700;
+            margin: 0;
+            letter-spacing: 8px;
+            font-family: 'Creepster', cursive;
+            transform: skew(-8deg);
+        }
+
+        .subtitle {
+            font-size: 1.8rem;
+            color: #00ffcc;
+            text-shadow: 0 0 15px #00ffcc;
+            margin: 10px 0;
+        }
+
+        .dj-name {
+            font-size: 2.8rem;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 12px;
+            margin: 15px 0;
+            text-shadow: 0 0 20px #ff00ff;
+        }
+
+        .player {
+            background: #111;
+            border: 5px solid #ffd700;
+            padding: 15px;
+            margin: 25px auto;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 0 25px #ff00ff;
+        }
+
+        audio {
+            width: 100%;
+            filter: hue-rotate(200deg) contrast(1.2);
+        }
+
+        .section {
+            background: rgba(0, 0, 0, 0.8);
+            border: 4px dashed #00ff00;
+            padding: 20px;
+            margin: 25px 0;
+        }
+
+        h2 {
+            color: #ff00ff;
+            font-size: 2.2rem;
+            text-shadow: 3px 3px 0 #000;
+            border-bottom: 3px solid #ffd700;
+            padding-bottom: 8px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: #1a001a;
+            margin: 8px 0;
+            padding: 12px;
+            border-left: 6px solid #ffd700;
+            font-size: 1.3rem;
+            transition: all 0.3s;
+        }
+
+        li:hover {
+            transform: translateX(15px);
+            background: #330033;
+            color: #00ffcc;
+        }
+
+        .bling {
+            color: #ffd700;
+            font-size: 1.4rem;
+            text-shadow: 0 0 10px #ffd700;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .glitter {
+            animation: glitter 1.5s infinite alternate;
+        }
+
+        @keyframes glitter {
+            0% { text-shadow: 0 0 10px #ffd700; }
+            100% { text-shadow: 0 0 30px #ff00ff, 0 0 40px #00ffff; }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+
+    <div class="container">
+        <header>
+            <h1 class="glitter">TRAP LORD</h1>
+            <div class="dj-name">DJ [YOUR NAME] • 2007</div>
+            <p class="subtitle">Hosted by the streets • Mixed in the trap</p>
+            <div style="font-size: 2rem; color:#ffd700;">💎🔥💎 CHOPPED & SCREWED 💎🔥💎</div>
+        </header>
+
+        <div class="player">
+            <p style="color:#ff00ff; margin-bottom:10px;">NOW BANGING IN YOUR WHIP:</p>
+            <audio controls>
+                <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+                Your browser doesn't support the audio element. (Replace with real trap link)
+            </audio>
+            <p style="margin-top:8px; font-size:1.1rem; color:#00ffcc;">— "Trap House Anthem" (2007) —</p>
+        </div>
+
+        <div class="section">
+            <h2>TRACKLIST 🔥</h2>
+            <ul>
+                <li><span class="bling">01.</span> Gucci Mane - Icy (Chopped & Screwed)</li>
+                <li><span class="bling">02.</span> DJ Screw - June 27th (Traplord Edition)</li>
+                <li><span class="bling">03.</span> Zaytoven x Plies - Go Stupid</li>
+                <li><span class="bling">04.</span> Three 6 Mafia - Stay Fly (2007 Remix)</li>
+                <li><span class="bling">05.</span> Young Jeezy - Put On (For The City)</li>
+                <li><span class="bling">06.</span> Project Pat - Chickenhead (Slowed + Reverb)</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>TRAP LORD STATUS</h2>
+            <p style="font-size:1.4rem; line-height:1.6;">
+                💰 100K in the trunk<br>
+                🏠 Trap house boomin'<br>
+                🚘 Candy paint drippin'<br>
+                📼 Tapes still sellin' out the trunk<br>
+                <span style="color:#ff00ff;">"If you ain't from the hood, stay out my comments"</span>
+            </p>
+        </div>
+
+        <div class="section" style="text-align:center;">
+            <h2 style="border:none;">BOOK DJ TRAP LORD FOR YOUR TRAP PARTY</h2>
+            <p style="font-size:2rem; color:#ffd700;">📞 404-TRAP-GOD</p>
+            <p style="color:#00ffcc;">MySpace | AIM | Yahoo | Triller</p>
+        </div>
+
+        <footer>
+            © 2007 TRAP LORD ENT. • ALL RIGHTS RESERVED IN THE STREETS • NO SNITCHING
+        </footer>
+    </div>
+
+    <!-- Optional: Auto-playing background vibe (comment out if annoying) -->
+    <!--
+    <audio autoplay loop style="display:none;">
+        <source src="your-trap-beat.mp3" type="audio/mpeg">
+    </audio>
+    -->
+</body>
+</html>
