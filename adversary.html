@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ADVERSARY: The Ashfall Contract</title>
+<style>
+  :root{
+    --stage-w: 960px;
+    --navy:#141c2c;
+    --navy-lt:#243350;
+    --chrome-hi:#c9d2e0;
+    --chrome-lo:#5b6880;
+    --orange:#ff8a12;
+    --orange-dk:#a34c00;
+    --gold:#ffcf3a;
+    --toxic:#8dff3a;
+    --blood:#c2352b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:#0a0f18;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.022) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.022) 0 1px, transparent 1px 4px),
+      radial-gradient(ellipse at 50% 0%, #1d2a42 0%, #0a0f18 70%);
+    font-family: Verdana, Geneva, sans-serif;
+    color:#cdd6e4;
+    display:flex; flex-direction:column; align-items:center;
+    padding:14px 10px 40px;
+  }
+
+  .portal-head{
+    width:100%; max-width:var(--stage-w);
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap:12px; margin-bottom:8px;
+  }
+  .logo{
+    font-family:"Arial Black","Arial Bold",Arial,sans-serif;
+    font-size:30px; letter-spacing:-1.5px; line-height:1;
+    color:var(--gold);
+    text-shadow:2px 2px 0 #000, 4px 4px 0 rgba(0,0,0,.45);
+    transform:skewX(-7deg);
+  }
+  .logo span{color:var(--orange)}
+  .portal-head .tagline{
+    font-size:10px; color:#7f8ca2; padding-bottom:4px;
+  }
+
+  .cabinet{
+    width:100%; max-width:var(--stage-w);
+    border:2px solid #000;
+    border-radius:6px;
+    padding:5px;
+    background:linear-gradient(180deg,var(--chrome-hi) 0%, #8d99ad 12%, var(--chrome-lo) 50%, #39445a 100%);
+    box-shadow:0 0 0 1px rgba(255,255,255,.25) inset, 0 14px 30px rgba(0,0,0,.65);
+  }
+  .screen{
+    position:relative;
+    border:2px solid #000;
+    background:#05070c;
+    border-radius:3px;
+    overflow:hidden;
+    box-shadow:0 0 22px rgba(0,0,0,.9) inset;
+  }
+  canvas{display:block;width:100%;height:auto;image-rendering:auto;cursor:none;touch-action:none}
+
+  /* ---------- overlay screens ---------- */
+  .veil{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:26px;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(46,66,102,.95) 0%, rgba(8,12,20,.97) 68%);
+  }
+  .veil.on{display:flex}
+  .veil h1{
+    font-family:"Arial Black",Arial,sans-serif;
+    font-size:clamp(30px,5.2vw,58px); line-height:.92; margin:0;
+    letter-spacing:-2px; transform:skewX(-6deg);
+    color:#fff;
+    text-shadow:0 2px 0 #7a3b00, 0 4px 0 #4a2400, 0 7px 14px rgba(0,0,0,.8);
+  }
+  .veil h1 em{font-style:normal;display:block;color:var(--orange);font-size:.52em;letter-spacing:0}
+  .veil p{max-width:560px;font-size:12px;line-height:1.75;color:#a9b6ca}
+  .kbd{
+    display:inline-block;padding:1px 6px;border-radius:3px;
+    background:linear-gradient(180deg,#e8edf5,#9aa6ba);
+    color:#111;border:1px solid #000;font-size:11px;font-weight:bold;
+  }
+
+  .btn{
+    font-family:"Arial Black",Arial,sans-serif;
+    font-size:19px; letter-spacing:.5px;
+    padding:11px 30px; margin-top:6px;
+    color:#2a1400;
+    border:2px solid #000; border-radius:5px;
+    background:linear-gradient(180deg,#ffd58a 0%, var(--orange) 45%, var(--orange-dk) 100%);
+    box-shadow:0 0 0 1px rgba(255,255,255,.5) inset, 0 5px 0 #4a2200, 0 9px 14px rgba(0,0,0,.55);
+    cursor:pointer; transition:transform .06s, box-shadow .06s;
+  }
+  .btn:hover{background:linear-gradient(180deg,#ffe2ab 0%, #ff9c33 45%, #b85800 100%)}
+  .btn:active{transform:translateY(4px);box-shadow:0 0 0 1px rgba(255,255,255,.5) inset,0 1px 0 #4a2200}
+  .btn:focus-visible{outline:3px solid var(--toxic);outline-offset:3px}
+
+  .briefing{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
+    margin:16px 0 6px;width:100%;max-width:640px;
+  }
+  .brief-cell{
+    border:1px solid #000;border-radius:4px;padding:9px 8px;
+    background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(0,0,0,.35));
+    text-align:left;
+  }
+  .brief-cell b{display:block;font-size:9px;color:#8fa0bb;font-weight:normal;margin-bottom:3px}
+  .brief-cell i{font-style:normal;font-family:"Arial Black",Arial;font-size:15px;color:var(--gold)}
+
+  /* ---------- HUD ---------- */
+  .hud{
+    display:grid; gap:5px; margin-top:5px;
+    grid-template-columns:1.15fr 1fr 1fr 1fr 1.35fr;
+  }
+  .gauge{
+    border:2px solid #000;border-radius:4px;padding:6px 8px;
+    background:linear-gradient(180deg,#2c3a56,#151d2e 60%,#0d1320);
+    box-shadow:0 1px 0 rgba(255,255,255,.18) inset;
+    min-width:0;
+  }
+  .gauge b{display:block;font-size:9px;font-weight:normal;color:#7e8da6;letter-spacing:.4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gauge i{font-style:normal;font-family:"Arial Black",Arial,sans-serif;font-size:17px;color:#fff;text-shadow:0 0 9px rgba(141,255,58,.35)}
+  #gScore i{color:var(--gold)}
+  #gWind i{color:var(--toxic)}
+  #gShots i{color:#ff9f5c}
+
+  .bar{height:7px;border:1px solid #000;border-radius:2px;background:#070a11;margin-top:5px;overflow:hidden}
+  .bar div{height:100%;width:100%;background:linear-gradient(90deg,#3aff9e,#8dff3a 60%,#ffcf3a)}
+
+  .ticker{
+    margin-top:5px;border:2px solid #000;border-radius:4px;
+    background:#080c14;color:#79889f;font-size:10.5px;
+    padding:6px 10px;line-height:1.6;min-height:30px;
+  }
+  .ticker b{color:var(--blood);font-family:"Arial Black",Arial;letter-spacing:.5px}
+  .ticker u{text-decoration:none;color:#c9d4e6}
+
+  .credits{
+    width:100%;max-width:var(--stage-w);margin-top:12px;
+    font-size:10px;color:#5d6a80;line-height:1.7;
+    border-top:1px solid #1e2839;padding-top:9px;
+  }
+  .credits b{color:#8794aa;font-weight:normal}
+
+  .medals{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:14px 0 4px;max-width:640px}
+  .medal{
+    font-size:10px;padding:5px 10px;border:1px solid #000;border-radius:12px;
+    background:linear-gradient(180deg,#3c3013,#20190a);color:#6b6350;
+  }
+  .medal.got{background:linear-gradient(180deg,#ffe08a,#c88b12);color:#3a2600;font-weight:bold;box-shadow:0 0 12px rgba(255,207,58,.4)}
+
+  @media (max-width:720px){
+    .hud{grid-template-columns:1fr 1fr 1fr}
+    .logo{font-size:22px}
+  }
+  @media (prefers-reduced-motion:reduce){ .btn{transition:none} }
+</style>
+</head>
+<body>
+
+<div class="portal-head">
+  <div class="logo">MOST<span>FUN</span>GAMEZ<span>.</span>NET</div>
+  <div class="tagline">shockwave &amp; flash &middot; 4,102,884 plays &middot; rated 4.5 stars by 12 people</div>
+</div>
+
+<div class="cabinet">
+  <div class="screen">
+    <canvas id="cv" width="960" height="560" aria-label="Sniper scope view"></canvas>
+
+    <!-- TITLE -->
+    <div class="veil on" id="vTitle">
+      <h1>ADVERSARY<em>the ashfall contract</em></h1>
+      <p>He has been standing on that slab since before there was a word for the hill you are lying on.
+         You have ten rounds, one ridge line, and a crosswind coming off the ash that will not hold still.
+         The scope does not lie to you. Neither will the mirage, if you learn to read it.</p>
+      <p style="color:#7e8da6">
+        Move the mouse to lay the scope &middot; click to fire &middot; hold <span class="kbd">SPACE</span> to steady your breathing
+      </p>
+      <button class="btn" id="btnStart">PLAY GAME</button>
+    </div>
+
+    <!-- BRIEFING -->
+    <div class="veil" id="vBrief">
+      <h1 style="font-size:38px">SHOT <em id="bShot" style="font-size:.6em">1 OF 10</em></h1>
+      <div class="briefing">
+        <div class="brief-cell"><b>range to target</b><i id="bRange">—</i></div>
+        <div class="brief-cell"><b>spotter's wind call</b><i id="bWind">—</i></div>
+        <div class="brief-cell"><b>suggested holdover</b><i id="bHold">—</i></div>
+      </div>
+      <p id="bTip" style="margin:6px 0 10px"></p>
+      <button class="btn" id="btnGo">TAKE THE SHOT</button>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="veil" id="vEnd">
+      <h1 id="eGrade">CONTRACT CLOSED</h1>
+      <p id="eLine" style="font-size:13px;color:#dbe3ef"></p>
+      <div class="briefing" style="max-width:640px">
+        <div class="brief-cell"><b>final score</b><i id="eScore">0</i></div>
+        <div class="brief-cell"><b>rounds on target</b><i id="eHits">0 / 10</i></div>
+        <div class="brief-cell"><b>best single round</b><i id="eBest">0</i></div>
+      </div>
+      <div class="medals" id="eMedals"></div>
+      <button class="btn" id="btnAgain">PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <div class="hud">
+    <div class="gauge" id="gScore"><b>SCORE</b><i id="hScore">0</i></div>
+    <div class="gauge" id="gShots"><b>ROUNDS LEFT</b><i id="hShots">10</i></div>
+    <div class="gauge"><b>RANGE</b><i id="hRange">— m</i></div>
+    <div class="gauge" id="gWind"><b>WIND (SPOTTER)</b><i id="hWind">—</i></div>
+    <div class="gauge"><b>BREATH</b><i id="hBreath" style="font-size:12px">steady</i><div class="bar"><div id="hBar"></div></div></div>
+  </div>
+
+  <div class="ticker" id="ticker">
+    <b>INFERNAL WIRE</b> &nbsp; <u>Standing by. The wire updates whenever you embarrass yourself.</u>
+  </div>
+</div>
+
+<div class="credits">
+  <b>Ballistics note:</b> rounds are solved with the analytic quadratic-drag model — velocity decays as dv/dt = −kv², so
+  time of flight is t(R) = (e^{kR} − 1)/(k·v₀). Drop is ½gt² measured against a 350&nbsp;m zero, and crosswind drift uses the
+  lag-time method: the round is pushed by the wind for exactly as long as drag has made it late. Muzzle velocity 850&nbsp;m/s.
+  Mirage boils off the ash plain and runs with the true wind, not the spotter's guess — your spotter is off by up to
+  1.5&nbsp;m/s and he knows it.
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ══════════════════════════════════════════════════════════
+   CONSTANTS
+   ══════════════════════════════════════════════════════════ */
+const cv  = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+const CX = W/2, CY = 272;          // scope centre
+const SCOPE_R = 246;               // scope radius, px
+const FOV_MILS = 14;               // mils across the scope diameter
+const PPM = (SCOPE_R*2) / FOV_MILS;// pixels per milliradian
+
+const V0 = 850;                    // muzzle velocity, m/s
+const K  = 0.0006;                 // quadratic drag coefficient
+const G  = 9.81;
+const ZERO = 350;                  // zero range, m
+const TOTAL_SHOTS = 10;
+
+const TGT_W = 3.4;                 // target physical width, m (for scale)
+
+/* analytic quadratic-drag time of flight */
+const tof  = R => (Math.exp(K*R) - 1) / (K*V0);
+const ELEV = (0.5*G*tof(ZERO)**2) / ZERO;   // launch angle, radians
+
+function solve(R, wind){
+  const t    = tof(R);
+  const drop = 0.5*G*t*t - ELEV*R;          // metres low, relative to zero
+  const lag  = t - R/V0;                     // drag-induced lateral lag time
+  const drift= wind * lag;                   // metres downwind
+  return { dropMils: drop/R*1000, driftMils: drift/R*1000, t, lag };
+}
+
+/* ══════════════════════════════════════════════════════════
+   TARGET GEOMETRY  (local metres, +y is up, origin = mass centre)
+   ══════════════════════════════════════════════════════════ */
+const ZONES = [
+  { id:'dome',  label:'SKULLCAP',      pts:250, kind:'c', x:0,     y:1.62, r:0.28 },
+  { id:'maw',   label:'OPEN THROAT',   pts:100, kind:'e', x:0,     y:1.10, rx:0.40, ry:0.22 },
+  { id:'hornL', label:'LEFT HORN',     pts:50,  kind:'c', x:-0.58, y:1.90, r:0.25 },
+  { id:'hornR', label:'RIGHT HORN',    pts:50,  kind:'c', x:0.58,  y:1.90, r:0.25 },
+  { id:'head',  label:'SKULL',         pts:75,  kind:'e', x:0,     y:1.35, rx:0.42, ry:0.44 },
+  { id:'torso', label:'RIBS',          pts:25,  kind:'e', x:0,     y:0.30, rx:0.72, ry:0.80 },
+  { id:'wingL', label:'WING MEMBRANE', pts:10,  kind:'e', x:-1.25, y:0.85, rx:0.65, ry:0.95 },
+  { id:'wingR', label:'WING MEMBRANE', pts:10,  kind:'e', x:1.25,  y:0.85, rx:0.65, ry:0.95 },
+  { id:'slab',  label:'BASALT SLAB',   pts:5,   kind:'r', x0:-1.05, x1:1.05, y0:-1.58, y1:-1.14 },
+];
+function hitZone(x,y){
+  for(const z of ZONES){
+    if(z.kind==='c' && (x-z.x)**2+(y-z.y)**2 <= z.r*z.r) return z;
+    if(z.kind==='e' && ((x-z.x)/z.rx)**2+((y-z.y)/z.ry)**2 <= 1) return z;
+    if(z.kind==='r' && x>=z.x0 && x<=z.x1 && y>=z.y0 && y<=z.y1) return z;
+  }
+  return null;
+}
+
+/* ══════════════════════════════════════════════════════════
+   COPY
+   ══════════════════════════════════════════════════════════ */
+const ROASTS = [
+  "That round is still traveling. It will outlive you.",
+  "You held for a wind that stopped blowing four seconds ago, you absolute pleb.",
+  "The mirage was RIGHT THERE, boiling sideways, and you ignored it like a chud.",
+  "Somewhere a wind flag is laughing at you in a language you will never learn.",
+  "You aimed at where he was standing. Aim at where the bullet is going. Different sport.",
+  "Gravity: undefeated. You: not.",
+  "A round that misses by half a mil misses by exactly as much as one that misses by ten.",
+  "Your spotter has stopped calling wind and started praying, which is worse.",
+  "The ridge behind the Adversary now has a hole in it. The ridge did nothing to you.",
+  "You breathed. In the middle of it. Like some kind of mammal.",
+  "He didn't dodge. He didn't have to. That's the humiliating part.",
+  "That's the shot of a man who thinks 'holdover' is a type of sandwich.",
+  "You corrected the wrong direction. Confidently. That's the part that stings.",
+  "He felt the crack go past and smiled with the whole jaw. All of it.",
+  "Zeroed at three-fifty. It says so on the screen. It has said so the whole time.",
+];
+const WIRE = [
+  ["NINTH CIRCLE REZONED FOR MIXED USE","Damned to be rehoused during works. Works have no scheduled end."],
+  ["ADVERSARY NAMED EMPLOYER OF THE MILLENNIUM","Award presented by a panel he owns, catered by a panel he ate."],
+  ["SOUL INTAKE HITS RECORD HIGH FOR SIXTH YEAR","Growth attributed to 'the terms of service getting longer'."],
+  ["BRIMSTONE FUTURES RALLY ON MISSED SHOT","Traders describe the mood on the floor as 'vindicated'."],
+  ["PALACE OF ASH DENIES ANY SHOT WAS FIRED","Denial issued before the shot. Nobody has asked how."],
+  ["CONTRACT DEPARTMENT ADDS ELEVENTH SIGNATURE LINE","New line is on the reverse, in a colour humans cannot see."],
+  ["LAKE OF FIRE PASSES ANNUAL SAFETY INSPECTION","Inspector has been promoted, posthumously, and is very grateful."],
+  ["ADVERSARY ANNOUNCES HE HAS 'NEVER FELT BETTER'","Statement delivered in four voices, three of which were yours."],
+  ["MARKSMANSHIP GUILD LOWERS ENTRY STANDARDS AGAIN","Officials cite 'the applicant pool', while looking directly at you."],
+  ["CHOIR OF THE PIT ADDS A VERSE ABOUT TONIGHT","Verse is about you. It is not a kind verse. It scans beautifully."],
+  ["WIND SPEED DECLARED A MATTER OF FAITH","Anemometers confiscated. Believers instructed to guess and feel good."],
+  ["DAMNED PETITION FOR BETTER MARKSMEN","Petition rejected on the grounds that the current one is funnier."],
+];
+const MEDAL_DEFS = [
+  { id:'first',  name:'FIRST BLOOD',        hint:'land any round on the Adversary' },
+  { id:'dome',   name:'SKULLCAP',           hint:'put one through the crown of the skull' },
+  { id:'maw',    name:'DOWN THE THROAT',    hint:'drop a round into the open jaw' },
+  { id:'ears',   name:'BOTH HORNS',         hint:'clip each horn at least once' },
+  { id:'wind',   name:'WINDWHISPERER',      hint:'hit with a crosswind over 6 m/s' },
+  { id:'far',    name:'LONG CONTRACT',      hint:'hit the skull past 600 m' },
+  { id:'needle', name:'THREADED THE NEEDLE',hint:'throat shot past 550 m' },
+  { id:'flaw',   name:'NO NOTES',           hint:'ten rounds, ten hits' },
+];
+
+/* ══════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════ */
+let S = null;
+function newGame(){
+  S = {
+    phase:'title', shot:0, score:0, hits:0, best:0,
+    range:0, tAng:{x:0,y:0},
+    windBase:0, windNow:0, spotter:0,
+    aimMouse:{x:0,y:0}, sway:{x:0,y:0},
+    breath:1, holding:false,
+    t0:performance.now()/1000, time:0,
+    round:null, splashes:[], toasts:[],
+    medals:new Set(), earSeen:new Set(),
+    lastZone:null, boltUntil:0,
+  };
+}
+newGame();
+
+function setupShot(){
+  S.shot++;
+  S.range   = Math.round(320 + Math.random()*360);
+  S.windBase= (Math.random()*2-1) * 7.6;
+  S.spotter = S.windBase + (Math.random()*3-1.5);
+  S.tAng    = { x:(Math.random()*2-1)*3.2, y:(Math.random()*2-1)*2.0 };
+  S.aimMouse= { x:0, y:0 };
+  S.round   = null;
+  S.breath  = 1;
+  S.boltUntil = 0;
+}
+
+/* live wind wobbles around the base value */
+function trueWind(t){
+  return S.windBase
+       + 1.15*Math.sin(t*0.63 + 0.4)
+       + 0.70*Math.sin(t*1.77 + 2.1)
+       + 0.45*Math.sin(t*3.10 + 5.3);
+}
+
+/* ══════════════════════════════════════════════════════════
+   AUDIO
+   ══════════════════════════════════════════════════════════ */
+let AC = null;
+const audio = () => (AC ||= new (window.AudioContext||window.webkitAudioContext)());
+function noise(dur, gain, filt){
+  const ac=audio(), n=Math.floor(ac.sampleRate*dur);
+  const buf=ac.createBuffer(1,n,ac.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n)**2;
+  const src=ac.createBufferSource(); src.buffer=buf;
+  const bp=ac.createBiquadFilter(); bp.type='lowpass'; bp.frequency.value=filt;
+  const g=ac.createGain(); g.gain.value=gain;
+  src.connect(bp).connect(g).connect(ac.destination); src.start();
+}
+function tone(f0,f1,dur,gain,type='sine'){
+  const ac=audio(), o=ac.createOscillator(), g=ac.createGain();
+  o.type=type; o.frequency.setValueAtTime(f0,ac.currentTime);
+  o.frequency.exponentialRampToValueAtTime(Math.max(f1,1),ac.currentTime+dur);
+  g.gain.setValueAtTime(gain,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+dur);
+  o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime+dur);
+}
+const sfxShot  = () => { noise(0.35,0.55,2600); tone(180,42,0.42,0.4,'sawtooth'); };
+const sfxBolt  = () => { noise(0.05,0.22,3800); setTimeout(()=>noise(0.05,0.2,3200),190); };
+const sfxDing  = () => { tone(880,1760,0.30,0.22,'square'); };
+const sfxThud  = () => { tone(150,60,0.22,0.25,'sine'); noise(0.14,0.2,900); };
+const sfxDud   = () => { tone(120,70,0.3,0.16,'triangle'); };
+
+/* ══════════════════════════════════════════════════════════
+   FIRING
+   ══════════════════════════════════════════════════════════ */
+function fire(){
+  if(S.phase!=='play' || S.round || performance.now()<S.boltUntil) return;
+  const aim  = currentAim();
+  const wind = trueWind(S.time);
+  const sol  = solve(S.range, wind);
+  const impact = { x:aim.x + sol.driftMils, y:aim.y + sol.dropMils };
+
+  const lx =  (impact.x - S.tAng.x) * S.range/1000;
+  const ly = -(impact.y - S.tAng.y) * S.range/1000;
+  const z  = hitZone(lx,ly);
+
+  sfxShot();
+  S.round = { impact, zone:z, wind, at:S.time, shown:false, lx, ly };
+  S.boltUntil = performance.now()+950;
+
+  setTimeout(()=>{
+    if(!S.round) return;
+    S.round.shown = true;
+    resolveShot(S.round);
+  }, Math.max(260, sol.t*260));
+}
+
+function resolveShot(r){
+  const z = r.zone;
+  if(z){
+    S.score += z.pts; S.hits++; S.best = Math.max(S.best, z.pts);
+    splash(r.impact, z.id==='slab' ? '#b9c2cc' : '#ffb03a');
+    if(z.pts>=100) sfxDing(); else sfxThud();
+    toast(`${z.label} · +${z.pts}`, z.pts>=100 ? 'gold' : 'green');
+
+    award('first');
+    if(z.id==='dome'){ award('dome'); toast('MEDAL: DOME SPLITTER','gold'); }
+    if(z.id==='maw'){  award('maw'); }
+    if(z.id==='hornL'||z.id==='hornR'){
+      S.earSeen.add(z.id);
+      if(S.earSeen.size===2) award('ears');
+    }
+    if(Math.abs(r.wind)>6) award('wind');
+    if(S.range>600 && (z.id==='head'||z.id==='dome'||z.id==='maw')) award('far');
+    if(S.range>550 && z.id==='maw') award('needle');
+    wireLine(null, z);
+  } else {
+    splash(r.impact, '#cbb794'); sfxDud();
+    toast('MISS','red');
+    wireLine(ROASTS[(Math.random()*ROASTS.length)|0], null);
+  }
+  setTimeout(nextStep, 1500);
+}
+
+function award(id){ S.medals.add(id); }
+
+function nextStep(){
+  S.round = null;
+  if(S.shot >= TOTAL_SHOTS){
+    if(S.hits===TOTAL_SHOTS) award('flaw');
+    endGame();
+  } else {
+    setupShot(); showBriefing();
+  }
+}
+
+function splash(ang,color){
+  S.splashes.push({ ang:{...ang}, color, born:S.time, bits:Array.from({length:16},()=>({
+    a:Math.random()*Math.PI*2, v:14+Math.random()*46, s:1.4+Math.random()*3.2
+  }))});
+}
+function toast(text,tone){ S.toasts.push({text,tone,born:S.time}); }
+
+/* ══════════════════════════════════════════════════════════
+   DRAWING — the world
+   ══════════════════════════════════════════════════════════ */
+function currentAim(){
+  return { x:S.aimMouse.x + S.sway.x, y:S.aimMouse.y + S.sway.y };
+}
+function toScreen(ax,ay,aim){
+  return [ CX + (ax-aim.x)*PPM, CY + (ay-aim.y)*PPM ];
+}
+
+function drawWorld(aim){
+  const R = S.range;
+  const mPerMil = R/1000;
+  const pxPerM  = PPM/mPerMil;                    // px per metre at target
+  const [tx,ty] = toScreen(S.tAng.x, S.tAng.y, aim);
+  const groundY = ty + (1.58/mPerMil)*PPM;        // ground under the slab
+  const ridgeY  = ty - (18/mPerMil)*PPM;
+
+  // sulphur sky
+  const sky = ctx.createLinearGradient(0, ridgeY-320, 0, groundY);
+  sky.addColorStop(0,'#241033'); sky.addColorStop(.42,'#6b2438');
+  sky.addColorStop(.76,'#b45228'); sky.addColorStop(1,'#e0913f');
+  ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);
+
+  // far ridges
+  drawRidge(aim, ridgeY+40,  0.0, '#4a2138', 44, 340);
+  drawRidge(aim, ridgeY+120, 1.7, '#331726', 60, 210);
+
+  // ash haze
+  const haze = ctx.createLinearGradient(0, groundY-180, 0, groundY+20);
+  haze.addColorStop(0,'rgba(226,164,104,0)'); haze.addColorStop(1,'rgba(226,164,104,.5)');
+  ctx.fillStyle = haze; ctx.fillRect(0, groundY-180, W, 200);
+
+  // ash plain
+  const gnd = ctx.createLinearGradient(0, groundY, 0, H);
+  gnd.addColorStop(0,'#6b5449'); gnd.addColorStop(1,'#241b19');
+  ctx.fillStyle = gnd; ctx.fillRect(0, groundY, W, H-groundY);
+
+  // charred scrub, positioned in angle space so it parallaxes correctly
+  ctx.fillStyle='rgba(24,16,14,.6)';
+  for(let i=0;i<70;i++){
+    const a = ((i*37)%100)/100*24 - 12;
+    const d = 0.15 + ((i*53)%100)/100*3.4;
+    const [sx] = toScreen(S.tAng.x + a*(1+d*0.1), 0, aim);
+    const sy = groundY + d*32;
+    ctx.beginPath(); ctx.ellipse(sx, sy, 9+d*5, 2.4+d*1.4, 0, 0, 7); ctx.fill();
+  }
+
+  drawMirage(groundY);
+  drawTarget(tx, ty, pxPerM);
+  drawFlag(aim, groundY, pxPerM);
+}
+
+function drawRidge(aim, baseY, seed, color, amp, step){
+  const [ox] = toScreen(S.tAng.x, 0, aim);
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.moveTo(-200, H);
+  for(let x=-200; x<=W+200; x+=18){
+    const u = (x-ox)/step + seed*17;
+    const y = baseY - (Math.sin(u)*amp*0.55 + Math.sin(u*0.47+1.9)*amp*0.45 + Math.sin(u*2.3)*amp*0.12);
+    ctx.lineTo(x,y);
+  }
+  ctx.lineTo(W+200,H); ctx.closePath(); ctx.fill();
+}
+
+/* The Adversary — drawn in local metres, +y up, origin at the sternum */
+function drawTarget(tx,ty,pxPerM){
+  ctx.save();
+  ctx.translate(tx,ty);
+  ctx.scale(pxPerM, -pxPerM);     // flip so +y is up
+  ctx.lineJoin='round'; ctx.lineCap='round';
+
+  const el=(x,y,rx,ry,fill)=>{ctx.fillStyle=fill;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,7);ctx.fill();};
+  const stroke=(w,c)=>{ctx.lineWidth=w;ctx.strokeStyle=c;ctx.stroke();};
+
+  /* ── ember glow under the slab ── */
+  const em=ctx.createRadialGradient(0,-1.5,0.1,0,-1.5,2.2);
+  em.addColorStop(0,'rgba(255,150,40,.55)'); em.addColorStop(.5,'rgba(200,60,20,.22)');
+  em.addColorStop(1,'rgba(120,20,10,0)');
+  ctx.fillStyle=em; ctx.beginPath(); ctx.ellipse(0,-1.5,2.2,0.65,0,0,7); ctx.fill();
+
+  /* ── basalt slab ── */
+  ctx.fillStyle='#241d22'; ctx.fillRect(-1.05,-1.58,2.10,0.44);
+  ctx.fillStyle='#3b3038'; ctx.fillRect(-1.05,-1.20,2.10,0.06);
+  ctx.globalAlpha=.5;
+  for(let i=0;i<7;i++){
+    ctx.beginPath(); ctx.moveTo(-0.95+i*0.32,-1.58); ctx.lineTo(-0.88+i*0.32,-1.16); stroke(0.028,'#100c10');
+  }
+  ctx.globalAlpha=1;
+
+  /* ── wings, behind everything ── */
+  for(const s of [-1,1]){
+    ctx.save(); ctx.scale(s,1);
+    const mem=ctx.createLinearGradient(0.4,1.6,1.9,-0.1);
+    mem.addColorStop(0,'#5e2029'); mem.addColorStop(.55,'#3c1119'); mem.addColorStop(1,'#22090f');
+    ctx.fillStyle=mem;
+    ctx.beginPath();
+    ctx.moveTo(0.45,1.00);
+    ctx.quadraticCurveTo(1.40,2.00, 1.98,1.58);          // leading edge
+    ctx.quadraticCurveTo(1.55,1.30, 1.72,0.72);          // scallop 1
+    ctx.quadraticCurveTo(1.30,0.62, 1.30,0.12);          // scallop 2
+    ctx.quadraticCurveTo(0.95,0.22, 0.62,-0.12);         // scallop 3
+    ctx.quadraticCurveTo(0.42,0.45, 0.45,1.00);
+    ctx.closePath(); ctx.fill();
+    // finger struts
+    ctx.globalAlpha=.85;
+    const E=[1.12,1.30];
+    for(const T of [[1.98,1.58],[1.72,0.72],[1.30,0.12],[0.62,-0.12]]){
+      ctx.beginPath(); ctx.moveTo(E[0],E[1]); ctx.lineTo(T[0],T[1]); stroke(0.055,'#180810');
+    }
+    ctx.beginPath(); ctx.moveTo(0.45,1.00); ctx.lineTo(E[0],E[1]); stroke(0.075,'#180810');
+    ctx.globalAlpha=1;
+    ctx.restore();
+  }
+
+  /* ── digitigrade legs and hooves ── */
+  for(const s of [-1,1]){
+    ctx.save(); ctx.scale(s,1);
+    ctx.fillStyle='#5d2320';
+    ctx.beginPath();
+    ctx.moveTo(0.12,-0.30); ctx.lineTo(0.50,-0.34);
+    ctx.lineTo(0.58,-0.92); ctx.lineTo(0.34,-1.14);
+    ctx.lineTo(0.14,-1.14); ctx.lineTo(0.20,-0.80);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#1c1116';
+    ctx.beginPath(); ctx.ellipse(0.26,-1.16,0.20,0.09,0,0,7); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ── torso ── */
+  const tor=ctx.createRadialGradient(-0.22,0.55,0.1,0,0.30,1.15);
+  tor.addColorStop(0,'#9b3a2e'); tor.addColorStop(.55,'#71241f'); tor.addColorStop(1,'#3a1013');
+  el(0,0.30,0.72,0.80,tor);
+  // sternum + rib shadows
+  ctx.globalAlpha=.4;
+  for(let i=0;i<4;i++){
+    for(const s of [-1,1]){
+      ctx.beginPath();
+      ctx.moveTo(s*0.06,0.72-i*0.24);
+      ctx.quadraticCurveTo(s*0.46,0.66-i*0.24, s*0.58,0.42-i*0.24);
+      stroke(0.05,'#2a0b0d');
+    }
+  }
+  ctx.globalAlpha=1;
+  ctx.globalAlpha=.22; el(-0.30,0.70,0.26,0.34,'#ffb27a'); ctx.globalAlpha=1;
+
+  /* ── arms ── */
+  for(const s of [-1,1]){
+    ctx.save(); ctx.scale(s,1);
+    ctx.fillStyle='#7c2822';
+    ctx.beginPath();
+    ctx.moveTo(0.58,0.92); ctx.quadraticCurveTo(1.02,0.55, 0.92,0.02);
+    ctx.quadraticCurveTo(0.86,-0.30, 0.68,-0.42);
+    ctx.lineTo(0.52,-0.30); ctx.quadraticCurveTo(0.72,-0.10, 0.70,0.18);
+    ctx.quadraticCurveTo(0.68,0.52, 0.42,0.78);
+    ctx.closePath(); ctx.fill();
+    // claws
+    ctx.fillStyle='#e8dcc0';
+    for(let i=0;i<3;i++){
+      ctx.beginPath(); ctx.moveTo(0.56+i*0.07,-0.38);
+      ctx.lineTo(0.62+i*0.07,-0.60); ctx.lineTo(0.68+i*0.07,-0.38); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /* ── neck ── */
+  ctx.fillStyle='#6d221d';
+  ctx.beginPath(); ctx.moveTo(-0.24,0.86); ctx.lineTo(0.24,0.86);
+  ctx.lineTo(0.20,1.16); ctx.lineTo(-0.20,1.16); ctx.closePath(); ctx.fill();
+
+  /* ── skull ── */
+  const hd=ctx.createRadialGradient(-0.14,1.52,0.05,0,1.35,0.62);
+  hd.addColorStop(0,'#b8674a'); hd.addColorStop(.6,'#8a3628'); hd.addColorStop(1,'#4d1614');
+  el(0,1.35,0.42,0.44,hd);
+  // cheekbones
+  ctx.globalAlpha=.45;
+  for(const s of [-1,1]){
+    ctx.beginPath(); ctx.moveTo(s*0.10,1.30); ctx.quadraticCurveTo(s*0.34,1.26, s*0.38,1.44);
+    stroke(0.045,'#3a0f0e');
+  }
+  ctx.globalAlpha=1;
+
+  /* ── horns (the 50-point zones) ── */
+  for(const s of [-1,1]){
+    ctx.save(); ctx.scale(s,1);
+    const hn=ctx.createLinearGradient(0.2,1.6,0.85,2.2);
+    hn.addColorStop(0,'#c9b189'); hn.addColorStop(1,'#7d6743');
+    ctx.fillStyle=hn;
+    ctx.beginPath();
+    ctx.moveTo(0.14,1.60);
+    ctx.quadraticCurveTo(0.62,1.72, 0.82,2.20);          // outer edge up to the tip
+    ctx.quadraticCurveTo(0.62,1.90, 0.34,1.78);          // back down the inner edge
+    ctx.quadraticCurveTo(0.24,1.70, 0.14,1.60);
+    ctx.closePath(); ctx.fill();
+    // growth ridges
+    ctx.globalAlpha=.55;
+    for(let i=1;i<=4;i++){
+      const u=i/5;
+      ctx.beginPath();
+      ctx.moveTo(0.14+u*0.52, 1.60+u*0.28);
+      ctx.lineTo(0.20+u*0.56, 1.70+u*0.36);
+      stroke(0.035,'#4d3c22');
+    }
+    ctx.globalAlpha=1;
+    ctx.restore();
+  }
+
+  /* ── skullcap (achievement zone) — kept pale so it reads through mirage ── */
+  const cap=ctx.createRadialGradient(-0.10,1.76,0.03,0,1.62,0.34);
+  cap.addColorStop(0,'#f0e3c2'); cap.addColorStop(1,'#a88f62');
+  el(0,1.62,0.28,0.28,cap);
+  ctx.globalAlpha=.55; el(-0.09,1.74,0.09,0.055,'#fffdf2'); ctx.globalAlpha=1;
+  ctx.beginPath(); ctx.ellipse(0,1.62,0.28,0.28,0,0,7); stroke(0.03,'#6b5636');
+
+  /* ── eyes ── */
+  for(const s of [-1,1]){
+    ctx.globalAlpha=.35; el(s*0.22,1.38,0.16,0.13,'#ff9a2a'); ctx.globalAlpha=1;
+    el(s*0.22,1.38,0.095,0.075,'#ffd24a');
+    ctx.fillStyle='#1a0b06';
+    ctx.beginPath(); ctx.ellipse(s*0.22,1.38,0.026,0.062,0,0,7); ctx.fill();
+  }
+
+  /* ── open throat (the 100-point zone) ── */
+  ctx.save();
+  ctx.beginPath(); ctx.ellipse(0,1.10,0.40,0.22,0,0,7);
+  const thr=ctx.createRadialGradient(0,1.06,0.02,0,1.10,0.42);
+  thr.addColorStop(0,'#ffb040'); thr.addColorStop(.45,'#c23a10'); thr.addColorStop(1,'#4a0d06');
+  ctx.fillStyle=thr; ctx.fill();
+  ctx.clip();
+  ctx.fillStyle='#f2e8cc';
+  for(let i=0;i<8;i++){
+    const x=-0.36+i*0.098;
+    ctx.beginPath(); ctx.moveTo(x,1.34); ctx.lineTo(x+0.048,1.14); ctx.lineTo(x+0.096,1.34); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x,0.86); ctx.lineTo(x+0.048,1.06); ctx.lineTo(x+0.096,0.86); ctx.fill();
+  }
+  ctx.restore();
+  ctx.beginPath(); ctx.ellipse(0,1.10,0.40,0.22,0,0,7); stroke(0.04,'#2e0d08');
+
+  ctx.restore();
+}
+
+function drawFlag(aim, groundY, pxPerM){
+  const w = trueWind(S.time);
+  const [fx] = toScreen(S.tAng.x - 4.6, 0, aim);
+  const poleH = 1.9*pxPerM, base = groundY + 6;
+  ctx.strokeStyle='#1d1512'; ctx.lineWidth=Math.max(1.4,pxPerM*0.05);
+  ctx.beginPath(); ctx.moveTo(fx,base); ctx.lineTo(fx,base-poleH); ctx.stroke();
+
+  const lift = Math.min(1, Math.abs(w)/8);         // 0 = limp, 1 = straight out
+  const dir  = Math.sign(w) || 1;
+  const L    = poleH*0.62;
+  ctx.fillStyle='#e8dcc0';
+  ctx.beginPath(); ctx.moveTo(fx, base-poleH);
+  for(let i=0;i<=10;i++){
+    const u=i/10, sag=(1-lift)*L*0.85*u*u;
+    const ripple=Math.sin(S.time*7 + u*6)*L*0.05*lift;
+    ctx.lineTo(fx + dir*L*u, base-poleH + sag + ripple);
+  }
+  for(let i=10;i>=0;i--){
+    const u=i/10, sag=(1-lift)*L*0.85*u*u;
+    const ripple=Math.sin(S.time*7 + u*6)*L*0.05*lift;
+    ctx.lineTo(fx + dir*L*u, base-poleH + sag + ripple + L*0.30);
+  }
+  ctx.closePath(); ctx.fill();
+}
+
+/* Heat mirage, read on the ground between shooter and target — never over
+   the target itself. Boils upward and runs with the TRUE wind, so it is the
+   honest cue when the spotter's call is wrong. */
+function drawMirage(groundY){
+  const w    = trueWind(S.time);
+  const rows = 22, gap = 9;
+  const top  = groundY + 4;
+  ctx.save();
+  ctx.globalCompositeOperation = 'overlay';
+  for(let i=0;i<rows;i++){
+    const y = top + i*gap;
+    if(y > H) break;
+    const ph  = S.time*(0.9 + Math.abs(w)*0.6)*Math.sign(w||1) + i*0.7;
+    const amp = 6 + Math.abs(w)*2.2;
+    const fade = 1 - i/rows;                 // strongest near the horizon
+    ctx.globalAlpha = (0.10 + 0.05*Math.abs(Math.sin(i*1.3))) * fade;
+    ctx.strokeStyle = i%2 ? '#ffffff' : '#5d5c3e';
+    ctx.lineWidth = 3.6;
+    ctx.beginPath();
+    for(let x=0;x<=W;x+=14){
+      ctx.lineTo(x, y + Math.sin(x/58 + ph)*amp*0.38 + Math.sin(x/23 - ph*1.6)*amp*0.18);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ══════════════════════════════════════════════════════════
+   DRAWING — scope furniture
+   ══════════════════════════════════════════════════════════ */
+function drawScope(){
+  // black surround
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0,0,W,H);
+  ctx.arc(CX,CY,SCOPE_R,0,7,true);
+  ctx.fillStyle='#05070b'; ctx.fill('evenodd');
+  ctx.restore();
+
+  // eyebox vignette
+  const vg=ctx.createRadialGradient(CX,CY,SCOPE_R*0.55,CX,CY,SCOPE_R);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(.82,'rgba(0,0,0,.35)'); vg.addColorStop(1,'rgba(0,0,0,.92)');
+  ctx.fillStyle=vg; ctx.beginPath(); ctx.arc(CX,CY,SCOPE_R,0,7); ctx.fill();
+
+  // lens ring
+  ctx.lineWidth=8; ctx.strokeStyle='#0b0e14';
+  ctx.beginPath(); ctx.arc(CX,CY,SCOPE_R+4,0,7); ctx.stroke();
+  ctx.lineWidth=2; ctx.strokeStyle='rgba(180,200,230,.30)';
+  ctx.beginPath(); ctx.arc(CX,CY,SCOPE_R-1,0,7); ctx.stroke();
+
+  // reticle
+  ctx.save();
+  ctx.beginPath(); ctx.arc(CX,CY,SCOPE_R-2,0,7); ctx.clip();
+  ctx.strokeStyle='rgba(12,16,10,.88)'; ctx.fillStyle='rgba(12,16,10,.88)';
+
+  ctx.lineWidth=2.2;
+  ctx.beginPath();
+  ctx.moveTo(CX-SCOPE_R,CY); ctx.lineTo(CX-13,CY);
+  ctx.moveTo(CX+13,CY);      ctx.lineTo(CX+SCOPE_R,CY);
+  ctx.moveTo(CX,CY-SCOPE_R); ctx.lineTo(CX,CY-13);
+  ctx.moveTo(CX,CY+13);      ctx.lineTo(CX,CY+SCOPE_R);
+  ctx.stroke();
+
+  ctx.lineWidth=1.1;
+  for(let m=1;m<=6;m++){
+    const d=m*PPM;
+    // holdover stadia below centre, with windage ticks
+    if(CY+d < CY+SCOPE_R){
+      const halfW = m%2===0 ? 26 : 15;
+      ctx.beginPath(); ctx.moveTo(CX-halfW,CY+d); ctx.lineTo(CX+halfW,CY+d); ctx.stroke();
+      for(const s of [-1,1]) for(let k=1;k<=3;k++){
+        ctx.beginPath(); ctx.arc(CX+s*k*PPM, CY+d, 1.9, 0, 7); ctx.fill();
+      }
+      if(m%2===0){
+        ctx.font='bold 10px Verdana'; ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.fillText(String(m), CX+31, CY+d);
+      }
+    }
+    // windage dots on the horizontal
+    for(const s of [-1,1]){
+      ctx.beginPath(); ctx.arc(CX+s*d, CY, 2.1, 0, 7); ctx.fill();
+    }
+    // elevation dots above
+    ctx.beginPath(); ctx.arc(CX, CY-d, 2.1, 0, 7); ctx.fill();
+  }
+  ctx.fillStyle='rgba(180,20,20,.9)';
+  ctx.beginPath(); ctx.arc(CX,CY,2.2,0,7); ctx.fill();
+  ctx.restore();
+}
+
+function drawEffects(aim){
+  // splashes
+  S.splashes = S.splashes.filter(sp => S.time-sp.born < 1.5);
+  for(const sp of S.splashes){
+    const age=S.time-sp.born, [sx,sy]=toScreen(sp.ang.x,sp.ang.y,aim);
+    ctx.globalAlpha = Math.max(0,1-age/1.5);
+    ctx.fillStyle = sp.color;
+    for(const b of sp.bits){
+      const d=b.v*age*(1-age*0.35);
+      ctx.beginPath();
+      ctx.arc(sx+Math.cos(b.a)*d, sy+Math.sin(b.a)*d + age*age*70, b.s*(1-age*0.5), 0, 7);
+      ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+  // toasts
+  S.toasts = S.toasts.filter(t => S.time-t.born < 2.0);
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  S.toasts.forEach((t,i)=>{
+    const age=S.time-t.born;
+    const y=CY-160 - i*34 - Math.min(age,0.35)*26;
+    ctx.globalAlpha=Math.max(0,1-Math.max(0,age-1.3)/0.7);
+    ctx.font='bold 27px "Arial Black", Arial, sans-serif';
+    ctx.lineWidth=6; ctx.strokeStyle='#000'; ctx.strokeText(t.text,CX,y);
+    ctx.fillStyle = t.tone==='gold' ? '#ffcf3a' : t.tone==='red' ? '#ff5c47' : '#8dff3a';
+    ctx.fillText(t.text,CX,y);
+    ctx.globalAlpha=1;
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   LOOP
+   ══════════════════════════════════════════════════════════ */
+function frame(){
+  requestAnimationFrame(frame);
+  const now = performance.now()/1000;
+  S.time = now - S.t0;
+
+  if(S.phase==='play'){
+    // breathing
+    if(S.holding && S.breath>0) S.breath = Math.max(0, S.breath - 0.0075);
+    else if(!S.holding && S.breath<1) S.breath = Math.min(1, S.breath + 0.0042);
+    const steady = (S.holding && S.breath>0) ? 0.14 : 1;
+    const amp = 0.40 * steady * (S.breath<=0 ? 2.1 : 1);
+    S.sway.x = Math.sin(S.time*1.15)*amp*0.55 + Math.sin(S.time*2.7+1.1)*amp*0.20;
+    S.sway.y = Math.sin(S.time*0.92+0.6)*amp*0.75 + Math.sin(S.time*3.3)*amp*0.16;
+
+    const aim = currentAim();
+    drawWorld(aim);
+    if(S.round && S.round.shown) drawImpactMark(aim);
+    drawScope();
+    drawEffects(aim);
+    drawCorners();
+    updateHUD();
+  } else {
+    ctx.fillStyle='#070a10'; ctx.fillRect(0,0,W,H);
+  }
+}
+
+function drawImpactMark(aim){
+  const [ix,iy]=toScreen(S.round.impact.x, S.round.impact.y, aim);
+  ctx.strokeStyle = S.round.zone ? 'rgba(255,190,70,.95)' : 'rgba(190,200,215,.9)';
+  ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(ix,iy,11,0,7); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(ix-17,iy); ctx.lineTo(ix-6,iy); ctx.moveTo(ix+6,iy); ctx.lineTo(ix+17,iy);
+  ctx.moveTo(ix,iy-17); ctx.lineTo(ix,iy-6); ctx.moveTo(ix,iy+6); ctx.lineTo(ix,iy+17);
+  ctx.stroke();
+}
+
+function drawCorners(){
+  ctx.font='bold 12px Verdana'; ctx.textBaseline='top';
+  ctx.textAlign='left';
+  ctx.fillStyle='rgba(141,255,58,.75)';
+  ctx.fillText(`RNG ${S.range} m`, 16, 14);
+  ctx.fillText(`ZERO ${ZERO} m  ·  MV ${V0} m/s`, 16, 32);
+  ctx.textAlign='right';
+  ctx.fillText(`SHOT ${S.shot} / ${TOTAL_SHOTS}`, W-16, 14);
+  ctx.fillText(`SCORE ${S.score}`, W-16, 32);
+
+  if(performance.now() < S.boltUntil && !S.round?.shown){
+    ctx.textAlign='center'; ctx.fillStyle='rgba(255,160,60,.9)';
+    ctx.font='bold 14px Verdana';
+    ctx.fillText('CYCLING BOLT', CX, CY+SCOPE_R+18);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   HUD / DOM
+   ══════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+function fmtWind(w){
+  const d = w>=0 ? 'RIGHT' : 'LEFT';
+  return `${Math.abs(w).toFixed(1)} ${d}`;
+}
+function updateHUD(){
+  $('hScore').textContent = S.score;
+  $('hShots').textContent = TOTAL_SHOTS - S.shot + (S.round?1:0);
+  $('hRange').textContent = S.range + ' m';
+  $('hWind').textContent  = fmtWind(S.spotter);
+  $('hBar').style.width   = (S.breath*100).toFixed(0)+'%';
+  $('hBreath').textContent= S.breath<=0 ? 'out of air' : S.holding ? 'held' : 'steady';
+}
+function wireLine(roast, zone){
+  const t = $('ticker');
+  if(roast){
+    const [head,sub] = WIRE[(Math.random()*WIRE.length)|0];
+    t.innerHTML = `<b>INFERNAL WIRE</b> &nbsp; <u>${head}</u> — ${sub}<br><span style="color:#ff7a5c">${roast}</span>`;
+  } else {
+    t.innerHTML = `<b>INFERNAL WIRE</b> &nbsp; <u>PIT CONFIRMS INCIDENT</u> — round struck the ${zone.label.toLowerCase()}. The Adversary's press office calls it "a scheduled renovation." <span style="color:#8dff3a">+${zone.pts}</span>`;
+  }
+}
+
+function showBriefing(){
+  S.phase='brief';
+  const sol = solve(S.range, S.spotter);
+  $('bShot').textContent  = `${S.shot} OF ${TOTAL_SHOTS}`;
+  $('bRange').textContent = S.range + ' m';
+  $('bWind').textContent  = fmtWind(S.spotter) + ' m/s';
+  $('bHold').textContent  = `${sol.dropMils.toFixed(1)} MIL UP`;
+  $('bTip').textContent   = tipFor(sol);
+  veil('vBrief');
+}
+function tipFor(sol){
+  const dir = S.spotter>=0 ? 'left' : 'right';
+  const wm  = Math.abs(sol.driftMils).toFixed(1);
+  if(S.range>600) return `Long one. Hold ${sol.dropMils.toFixed(1)} mils of elevation and about ${wm} mils ${dir}. Watch the mirage — your spotter is guessing and he knows what he's looking at.`;
+  if(Math.abs(S.spotter)>5) return `Heavy crosswind coming off the ash. Roughly ${wm} mils ${dir}, and the gusts are not done with you yet.`;
+  return `Gentle. Hold ${sol.dropMils.toFixed(1)} mils up, a touch ${dir}, and let the reticle settle before you break the shot.`;
+}
+
+function veil(id){
+  for(const v of document.querySelectorAll('.veil')) v.classList.toggle('on', v.id===id);
+  cv.style.cursor = id ? 'default' : 'none';
+}
+
+function startPlay(){
+  S.phase='play';
+  veil(null);
+  cv.focus();
+}
+
+function endGame(){
+  S.phase='end';
+  $('eScore').textContent = S.score;
+  $('eHits').textContent  = `${S.hits} / ${TOTAL_SHOTS}`;
+  $('eBest').textContent  = S.best;
+  const g = S.score>=1400 ? ['THE MORNING STAR FALLS','Ten rounds, one ridge, and the oldest contract in the book finally closed.']
+          : S.score>=900  ? ['CONTRACT FULFILLED','Clean work. The Pit has cancelled the intake quota and several of its managers.']
+          : S.score>=450  ? ['PARTIALLY EFFECTIVE','He is smaller than he was. That is the most anyone can say for you.']
+          : S.hits>0      ? ['DISAPPOINTING','You made noise, put a hole in a ridge, and gave the Adversary something to laugh about.']
+                          : ['TOTAL WASHOUT','Ten rounds. Ten holes in the landscape. The wind won every single one.'];
+  $('eGrade').textContent = g[0];
+  $('eLine').textContent  = g[1];
+  $('eMedals').innerHTML  = MEDAL_DEFS.map(m =>
+    `<div class="medal ${S.medals.has(m.id)?'got':''}" title="${m.hint}">${S.medals.has(m.id)?'★ ':'· '}${m.name}</div>`
+  ).join('');
+  veil('vEnd');
+}
+
+/* ══════════════════════════════════════════════════════════
+   INPUT
+   ══════════════════════════════════════════════════════════ */
+function pointerToAim(e){
+  const r = cv.getBoundingClientRect();
+  const mx = (e.clientX - r.left) * (W / r.width);
+  const my = (e.clientY - r.top)  * (H / r.height);
+  S.aimMouse.x = Math.max(-11, Math.min(11, (mx - CX)/PPM));
+  S.aimMouse.y = Math.max(-9,  Math.min(9,  (my - CY)/PPM));
+}
+cv.addEventListener('pointermove', e => { if(S.phase==='play') pointerToAim(e); });
+cv.addEventListener('pointerdown', e => {
+  if(S.phase!=='play') return;
+  e.preventDefault(); pointerToAim(e); fire();
+});
+cv.addEventListener('contextmenu', e => e.preventDefault());
+
+window.addEventListener('keydown', e => {
+  if(e.code==='Space'){
+    if(S.phase==='play'){ e.preventDefault(); S.holding=true; }
+  }
+  if(e.code==='Enter'){
+    if(S.phase==='title') $('btnStart').click();
+    else if(S.phase==='brief') $('btnGo').click();
+    else if(S.phase==='end') $('btnAgain').click();
+  }
+});
+window.addEventListener('keyup', e => { if(e.code==='Space') S.holding=false; });
+window.addEventListener('blur', () => { S.holding=false; });
+
+$('btnStart').onclick = () => { audio(); sfxBolt(); setupShot(); showBriefing(); };
+$('btnGo').onclick    = () => { sfxBolt(); startPlay(); };
+$('btnAgain').onclick = () => {
+  const keep = S.medals;
+  newGame(); S.medals = keep;
+  $('ticker').innerHTML = '<b>INFERNAL WIRE</b> &nbsp; <u>Fresh contract. He has not moved.</u>';
+  setupShot(); showBriefing();
+};
+
+frame();
+})();
+</script>
+</body>
+</html>
