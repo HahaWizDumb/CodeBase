@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Country Map Selector</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+        }
+        header {
+            background: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        #map {
+            height: 70vh;
+            width: 100%;
+            background: #ddd;
+        }
+        .controls {
+            padding: 15px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+        button {
+            padding: 8px 16px;
+            background: #007cba;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        #selected-list {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            min-height: 50px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .country-tag {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            margin: 3px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        .info {
+            padding: 10px;
+            background: #e7f3ff;
+            border-left: 4px solid #007cba;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🌍 Multi-Country Map Selector</h1>
+        <p>Click countries to select / highlight them. Great for visualizing groups and relations.</p>
+    </header>
+
+    <div class="controls">
+        <button onclick="clearSelection()">Clear All Selections</button>
+        <button onclick="randomSelection()">Random 5 Countries</button>
+        <button onclick="toggleLabels()">Toggle Country Labels</button>
+        <span id="count">Selected: <strong>0</strong> countries</span>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="controls">
+        <strong>Selected Countries:</strong>
+        <div id="selected-list"></div>
+    </div>
+
+    <div class="info">
+        <strong>How to use:</strong> Click any country to toggle highlight. Multiple selections allowed. 
+        Use the buttons above to clear or demo. Perfect for simplifying views of country groups &amp; relations.
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        const map = L.map('map', {
+            center: [20, 0],
+            zoom: 2,
+            minZoom: 1,
+            maxZoom: 8
+        });
+
+        // OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            className: 'map-tiles'
+        }).addTo(map);
+
+        // Layer for highlighted countries
+        let highlightedLayer = L.layerGroup().addTo(map);
+        let selectedCountries = new Map(); // ISO_A3 -> feature
+
+        // World countries GeoJSON (public source)
+        const geojsonUrl = 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json';
+
+        let countryLayer;
+        let labelsVisible = true;
+
+        // Fetch and add countries
+        fetch(geojsonUrl)
+            .then(response => response.json())
+            .then(data => {
+                countryLayer = L.geoJSON(data, {
+                    style: {
+                        fillColor: '#3388ff',
+                        weight: 1,
+                        opacity: 1,
+                        color: '#666',
+                        fillOpacity: 0.2
+                    },
+                    onEachFeature: function(feature, layer) {
+                        const name = feature.properties.name || 'Unknown';
+                        const code = feature.properties.iso_a3 || 'N/A';
+                        
+                        layer.bindTooltip(name, { 
+                            permanent: false, 
+                            direction: 'center',
+                            className: 'country-tooltip'
+                        });
+                        
+                        layer.on({
+                            click: function(e) {
+                                toggleCountry(feature, layer, e);
+                            },
+                            mouseover: function(e) {
+                                if (!selectedCountries.has(code)) {
+                                    layer.setStyle({
+                                        fillOpacity: 0.5,
+                                        weight: 3
+                                    });
+                                }
+                            },
+                            mouseout: function(e) {
+                                if (!selectedCountries.has(code)) {
+                                    resetStyle(layer);
+                                }
+                            }
+                        });
+                    }
+                }).addTo(map);
+            })
+            .catch(err => {
+                console.error('Failed to load map data:', err);
+                alert('Could not load country boundaries. Please check your internet connection.');
+            });
+
+        function resetStyle(layer) {
+            layer.setStyle({
+                fillColor: '#3388ff',
+                weight: 1,
+                fillOpacity: 0.2
+            });
+        }
+
+        function toggleCountry(feature, layer, e) {
+            const code = feature.properties.iso_a3;
+            const name = feature.properties.name;
+            
+            if (selectedCountries.has(code)) {
+                // Deselect
+                selectedCountries.delete(code);
+                highlightedLayer.removeLayer(layer); // remove highlight copy
+                resetStyle(layer);
+            } else {
+                // Select
+                selectedCountries.set(code, feature);
+                
+                // Create highlighted version
+                const highlight = L.geoJSON(feature, {
+                    style: {
+                        fillColor: '#28a745',
+                        weight: 3,
+                        color: '#1e5c2b',
+                        fillOpacity: 0.7
+                    }
+                }).addTo(highlightedLayer);
+                
+                // Keep original layer subtle
+                layer.setStyle({
+                    fillOpacity: 0.3,
+                    weight: 1
+                });
+            }
+            
+            updateUI();
+        }
+
+        function updateUI() {
+            const countEl = document.getElementById('count');
+            countEl.innerHTML = `Selected: <strong>${selectedCountries.size}</strong> countries`;
+            
+            const listEl = document.getElementById('selected-list');
+            listEl.innerHTML = '';
+            
+            if (selectedCountries.size === 0) {
+                listEl.innerHTML = '<em>None selected yet. Click countries on the map.</em>';
+                return;
+            }
+            
+            selectedCountries.forEach((feature, code) => {
+                const name = feature.properties.name;
+                const tag = document.createElement('span');
+                tag.className = 'country-tag';
+                tag.textContent = `${name} (${code})`;
+                tag.onclick = () => {
+                    // Find and toggle the country again
+                    countryLayer.eachLayer(l => {
+                        if (l.feature.properties.iso_a3 === code) {
+                            toggleCountry(l.feature, l);
+                        }
+                    });
+                };
+                listEl.appendChild(tag);
+            });
+        }
+
+        function clearSelection() {
+            highlightedLayer.clearLayers();
+            selectedCountries.clear();
+            
+            if (countryLayer) {
+                countryLayer.eachLayer(layer => {
+                    resetStyle(layer);
+                });
+            }
+            
+            updateUI();
+        }
+
+        function randomSelection() {
+            clearSelection();
+            if (!countryLayer) return;
+            
+            const layers = [];
+            countryLayer.eachLayer(l => layers.push(l));
+            
+            // Shuffle and pick 5
+            const shuffled = layers.sort(() => 0.5 - Math.random());
+            const selected = shuffled.slice(0, 5);
+            
+            selected.forEach(layer => {
+                toggleCountry(layer.feature, layer);
+            });
+        }
+
+        function toggleLabels() {
+            labelsVisible = !labelsVisible;
+            if (countryLayer) {
+                countryLayer.eachLayer(layer => {
+                    if (labelsVisible) {
+                        layer.openTooltip();
+                    } else {
+                        layer.closeTooltip();
+                    }
+                });
+            }
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                clearSelection();
+            }
+        });
+
+        // Make map responsive
+        window.addEventListener('resize', () => {
+            map.invalidateSize();
+        });
+    </script>
+</body>
+</html>

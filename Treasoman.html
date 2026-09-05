@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solomon's Treasures • Wisdom in a Violent World</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            color: #ffd700;
+            font-family: 'Press Start 2P', system-ui;
+            overflow: hidden;
+            image-rendering: pixelated;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        canvas {
+            border: 8px solid #ffd700;
+            box-shadow: 0 0 40px #ff0000,
+                        0 0 80px #8b0000;
+            image-rendering: pixelated;
+        }
+        
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 25px;
+            border: 4px solid #ffd700;
+            font-size: 18px;
+            text-shadow: 0 0 10px #ff0000;
+            z-index: 100;
+            min-width: 280px;
+        }
+        
+        #news-ticker {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(139, 0, 0, 0.95);
+            color: #ffd700;
+            padding: 12px 20px;
+            font-size: 14px;
+            border: 4px solid #ff0000;
+            white-space: nowrap;
+            overflow: hidden;
+            box-shadow: 0 0 20px #ff0000;
+            z-index: 100;
+        }
+        
+        .ticker-content {
+            display: inline-block;
+            animation: ticker 25s linear infinite;
+        }
+        
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        #wisdom-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 520px;
+            background: #111;
+            border: 8px solid #ffd700;
+            box-shadow: 0 0 60px #ff0000;
+            padding: 30px;
+            text-align: center;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #wisdom-modal h2 {
+            font-size: 22px;
+            margin: 0 0 20px 0;
+            color: #ffd700;
+            text-shadow: 0 0 15px #ff0000;
+        }
+        
+        #wisdom-text {
+            font-family: 'Press Start 2P', system-ui;
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 20px 0;
+            color: #ddd;
+        }
+        
+        button {
+            background: #8b0000;
+            color: #ffd700;
+            border: 4px solid #ffd700;
+            padding: 15px 40px;
+            font-family: 'Press Start 2P', system-ui;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            background: #ffd700;
+            color: #8b0000;
+        }
+        
+        #instructions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px;
+            border: 4px solid #ffd700;
+            font-size: 12px;
+            max-width: 260px;
+            line-height: 1.4;
+            z-index: 100;
+        }
+        
+        .title {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #8b0000;
+            color: #ffd700;
+            padding: 8px 40px;
+            border: 6px solid #ffd700;
+            font-size: 28px;
+            text-shadow: 0 0 20px #ff0000;
+            white-space: nowrap;
+            z-index: 200;
+            box-shadow: 0 0 30px #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div class="title">SOLOMON'S TREASURES</div>
+        
+        <canvas id="canvas" width="960" height="640"></canvas>
+        
+        <!-- HUD -->
+        <div id="hud">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>🧠 WISDOM COLLECTED: <span id="score">0</span>/8</div>
+                <div id="health">❤️❤️❤️❤️</div>
+            </div>
+            <div style="margin-top:8px; font-size:12px; opacity:0.8;">
+                WALK THE VIOLENT WORLD • AVOID THE CHAOS
+            </div>
+        </div>
+        
+        <!-- Real-time news ticker (simulates today's conflicts) -->
+        <div id="news-ticker">
+            <div class="ticker-content" id="ticker-content">
+                🔥 LIVE FROM THE VIOLENT WORLD • March 28, 2026 • 
+                Eastern Europe frontlines intensify • Middle East ceasefire collapses • 
+                Indo-Pacific naval standoff escalates • Global protests turn violent • 
+                Cyber attacks cripple cities • Solomon's wisdom is your only shield • 
+                🔥 LIVE FROM THE VIOLENT WORLD • March 28, 2026 • 
+                Eastern Europe frontlines intensify • Middle East ceasefire collapses • 
+                Indo-Pacific naval standoff escalates • Global protests turn violent • 
+                Cyber attacks cripple cities • Solomon's wisdom is your only shield • 
+            </div>
+        </div>
+        
+        <!-- Instructions -->
+        <div id="instructions">
+            WASD / ARROW KEYS = Move<br>
+            Collect glowing 📜 treasures<br>
+            Each contains Solomon's wisdom<br>
+            in a world torn by real-time conflict<br>
+            <span style="color:#ff0000">Beware the red chaos zones...</span>
+        </div>
+        
+        <!-- Wisdom modal -->
+        <div id="wisdom-modal">
+            <h2>✨ SOLOMON'S TREASURE FOUND ✨</h2>
+            <div id="wisdom-text"></div>
+            <button onclick="closeWisdom()">CONTINUE THE JOURNEY</button>
+            <div style="margin-top:15px; font-size:10px; opacity:0.6;">
+                Collected in the fires of today's wars
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game constants
+        const WORLD_WIDTH = 2400;
+        const WORLD_HEIGHT = 1800;
+        const CANVAS_WIDTH = canvas.width;
+        const CANVAS_HEIGHT = canvas.height;
+        
+        // Player
+        let player = {
+            x: 300,
+            y: 900,
+            size: 28,
+            speed: 6
+        };
+        
+        // Camera
+        let camera = { x: 0, y: 0 };
+        
+        // Keyboard
+        let keys = {};
+        
+        // Treasures of Solomon (8 treasures scattered across the violent world)
+        let treasures = [
+            {
+                x: 650, y: 450,
+                collected: false,
+                title: "Treasures of the East",
+                wisdom: "A gentle answer turns away wrath, but a harsh word stirs up anger.\n— Proverbs 15:1\n\nIn the shadow of today's Eastern Europe frontlines, choose peace."
+            },
+            {
+                x: 1250, y: 320,
+                collected: false,
+                title: "Treasures of the Middle East",
+                wisdom: "The wise store up knowledge, but the mouth of a fool invites ruin.\n— Proverbs 10:14\n\nAmid collapsing ceasefires and endless desert fires, seek knowledge."
+            },
+            {
+                x: 420, y: 1250,
+                collected: false,
+                title: "Treasures of the South",
+                wisdom: "Better a patient person than a warrior, a person who controls their temper than one who takes a city.\n— Proverbs 16:32\n\nIn Africa's burning conflicts, patience is the true victory."
+            },
+            {
+                x: 1780, y: 680,
+                collected: false,
+                title: "Treasures of the Pacific",
+                wisdom: "Pride goes before destruction, a haughty spirit before a fall.\n— Proverbs 16:18\n\nNaval standoffs and rising tensions — pride blinds empires."
+            },
+            {
+                x: 950, y: 1550,
+                collected: false,
+                title: "Treasures of the North",
+                wisdom: "The fear of the Lord is the beginning of wisdom, and knowledge of the Holy One is understanding.\n— Proverbs 9:10\n\nEven as cities burn and protests rage, wisdom begins with awe."
+            },
+            {
+                x: 2050, y: 1420,
+                collected: false,
+                title: "Treasures of the Cyber Realm",
+                wisdom: "The tongue has the power of life and death, and those who love it will eat its fruit.\n— Proverbs 18:21\n\nIn a world of invisible cyber wars, words can still destroy nations."
+            },
+            {
+                x: 280, y: 680,
+                collected: false,
+                title: "Treasures of the Streets",
+                wisdom: "Do not be overcome by evil, but overcome evil with good.\n— Romans 12:21 (echoing Solomon)\n\nGlobal protests rage — choose good in the chaos."
+            },
+            {
+                x: 1620, y: 280,
+                collected: false,
+                title: "Final Treasure of Wisdom",
+                wisdom: "Wisdom is more precious than rubies; nothing you desire can compare with her.\n— Proverbs 8:11\n\nYou have walked the violent world of 2026... may this be your shield."
+            }
+        ];
+        
+        let score = 0;
+        let health = 4;
+        let gameOver = false;
+        
+        // Simple chaos particles (red violence indicators that move)
+        let chaosParticles = [];
+        for (let i = 0; i < 35; i++) {
+            chaosParticles.push({
+                x: Math.random() * WORLD_WIDTH,
+                y: Math.random() * WORLD_HEIGHT,
+                vx: (Math.random() - 0.5) * 3,
+                vy: (Math.random() - 0.5) * 3,
+                size: Math.random() * 12 + 6,
+                life: 120
+            });
+        }
+        
+        // Background conflict zones (fixed violent areas that mimic real 2026 news)
+        const conflictZones = [
+            { x: 100, y: 200, w: 520, h: 380, label: "EASTERN EUROPE\nFRONTLINES", color: "#8b0000" },
+            { x: 1100, y: 100, w: 480, h: 420, label: "MIDDLE EAST\nCEASEFIRE COLLAPSED", color: "#8b0000" },
+            { x: 1800, y: 900, w: 380, h: 340, label: "INDO-PACIFIC\nNAVAL STANDOFF", color: "#8b0000" },
+            { x: 300, y: 1100, w: 420, h: 310, label: "GLOBAL PROTESTS\nTURN VIOLENT", color: "#8b0000" },
+            { x: 1400, y: 1400, w: 310, h: 290, label: "CYBER WAR ZONES", color: "#8b0000" }
+        ];
+        
+        // Keyboard controls
+        window.addEventListener('keydown', e => {
+            keys[e.key.toLowerCase()] = true;
+        });
+        
+        window.addEventListener('keyup', e => {
+            keys[e.key.toLowerCase()] = false;
+        });
+        
+        function updateCamera() {
+            camera.x = player.x - CANVAS_WIDTH / 2;
+            camera.y = player.y - CANVAS_HEIGHT / 2;
+            
+            // Clamp camera
+            if (camera.x < 0) camera.x = 0;
+            if (camera.y < 0) camera.y = 0;
+            if (camera.x > WORLD_WIDTH - CANVAS_WIDTH) camera.x = WORLD_WIDTH - CANVAS_WIDTH;
+            if (camera.y > WORLD_HEIGHT - CANVAS_HEIGHT) camera.y = WORLD_HEIGHT - CANVAS_HEIGHT;
+        }
+        
+        function checkTreasureCollision() {
+            for (let i = 0; i < treasures.length; i++) {
+                const t = treasures[i];
+                if (t.collected) continue;
+                
+                const dx = player.x - t.x;
+                const dy = player.y - t.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < player.size + 28) {
+                    t.collected = true;
+                    score++;
+                    document.getElementById('score').textContent = score;
+                    
+                    // Show wisdom
+                    showWisdomModal(t.title, t.wisdom);
+                    
+                    // Victory check
+                    if (score >= treasures.length) {
+                        setTimeout(() => {
+                            alert("🏆 YOU COLLECTED ALL OF SOLOMON'S TREASURES!\n\nIn a violent world of 2026 conflict, you walked through the fire and emerged wise.\n\nThe game is yours. Wisdom wins.");
+                        }, 600);
+                    }
+                    return;
+                }
+            }
+        }
+        
+        function checkChaosCollision() {
+            // Simple damage from chaos particles (violent world)
+            for (let i = 0; i < chaosParticles.length; i++) {
+                const p = chaosParticles[i];
+                const dx = player.x - p.x;
+                const dy = player.y - p.y;
+                if (Math.sqrt(dx*dx + dy*dy) < player.size + p.size) {
+                    health--;
+                    document.getElementById('health').innerHTML = '❤️'.repeat(health);
+                    // Push player away
+                    player.x += (dx > 0 ? 40 : -40);
+                    player.y += (dy > 0 ? 40 : -40);
+                    
+                    if (health <= 0) {
+                        gameOver = true;
+                        alert("💥 YOU WERE CONSUMED BY THE VIOLENT WORLD!\n\nThe conflicts of 2026 claimed you.\nRefresh the page to try again with Solomon's wisdom.");
+                    }
+                    break;
+                }
+            }
+        }
+        
+        function updateChaosParticles() {
+            for (let i = 0; i < chaosParticles.length; i++) {
+                const p = chaosParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                
+                // Bounce off world edges
+                if (p.x < 0 || p.x > WORLD_WIDTH) p.vx *= -1;
+                if (p.y < 0 || p.y > WORLD_HEIGHT) p.vy *= -1;
+                
+                // Respawn when dead
+                if (p.life <= 0) {
+                    p.x = Math.random() * WORLD_WIDTH;
+                    p.y = Math.random() * WORLD_HEIGHT;
+                    p.life = 120 + Math.random() * 80;
+                }
+            }
+        }
+        
+        function drawBackground() {
+            // Base violent world ground
+            ctx.fillStyle = '#0f2a0f';
+            ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+            
+            // Cracked earth / war-torn texture
+            ctx.strokeStyle = '#3a1a1a';
+            ctx.lineWidth = 3;
+            for (let i = 0; i < 120; i++) {
+                const x = (i * 47) % WORLD_WIDTH;
+                const y = (i * 31) % WORLD_HEIGHT;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + 80, y + 40);
+                ctx.stroke();
+            }
+            
+            // Draw conflict zones (red hot areas)
+            for (let zone of conflictZones) {
+                ctx.fillStyle = zone.color;
+                ctx.globalAlpha = 0.65;
+                ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
+                ctx.globalAlpha = 1;
+                
+                // Warning border
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 12;
+                ctx.strokeRect(zone.x + 8, zone.y + 8, zone.w - 16, zone.h - 16);
+                
+                // Labels (mimicking real-time 2026 news)
+                ctx.fillStyle = '#ffd700';
+                ctx.font = 'bold 22px "Press Start 2P"';
+                ctx.textAlign = 'center';
+                const lines = zone.label.split('\n');
+                ctx.fillText(lines[0], zone.x + zone.w / 2, zone.y + 55);
+                ctx.fillText(lines[1] || '', zone.x + zone.w / 2, zone.y + 85);
+                
+                // Fire effect on zones
+                ctx.fillStyle = '#ff8800';
+                ctx.globalAlpha = 0.4 + Math.sin(Date.now() / 200) * 0.3;
+                ctx.fillRect(zone.x + 30, zone.y + 30, zone.w - 60, zone.h - 60);
+                ctx.globalAlpha = 1;
+            }
+            
+            // Scattered debris / war remnants
+            ctx.fillStyle = '#555';
+            for (let i = 0; i < 80; i++) {
+                const x = (i * 73) % WORLD_WIDTH;
+                const y = (i * 59) % WORLD_HEIGHT;
+                ctx.fillRect(x, y, 18, 6);
+            }
+        }
+        
+        function drawTreasures() {
+            for (let t of treasures) {
+                if (t.collected) continue;
+                
+                // Glowing treasure
+                const pulse = Math.sin(Date.now() / 150) * 8 + 28;
+                
+                // Shadow glow
+                ctx.shadowColor = '#ffd700';
+                ctx.shadowBlur = 40;
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, pulse, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Core treasure
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#b8860b';
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, 24, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Scroll icon
+                ctx.fillStyle = '#111';
+                ctx.font = 'bold 32px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('📜', t.x, t.y + 4);
+                
+                // Sparkles
+                ctx.shadowColor = '#ffff00';
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = '#ffff00';
+                ctx.fillText('✧', t.x + Math.sin(Date.now()/300) * 18, t.y - 30);
+                ctx.fillText('✧', t.x - Math.sin(Date.now()/300) * 18, t.y + 30);
+            }
+        }
+        
+        function drawChaosParticles() {
+            ctx.shadowBlur = 12;
+            for (let p of chaosParticles) {
+                const alpha = p.life / 120;
+                ctx.shadowColor = '#ff0000';
+                ctx.fillStyle = `rgba(255, 40, 0, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Inner spark
+                ctx.fillStyle = '#ffcc00';
+                ctx.shadowBlur = 4;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+        }
+        
+        function drawPlayer() {
+            const screenX = player.x - camera.x;
+            const screenY = player.y - camera.y;
+            
+            // Player shadow
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath();
+            ctx.ellipse(screenX + 4, screenY + 18, 22, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // Explorer body
+            ctx.fillStyle = '#00bfff';
+            ctx.fillRect(screenX - 18, screenY - 22, 36, 36);
+            
+            // Head
+            ctx.fillStyle = '#f4a261';
+            ctx.beginPath();
+            ctx.arc(screenX, screenY - 12, 14, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Hat / wisdom hood
+            ctx.fillStyle = '#111';
+            ctx.beginPath();
+            ctx.moveTo(screenX - 18, screenY - 22);
+            ctx.lineTo(screenX + 18, screenY - 22);
+            ctx.lineTo(screenX, screenY - 38);
+            ctx.fill();
+            
+            // Eyes (looking forward)
+            ctx.fillStyle = '#000';
+            ctx.fillRect(screenX - 8, screenY - 16, 5, 5);
+            ctx.fillRect(screenX + 3, screenY - 16, 5, 5);
+            
+            // Walking animation
+            const bob = Math.sin(Date.now() / 120) * 3;
+            ctx.fillStyle = '#111';
+            ctx.fillRect(screenX - 14, screenY + 12 + bob, 10, 14); // left leg
+            ctx.fillRect(screenX + 4, screenY + 12 - bob, 10, 14);  // right leg
+        }
+        
+        function gameLoop() {
+            if (gameOver) return;
+            
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            
+            // Update player movement
+            let moved = false;
+            if (keys['w'] || keys['arrowup']) { player.y -= player.speed; moved = true; }
+            if (keys['s'] || keys['arrowdown']) { player.y += player.speed; moved = true; }
+            if (keys['a'] || keys['arrowleft']) { player.x -= player.speed; moved = true; }
+            if (keys['d'] || keys['arrowright']) { player.x += player.speed; moved = true; }
+            
+            // World bounds
+            player.x = Math.max(30, Math.min(player.x, WORLD_WIDTH - 30));
+            player.y = Math.max(30, Math.min(player.y, WORLD_HEIGHT - 30));
+            
+            updateCamera();
+            updateChaosParticles();
+            checkTreasureCollision();
+            checkChaosCollision();
+            
+            // DRAW EVERYTHING IN WORLD SPACE
+            ctx.save();
+            ctx.translate(-camera.x, -camera.y);
+            
+            drawBackground();
+            drawChaosParticles();
+            drawTreasures();
+            
+            ctx.restore();
+            
+            // Draw player (screen space)
+            drawPlayer();
+            
+            // Mini HUD on canvas (collected count again)
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold 18px "Press Start 2P"';
+            ctx.textAlign = 'left';
+            ctx.fillText(`📜 ${score}/8`, 30, 40);
+            
+            // Request next frame
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function showWisdomModal(title, text) {
+            const modal = document.getElementById('wisdom-modal');
+            document.getElementById('wisdom-text').innerHTML = `<strong>${title}</strong><br><br>${text.replace(/\n/g, '<br>')}`;
+            modal.style.display = 'flex';
+            
+            // Pause movement while reading wisdom
+            keys = {};
+        }
+        
+        window.closeWisdom = function() {
+            document.getElementById('wisdom-modal').style.display = 'none';
+        };
+        
+        // Start the game
+        function startGame() {
+            console.log('%c✅ Solomon\'s Treasures HTML game loaded! A side-scrolling/top-down explorer in a real-time violent world.', 'color:#ffd700; font-size:14px');
+            gameLoop();
+        }
+        
+        // Auto-start
+        window.onload = startGame;
+    </script>
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DroneShow Builder - RGB Drone Image Display</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <style>
+        body {
+            margin: 0; padding: 0; font-family: Arial, sans-serif; background: #111; color: #eee; overflow: hidden;
+        }
+        .container {
+            display: flex; height: 100vh;
+        }
+        .sidebar {
+            width: 320px; background: #1f1f1f; padding: 20px; overflow-y: auto; border-right: 2px solid #333;
+        }
+        .main {
+            flex: 1; display: flex; flex-direction: column;
+        }
+        .preview-area {
+            flex: 1; position: relative; background: #000;
+        }
+        .tabs {
+            display: flex; background: #222;
+        }
+        .tab {
+            padding: 12px 24px; cursor: pointer; background: #333;
+        }
+        .tab.active {
+            background: #0af; color: white;
+        }
+        canvas {
+            display: block;
+        }
+        .controls {
+            padding: 15px 0;
+        }
+        button {
+            background: #0af; color: white; border: none; padding: 10px 16px; margin: 5px 0; cursor: pointer; border-radius: 4px; width: 100%;
+        }
+        button:hover { background: #0df; }
+        input, select {
+            width: 100%; padding: 8px; margin: 8px 0; background: #333; border: 1px solid #555; color: white; border-radius: 4px;
+        }
+        .grid {
+            display: grid; gap: 1px; background: #222; padding: 1px; margin: 10px 0;
+        }
+        .drone {
+            width: 100%; aspect-ratio: 1/1; background: #444; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #aaa;
+        }
+        .output {
+            background: #000; padding: 15px; font-family: monospace; font-size: 12px; max-height: 200px; overflow: auto; white-space: pre;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h1>🚁 DroneShow Builder</h1>
+            
+            <div class="controls">
+                <label>Formation (Rows × Columns)</label>
+                <input type="number" id="rows" value="10" min="5" max="50">
+                <input type="number" id="cols" value="15" min="5" max="50">
+                
+                <button onclick="updateGrid()">Update Grid</button>
+                
+                <label>Upload Image</label>
+                <input type="file" id="imageUpload" accept="image/*">
+                
+                <label>Brightness</label>
+                <input type="range" id="brightness" value="100" min="50" max="200" oninput="applyImage()">
+                
+                <button onclick="randomTestPattern()">Random Test Pattern</button>
+                <button onclick="generateShowCode()">Generate Drone Show Code (JSON)</button>
+            </div>
+            
+            <h3>2D Preview</h3>
+            <div id="grid2d" class="grid"></div>
+            
+            <h3>Instructions</h3>
+            <p>Upload an image → adjust grid → see live preview.<br>
+            The 3D view shows drone positions with RGB lights.</p>
+        </div>
+
+        <!-- Main Preview -->
+        <div class="main">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab(0)">3D Drone Formation</div>
+                <div class="tab" onclick="switchTab(1)">2D Grid</div>
+            </div>
+            
+            <div class="preview-area" id="preview3d"></div>
+            
+            <div style="background:#1f1f1f; padding:10px; display:flex; gap:10px;">
+                <button onclick="playAnimation()">▶ Play Show</button>
+                <button onclick="pauseAnimation()">⏸ Pause</button>
+                <button onclick="resetAnimation()">Reset</button>
+            </div>
+            
+            <div style="padding:10px; background:#1f1f1f;">
+                <h3>Generated Show Code</h3>
+                <div id="codeOutput" class="output">Click "Generate Drone Show Code" to create executable sequence...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables
+        let rows = 10;
+        let cols = 15;
+        let drones = [];
+        let imageData = null;
+        let scene, camera, renderer;
+        let droneMeshes = [];
+        let isPlaying = false;
+        let animationFrame;
+        let currentFrame = 0;
+        
+        // Three.js setup
+        function init3D() {
+            const container = document.getElementById('preview3d');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x111111);
+            
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 25, 40);
+            camera.lookAt(0, 0, 0);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+            
+            // Lights
+            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambient);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(10, 20, 10);
+            scene.add(dirLight);
+            
+            // Grid helper
+            const gridHelper = new THREE.GridHelper(50, 50);
+            scene.add(gridHelper);
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+            
+            animate3D();
+        }
+        
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            if (droneMeshes.length > 0) {
+                droneMeshes.forEach((mesh, i) => {
+                    mesh.rotation.y += 0.001;
+                });
+            }
+            renderer.render(scene, camera);
+        }
+        
+        function createDroneFormation() {
+            // Clear existing
+            droneMeshes.forEach(m => scene.remove(m));
+            droneMeshes = [];
+            
+            const spacing = 2.5;
+            const startX = -(cols - 1) * spacing / 2;
+            const startZ = -(rows - 1) * spacing / 2;
+            
+            drones = [];
+            
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const x = startX + c * spacing;
+                    const z = startZ + r * spacing;
+                    const y = Math.sin(r * 0.5) * 1.5; // slight curve
+                    
+                    // Drone body
+                    const geometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+                    const material = new THREE.MeshPhongMaterial({ 
+                        color: 0xaaaaaa,
+                        emissive: 0x000000,
+                        shininess: 10
+                    });
+                    const drone = new THREE.Mesh(geometry, material);
+                    drone.position.set(x, y, z);
+                    scene.add(drone);
+                    droneMeshes.push(drone);
+                    
+                    drones.push({
+                        row: r,
+                        col: c,
+                        mesh: drone,
+                        color: {r: 0, g: 0, b: 0}
+                    });
+                }
+            }
+        }
+        
+        // 2D Grid
+        function updateGrid() {
+            rows = parseInt(document.getElementById('rows').value) || 10;
+            cols = parseInt(document.getElementById('cols').value) || 15;
+            
+            const gridEl = document.getElementById('grid2d');
+            gridEl.innerHTML = '';
+            gridEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            
+            drones = [];
+            
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'drone';
+                    cell.style.backgroundColor = '#222';
+                    gridEl.appendChild(cell);
+                    
+                    drones.push({
+                        row: r,
+                        col: c,
+                        el: cell,
+                        color: {r:0,g:0,b:0}
+                    });
+                }
+            }
+            
+            createDroneFormation();
+            if (imageData) applyImage();
+        }
+        
+        // Image upload & processing
+        document.getElementById('imageUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = cols;
+                canvas.height = rows;
+                ctx.drawImage(img, 0, 0, cols, rows);
+                imageData = ctx.getImageData(0, 0, cols, rows).data;
+                applyImage();
+            };
+            img.src = URL.createObjectURL(file);
+        });
+        
+        function applyImage() {
+            if (!imageData || !drones.length) return;
+            
+            const brightness = document.getElementById('brightness').value / 100;
+            
+            for (let i = 0; i < drones.length; i++) {
+                const idx = i * 4;
+                let r = imageData[idx] * brightness;
+                let g = imageData[idx + 1] * brightness;
+                let b = imageData[idx + 2] * brightness;
+                
+                drones[i].color = {r: Math.floor(r), g: Math.floor(g), b: Math.floor(b)};
+                
+                // Update 2D
+                if (drones[i].el) {
+                    drones[i].el.style.backgroundColor = `rgb(${r},${g},${b})`;
+                }
+                
+                // Update 3D
+                if (drones[i].mesh) {
+                    drones[i].mesh.material.emissive.setRGB(r/255, g/255, b/255);
+                    drones[i].mesh.material.color.setRGB(r/255 * 0.6, g/255 * 0.6, b/255 * 0.6);
+                }
+            }
+        }
+        
+        function randomTestPattern() {
+            drones.forEach(drone => {
+                const r = Math.random() * 255;
+                const g = Math.random() * 255;
+                const b = Math.random() * 255;
+                drone.color = {r: Math.floor(r), g: Math.floor(g), b: Math.floor(b)};
+                
+                if (drone.el) drone.el.style.backgroundColor = `rgb(${r},${g},${b})`;
+                if (drone.mesh) {
+                    drone.mesh.material.emissive.setRGB(r/255, g/255, b/255);
+                }
+            });
+        }
+        
+        // Generate show code (JSON sequence)
+        function generateShowCode() {
+            const sequence = {
+                metadata: {
+                    name: "Image Drone Show",
+                    droneCount: rows * cols,
+                    duration: 10,
+                    fps: 30
+                },
+                frames: []
+            };
+            
+            // Simple 5-frame transition for demo (fade in image)
+            for (let f = 0; f < 5; f++) {
+                const frame = [];
+                const progress = (f + 1) / 5;
+                
+                drones.forEach(drone => {
+                    const r = Math.floor(drone.color.r * progress);
+                    const g = Math.floor(drone.color.g * progress);
+                    const b = Math.floor(drone.color.b * progress);
+                    frame.push([drone.row, drone.col, r, g, b]);
+                });
+                sequence.frames.push(frame);
+            }
+            
+            const json = JSON.stringify(sequence, null, 2);
+            document.getElementById('codeOutput').textContent = json;
+            
+            console.log("%c Drone Show JSON Generated!", "color: cyan; font-size: 16px");
+        }
+        
+        // Animation playback
+        function playAnimation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            currentFrame = 0;
+            runAnimation();
+        }
+        
+        function pauseAnimation() {
+            isPlaying = false;
+        }
+        
+        function resetAnimation() {
+            isPlaying = false;
+            currentFrame = 0;
+            applyImage();
+        }
+        
+        function runAnimation() {
+            if (!isPlaying) return;
+            
+            // Simple pulsing animation for demo
+            const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.8;
+            
+            droneMeshes.forEach((mesh, i) => {
+                if (drones[i] && drones[i].color) {
+                    const c = drones[i].color;
+                    mesh.material.emissive.setRGB(
+                        c.r/255 * pulse,
+                        c.g/255 * pulse,
+                        c.b/255 * pulse
+                    );
+                }
+            });
+            
+            animationFrame = setTimeout(runAnimation, 50);
+        }
+        
+        function switchTab(n) {
+            document.querySelectorAll('.tab').forEach((t,i) => {
+                t.classList.toggle('active', i === n);
+            });
+            // Could hide/show canvases if needed
+        }
+        
+        // Initialize
+        window.onload = function() {
+            init3D();
+            updateGrid();
+            
+            // Keyboard support
+            document.addEventListener('keydown', e => {
+                if (e.key === " ") {
+                    isPlaying ? pauseAnimation() : playAnimation();
+                }
+            });
+        };
+    </script>
+</body>
+</html>
