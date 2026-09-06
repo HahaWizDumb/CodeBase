@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ANCIENT_SHELL // rain</title>
+<style>
+  :root{
+    --bg: #050806;
+    --glow: #39ff8a;
+    --glow-dim: #12a852;
+    --glow-dark: #063d1e;
+    --amber: #ffb020;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    overflow: hidden;
+    font-family: 'Courier New', monospace;
+  }
+
+  #stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(ellipse at center, #030602 0%, #000000 80%);
+  }
+
+  canvas#rain {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* scanlines */
+  #scanlines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0.25) 3px,
+      rgba(0,0,0,0) 4px
+    );
+    mix-blend-mode: multiply;
+    z-index: 5;
+  }
+
+  /* vignette */
+  #vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 160px 60px rgba(0,0,0,0.85);
+    z-index: 6;
+  }
+
+  /* flicker overlay */
+  #flicker {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: rgba(20,255,140,0.02);
+    z-index: 4;
+    animation: flicker 6s infinite;
+  }
+
+  @keyframes flicker {
+    0%, 92%, 100% { opacity: 1; }
+    93% { opacity: 0.75; }
+    94% { opacity: 1; }
+    95% { opacity: 0.6; }
+    96% { opacity: 1; }
+  }
+
+  /* header hud text */
+  #hud {
+    position: absolute;
+    top: 14px;
+    left: 18px;
+    color: var(--glow);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 6px var(--glow), 0 0 14px var(--glow-dim);
+    z-index: 7;
+    opacity: 0.85;
+    user-select: none;
+  }
+  #hud .dim { color: var(--glow-dim); }
+
+  #hud-right {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    color: var(--amber);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px rgba(255,176,32,0.8);
+    z-index: 7;
+    opacity: 0.8;
+    text-align: right;
+    user-select: none;
+  }
+
+  /* glitch tear layers - duplicate canvas via clip-path shifting */
+  .tear {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0;
+    z-index: 3;
+  }
+
+  #tear1 { animation: glitchTear1 7s steps(1) infinite; }
+  #tear2 { animation: glitchTear2 9.3s steps(1) infinite; }
+
+  @keyframes glitchTear1 {
+    0%, 100% { opacity: 0; transform: translate(0,0); clip-path: inset(0 0 0 0); }
+    41% { opacity: 0; }
+    42% { opacity: 0.7; transform: translate(-8px, 0); clip-path: inset(22% 0 60% 0); filter: hue-rotate(20deg); }
+    43.5% { opacity: 0.5; transform: translate(6px, 0); clip-path: inset(40% 0 30% 0); }
+    45% { opacity: 0; }
+    71% { opacity: 0; }
+    72% { opacity: 0.6; transform: translate(10px,0); clip-path: inset(5% 0 80% 0); }
+    73% { opacity: 0; }
+  }
+
+  @keyframes glitchTear2 {
+    0%, 100% { opacity: 0; transform: translate(0,0); clip-path: inset(0 0 0 0); }
+    17% { opacity: 0; }
+    18% { opacity: 0.55; transform: translate(-14px,0); clip-path: inset(60% 0 10% 0); }
+    19% { opacity: 0.3; transform: translate(5px,0); clip-path: inset(70% 0 5% 0); }
+    20% { opacity: 0; }
+    88% { opacity: 0; }
+    89% { opacity: 0.65; transform: translate(9px,0); clip-path: inset(10% 0 70% 0); filter: hue-rotate(-15deg); }
+    90% { opacity: 0; }
+  }
+
+  /* whole-screen jitter */
+  #stage.jitter {
+    animation: screenJitter 7s infinite;
+  }
+  @keyframes screenJitter {
+    0%, 100% { transform: translate(0,0); }
+    41.8% { transform: translate(0,0); }
+    42% { transform: translate(-2px, 1px); }
+    42.3% { transform: translate(3px, -1px); }
+    42.6% { transform: translate(0,0); }
+    71.8% { transform: translate(0,0); }
+    72% { transform: translate(3px, 0); }
+    72.2% { transform: translate(-2px, 0); }
+    72.4% { transform: translate(0,0); }
+  }
+
+  #settings-toggle {
+    position: absolute;
+    bottom: 16px;
+    right: 18px;
+    z-index: 9;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid var(--glow-dim);
+    color: var(--glow);
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 6px 10px;
+    cursor: pointer;
+    text-shadow: 0 0 6px var(--glow);
+    box-shadow: 0 0 8px rgba(20,180,90,0.25);
+    user-select: none;
+  }
+  #settings-toggle:hover {
+    background: rgba(20,180,90,0.15);
+  }
+
+  #settings-panel {
+    position: absolute;
+    bottom: 54px;
+    right: 18px;
+    z-index: 9;
+    width: 240px;
+    background: rgba(0,3,1,0.88);
+    border: 1px solid var(--glow-dim);
+    box-shadow: 0 0 16px rgba(20,180,90,0.3), inset 0 0 20px rgba(0,20,10,0.6);
+    color: var(--glow);
+    font-family: 'Courier New', monospace;
+    padding: 12px 14px 14px;
+    display: none;
+  }
+  #settings-panel.open { display: block; }
+
+  #settings-panel .title {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--glow);
+    text-shadow: 0 0 6px var(--glow);
+    border-bottom: 1px dashed var(--glow-dark);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  #settings-panel .title::before { content: "> "; color: var(--amber); }
+
+  #settings-panel .row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  #settings-panel label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--glow-dim);
+  }
+  #settings-panel .val {
+    color: var(--amber);
+    text-shadow: 0 0 4px rgba(255,176,32,0.7);
+  }
+
+  #settings-panel input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 3px;
+    background: var(--glow-dark);
+    outline: none;
+    margin: 4px 0;
+  }
+  #settings-panel input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--glow);
+    box-shadow: 0 0 6px var(--glow);
+    cursor: pointer;
+    border-radius: 0;
+  }
+  #settings-panel input[type="range"]::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: var(--glow);
+    box-shadow: 0 0 6px var(--glow);
+    cursor: pointer;
+    border: none;
+    border-radius: 0;
+  }
+
+  #rgbsplit {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 8;
+    opacity: 0;
+    animation: rgbSplit 7s infinite;
+  }
+  @keyframes rgbSplit {
+    0%, 100% { opacity: 0; box-shadow: none; }
+    42% { opacity: 1; box-shadow: -3px 0 0 rgba(255,0,60,0.25), 3px 0 0 rgba(0,200,255,0.2); }
+    42.6% { opacity: 0; }
+    72% { opacity: 1; box-shadow: 3px 0 0 rgba(255,0,60,0.25), -3px 0 0 rgba(0,200,255,0.2); }
+    72.6% { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage" class="jitter">
+  <canvas id="rain"></canvas>
+  <div id="tear1" class="tear"></div>
+  <div id="tear2" class="tear"></div>
+  <div id="scanlines"></div>
+  <div id="flicker"></div>
+  <div id="rgbsplit"></div>
+  <div id="vignette"></div>
+
+  <div id="hud">
+    root@ziggurat<span class="dim">:</span>~<span class="dim">#</span> tail -f /dev/glyphstream<span class="dim">&nbsp;&nbsp;[connected]</span>
+  </div>
+  <div id="hud-right">
+    STREAM :: CUNEIFORM · DEVANAGARI · MDC HIEROGLYPHS<br>
+    SIG-LOCK <span style="opacity:0.6">0x7F2A</span>
+  </div>
+
+  <div id="settings-toggle">[ ⚙ config ]</div>
+  <div id="settings-panel">
+    <div class="title">stream config</div>
+    <div class="row">
+      <label>flow speed &nbsp; <span class="val" id="speed-val">1.0x</span></label>
+      <input type="range" id="speed-slider" min="0.1" max="3" step="0.1" value="1">
+    </div>
+    <div class="row">
+      <label>glyph density &nbsp; <span class="val" id="density-val">1.0x</span></label>
+      <input type="range" id="density-slider" min="0.5" max="1" step="0.05" value="1">
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('rain');
+  const ctx = canvas.getContext('2d');
+
+  // Glyph pools: cuneiform, sanskrit (devanagari), egyptian hieroglyphs
+  const cuneiform = "𒀀𒀁𒀂𒀃𒀄𒀅𒀆𒀇𒀈𒀉𒀊𒀋𒀌𒀍𒀎𒀏𒀐𒀑𒀒𒀓𒀔𒀕𒀖𒀗𒀘𒀙𒀚𒀛𒀜𒀝𒀞𒀟𒀠𒀡𒀢𒀣𒀤𒀥𒀦𒀧𒀨𒀩𒀪𒀫𒀬𒀭𒀮𒀯𒀰𒀱𒀲𒀳𒀴𒀵𒀶𒀷𒀸𒀹𒀺𒀻𒀼𒀽𒀾𒀿𒁀𒁁𒁂𒁃𒁄𒁅𒁆𒁇𒁈𒁉𒁊𒁋𒁌𒁍𒁎𒁏𒁐𒁑𒁒𒁓𒁔𒁕𒁖𒁗𒁘𒁙𒁚𒁛𒁜𒁝𒁞𒁟𒁠𒁡𒁢𒁣𒁤𒁥𒁦𒁧𒁨𒁩𒁪𒁫𒁬𒁭𒁮𒁯𒁰𒁱𒁲𒁳𒁴𒁵𒁶𒁷𒁸𒁹𒁺𒁻𒁼𒁽𒁾𒁿𒂀𒂁𒂂𒂃𒂄𒂅𒂆𒂇𒂈𒂉𒂊𒂋𒂌𒂍𒂎𒂏𒂐𒂑𒂒𒂓𒂔𒂕𒂖𒂗𒂘𒂙𒂚𒂛𒂜𒂝𒂞𒂟𒂠𒂡𒂢𒂣𒂤𒂥𒂦𒂧𒂨𒂩𒂪𒂫𒂬𒂭𒂮𒂯𒂰𒂱𒂲𒂳𒂴𒂵𒂶𒂷𒂸𒂹𒂺𒂻𒂼𒂽𒂾𒂿𒃀𒃁𒃂𒃃𒃄𒃅𒃆𒃇𒃈𒃉𒃊𒃋𒃌𒃍𒃎𒃏";
+  const sanskrit = "अआइईउऊऋएऐओऔकखगघङचछजझञटठडढणतथदधनपफबभमयरलवशषसहक्षज्ञ॥ॐ";
+  const hieroglyphs = "𓀀𓀁𓀂𓀃𓀄𓀅𓀆𓀇𓀈𓀉𓀊𓀋𓀌𓀍𓀎𓀏𓀐𓁀𓁁𓁂𓁃𓂀𓂁𓃀𓃁𓆓𓆣𓇋𓇳𓊨𓊪𓋴𓌸𓎼𓏏𓏤";
+  const numbers = ["0","1","2","3","4","5","6","7","8","9","10"];
+
+  const allGlyphs = (cuneiform + sanskrit + hieroglyphs).split('').concat(numbers);
+
+  function pickGlyph(){
+    return allGlyphs[(Math.random() * allGlyphs.length) | 0];
+  }
+
+  let w, h, fontSize, rowHeight, rows, colsPerRow, drops, speeds, dirs, rowShade;
+
+  // user-controllable multipliers
+  let speedMult = 1;
+  let densityMult = 1;
+
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    fontSize = Math.max(24, Math.min(36, Math.floor(w / 42)));
+    rowHeight = fontSize * 0.85; // pack rows tighter than glyph height -> less blank gap
+    rows = Math.floor(h / rowHeight) + 1;
+    colsPerRow = Math.ceil(w / fontSize) + 4;
+
+    // each row holds a small chain of active head positions (in glyph-widths)
+    // so gaps fill in faster instead of one head trailing long empty runs
+    drops = [];
+    speeds = [];
+    dirs = [];
+    rowShade = [];
+    for (let i = 0; i < rows; i++){
+      const chain = [];
+      const heads = 2 + (Math.random() > 0.5 ? 1 : 0);
+      for (let n = 0; n < heads; n++){
+        chain.push(Math.random() * (colsPerRow + 20) - 10);
+      }
+      drops.push(chain);
+      // depth: some rows sit dim and "far back", others bright and "close"
+      const shade = 0.32 + Math.random() * 0.68;
+      rowShade.push(shade);
+      // parallax: closer/brighter rows drift faster, distant/dim rows drift slower
+      speeds.push((0.08 + Math.random() * 0.12) + shade * 0.35);
+      dirs.push(1); // all rows flow rightward
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function draw(){
+    // slightly higher alpha keeps trails from over-lingering as density rises
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.font = fontSize + 'px monospace';
+    ctx.textBaseline = 'top';
+
+    for (let i = 0; i < rows; i++){
+      const y = i * rowHeight;
+      const chain = drops[i];
+      const dir = dirs[i];
+      const shade = rowShade[i];
+
+      for (let c = 0; c < chain.length; c++){
+        const x = chain[c] * fontSize;
+
+        if (x > -fontSize * 2 && x < w + fontSize * 2){
+          const g = pickGlyph();
+          const isHead = Math.random() > 0.94;
+          const isNumber = numbers.includes(g);
+
+          let mainColor, glowColor, blur;
+          if (isHead){
+            const hb = Math.round(234 * shade + 10);
+            const hg = Math.round(255 * shade + 10);
+            mainColor = `rgb(${hb},${hg},${Math.round(239 * shade + 10)})`;
+            glowColor = `rgba(138,255,192,${(0.9 * shade).toFixed(2)})`;
+            blur = 16 * shade;
+          } else {
+            const alpha = (0.75 + Math.random() * 0.25) * shade;
+            mainColor = `rgba(45,255,120,${alpha.toFixed(2)})`;
+            glowColor = `rgba(20,180,90,${(0.9 * shade).toFixed(2)})`;
+            blur = 3 * shade;
+          }
+
+          if (isNumber){
+            // render as a circular data-badge instead of a plain glyph
+            const r = fontSize * 0.42;
+            const cx = x + r;
+            const cy = y + r;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.strokeStyle = mainColor;
+            ctx.shadowColor = glowColor;
+            ctx.shadowBlur = blur;
+            ctx.lineWidth = Math.max(1, fontSize * 0.06);
+            ctx.stroke();
+            ctx.shadowBlur = blur * 0.6;
+            ctx.fillStyle = mainColor;
+            ctx.font = (fontSize * 0.55) + 'px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(g, cx, cy - fontSize * 0.28);
+            ctx.textAlign = 'left';
+            ctx.font = fontSize + 'px monospace';
+          } else {
+            ctx.fillStyle = mainColor;
+            ctx.shadowColor = glowColor;
+            ctx.shadowBlur = blur;
+            ctx.fillText(g, x, y);
+          }
+          ctx.shadowBlur = 0;
+        }
+
+        chain[c] += dir * speeds[i] * speedMult;
+
+        const offEdge = dir > 0 ? (chain[c] * fontSize > w + fontSize * 2)
+                                 : (chain[c] * fontSize < -fontSize * 2);
+
+        if (offEdge){
+          // recycle this chain link back to the entry edge;
+          // densityMult controls how eagerly gaps get refilled
+          if (Math.random() < densityMult){
+            chain[c] = dir > 0 ? Math.random() * -10 : colsPerRow + Math.random() * 10;
+          } else {
+            chain[c] = dir > 0 ? -10000 : 10000; // park it off-screen, thins the stream out
+          }
+        }
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+
+  // --- settings panel wiring ---
+  const toggleBtn = document.getElementById('settings-toggle');
+  const panel = document.getElementById('settings-panel');
+  const speedSlider = document.getElementById('speed-slider');
+  const speedVal = document.getElementById('speed-val');
+  const densitySlider = document.getElementById('density-slider');
+  const densityVal = document.getElementById('density-val');
+
+  toggleBtn.addEventListener('click', () => {
+    panel.classList.toggle('open');
+  });
+
+  speedSlider.addEventListener('input', (e) => {
+    speedMult = parseFloat(e.target.value);
+    speedVal.textContent = speedMult.toFixed(1) + 'x';
+  });
+
+  densitySlider.addEventListener('input', (e) => {
+    densityMult = parseFloat(e.target.value);
+    densityVal.textContent = densityMult.toFixed(2) + 'x';
+  });
+})();
+</script>
+
+</body>
+</html>

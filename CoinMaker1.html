@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ANVIL &amp; DIE — Challenge Coin Foundry</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --forge-black:#14110F;
+  --gunmetal:#211D19;
+  --panel:#2A2521;
+  --brass:#B8875A;
+  --brass-bright:#E4B27C;
+  --patina:#5C8A78;
+  --bone:#EDE6DA;
+  --bone-dim:#B7AC9C;
+  --steel-line:#443C34;
+  --danger:#C1583F;
+  --radius:6px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;background:var(--forge-black);color:var(--bone);font-family:'Inter',sans-serif;overflow:hidden;}
+body{display:flex;flex-direction:column;}
+
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:var(--forge-black);}
+::-webkit-scrollbar-thumb{background:var(--steel-line);border-radius:4px;}
+
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 22px;border-bottom:1px solid var(--steel-line);
+  background:linear-gradient(180deg, #1a1613, #14110F);
+  flex-shrink:0;
+}
+.brand{display:flex;align-items:baseline;gap:10px;}
+.brand h1{
+  font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;margin:0;color:var(--brass-bright);
+  text-shadow:0 0 18px rgba(228,178,124,0.15);
+}
+.brand span{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--bone-dim);letter-spacing:2px;text-transform:uppercase;}
+.stat-strip{display:flex;gap:22px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--bone-dim);}
+.stat-strip b{color:var(--brass-bright);font-weight:600;}
+
+.layout{flex:1;display:flex;min-height:0;}
+
+.gallery{
+  width:270px;flex-shrink:0;border-right:1px solid var(--steel-line);
+  overflow-y:auto;padding:16px;background:var(--gunmetal);
+}
+.gallery h2{
+  font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:var(--bone-dim);
+  margin:0 0 12px 2px;text-transform:uppercase;
+}
+.tpl-card{
+  display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--steel-line);
+  border-radius:var(--radius);margin-bottom:8px;cursor:pointer;background:var(--panel);
+  transition:border-color .15s, background .15s, transform .1s;
+}
+.tpl-card:hover{border-color:var(--brass);transform:translateX(2px);}
+.tpl-card.active{border-color:var(--brass-bright);background:#332B23;box-shadow:0 0 0 1px var(--brass-bright) inset;}
+.tpl-card svg{width:34px;height:34px;flex-shrink:0;color:var(--brass);}
+.tpl-card.active svg{color:var(--brass-bright);}
+.tpl-card .info b{display:block;font-size:13px;color:var(--bone);font-weight:600;}
+.tpl-card .info small{font-size:10.5px;color:var(--bone-dim);letter-spacing:.3px;}
+
+.tpl-card.locked{opacity:.45;cursor:not-allowed;}
+.tpl-card.locked:hover{transform:none;border-color:var(--steel-line);}
+.tpl-card.locked svg{color:var(--bone-dim);}
+
+.tpl-card.joker{border-color:#8a5fc7;background:linear-gradient(120deg,#2a2131,#332320,#213028);animation:jokerpulse 2.4s ease-in-out infinite;}
+@keyframes jokerpulse{0%,100%{box-shadow:0 0 0 1px #8a5fc7 inset;}50%{box-shadow:0 0 12px 1px #c78ecf inset;}}
+
+.stage{
+  flex:1;position:relative;min-width:0;
+  background:radial-gradient(ellipse at 50% 40%, #241f1a 0%, #14110F 70%);
+}
+#stage-canvas{width:100%;height:100%;display:block;cursor:grab;}
+#stage-canvas:active{cursor:grabbing;}
+.stage-hint{
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--bone-dim);
+  background:rgba(20,17,15,0.6);padding:6px 12px;border-radius:20px;border:1px solid var(--steel-line);
+  pointer-events:none;letter-spacing:.5px;
+}
+.side-face-toggle{
+  position:absolute;top:16px;left:16px;display:flex;background:var(--panel);border:1px solid var(--steel-line);border-radius:20px;overflow:hidden;
+}
+.side-face-toggle button{
+  background:none;border:none;color:var(--bone-dim);font-family:'JetBrains Mono',monospace;font-size:11px;
+  padding:7px 16px;cursor:pointer;letter-spacing:1px;
+}
+.side-face-toggle button.active{background:var(--brass);color:#1a1410;font-weight:700;}
+
+.toast{
+  position:absolute;top:16px;left:50%;transform:translateX(-50%) translateY(-20px);
+  background:linear-gradient(120deg,#3a2a4a,#2a3a34);border:1px solid #8a5fc7;color:#f0e6ff;
+  padding:10px 20px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+  opacity:0;transition:all .4s ease;pointer-events:none;z-index:50;letter-spacing:.3px;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.panel{
+  width:320px;flex-shrink:0;border-left:1px solid var(--steel-line);background:var(--gunmetal);
+  overflow-y:auto;padding:18px;
+}
+.panel h2{
+  font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:var(--bone-dim);
+  margin:0 0 14px 2px;text-transform:uppercase;
+}
+.field{margin-bottom:16px;}
+.field label{
+  display:flex;justify-content:space-between;font-size:11.5px;color:var(--bone-dim);
+  margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase;font-weight:600;
+}
+.field label span.val{font-family:'JetBrains Mono',monospace;color:var(--brass-bright);text-transform:none;}
+.field input[type=text]{
+  width:100%;background:#1c1815;border:1px solid var(--steel-line);color:var(--bone);
+  padding:9px 10px;border-radius:var(--radius);font-family:'Inter',sans-serif;font-size:13px;
+}
+.field input[type=text]:focus{outline:none;border-color:var(--brass);}
+.field input[type=range]{width:100%;accent-color:var(--brass);}
+.seg{display:flex;gap:6px;}
+.seg button{
+  flex:1;background:#1c1815;border:1px solid var(--steel-line);color:var(--bone-dim);
+  padding:8px 4px;border-radius:var(--radius);cursor:pointer;font-size:11.5px;font-family:'Inter',sans-serif;font-weight:600;
+}
+.seg button.active{background:var(--brass);color:#1a1410;border-color:var(--brass);}
+.finish-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.finish-swatch{
+  aspect-ratio:1;border-radius:50%;cursor:pointer;border:2px solid transparent;position:relative;
+}
+.finish-swatch.active{border-color:var(--bone);}
+.finish-swatch span{
+  position:absolute;top:100%;left:50%;transform:translateX(-50%);font-size:9px;color:var(--bone-dim);
+  white-space:nowrap;margin-top:4px;
+}
+hr.div{border:none;border-top:1px solid var(--steel-line);margin:18px 0;}
+
+.btn-export{
+  width:100%;background:linear-gradient(180deg,var(--brass-bright),var(--brass));color:#1a1410;
+  border:none;padding:14px;border-radius:var(--radius);font-weight:700;font-size:14px;letter-spacing:.5px;
+  cursor:pointer;font-family:'Inter',sans-serif;margin-top:6px;
+  box-shadow:0 4px 14px rgba(184,135,90,0.25);
+  transition:transform .1s;
+}
+.btn-export:hover{transform:translateY(-1px);}
+.btn-export:active{transform:translateY(0);}
+.spec-sheet{
+  font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--bone-dim);line-height:1.9;
+  background:#1c1815;border:1px solid var(--steel-line);border-radius:var(--radius);padding:10px 12px;margin-top:12px;
+}
+.spec-sheet b{color:var(--brass-bright);}
+
+@media (max-width:900px){
+  .gallery{width:210px;}
+  .panel{width:260px;}
+  .brand h1{font-size:22px;}
+  .stat-strip{display:none;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>ANVIL &amp; DIE</h1>
+    <span>Challenge Coin Foundry</span>
+  </div>
+  <div class="stat-strip">
+    <div>DIAM <b id="stat-diam">40.0mm</b></div>
+    <div>THICK <b id="stat-thick">3.0mm</b></div>
+    <div>TRIS <b id="stat-tris">0</b></div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <div class="gallery">
+    <h2>Template Library</h2>
+    <div id="tpl-list"></div>
+  </div>
+
+  <div class="stage">
+    <canvas id="stage-canvas"></canvas>
+    <div class="side-face-toggle">
+      <button id="btn-face-front" class="active">FRONT</button>
+      <button id="btn-face-back">BACK</button>
+    </div>
+    <div class="stage-hint">drag to rotate · scroll to zoom</div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Inscription</h2>
+    <div class="field">
+      <label>Top Rim Text</label>
+      <input type="text" id="in-top" maxlength="24">
+    </div>
+    <div class="field">
+      <label>Bottom Rim Text</label>
+      <input type="text" id="in-bottom" maxlength="24">
+    </div>
+    <div class="field">
+      <label>Center Motto (optional)</label>
+      <input type="text" id="in-motto" maxlength="16" placeholder="e.g. EST. 2026">
+    </div>
+    <div class="field">
+      <label>Back Rim Text</label>
+      <input type="text" id="in-back" maxlength="24" placeholder="e.g. PRESENTED FOR EXCELLENCE">
+    </div>
+
+    <hr class="div">
+    <h2>Dimensions</h2>
+    <div class="field">
+      <label>Diameter <span class="val" id="lbl-diam">40.0 mm</span></label>
+      <input type="range" id="in-diam" min="30" max="60" step="0.5" value="40">
+    </div>
+    <div class="field">
+      <label>Thickness <span class="val" id="lbl-thick">3.0 mm</span></label>
+      <input type="range" id="in-thick" min="2" max="5" step="0.1" value="3">
+    </div>
+    <div class="field">
+      <label>Edge Style</label>
+      <div class="seg" id="seg-edge">
+        <button data-v="smooth">Smooth</button>
+        <button data-v="reeded" class="active">Reeded</button>
+        <button data-v="rope">Rope</button>
+      </div>
+    </div>
+
+    <hr class="div">
+    <h2>Finish</h2>
+    <div class="finish-grid" id="finish-grid"></div>
+
+    <hr class="div">
+    <button class="btn-export" id="btn-export">⬇ EXPORT STL FOR PRINTING</button>
+    <div class="spec-sheet">
+      Est. print volume: <b id="spec-vol">—</b><br>
+      Recommended layer height: <b>0.12–0.16mm</b><br>
+      Recommended fill: <b>15–20% (or solid ≤4mm)</b><br>
+      Units: <b>millimeters</b> · Orientation: <b>face up</b>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* =========================================================================
+   ANVIL & DIE — Challenge Coin STL Foundry
+   Self-contained Three.js app: procedural coin geometry + binary STL export.
+   ========================================================================= */
+
+/* ---------- tiny 3x5 stencil pixel font (military dog-tag style) ---------- */
+const PIXFONT = {
+' ':['...','...','...','...','...'],
+'A':['.#.','#.#','###','#.#','#.#'],
+'B':['##.','#.#','##.','#.#','##.'],
+'C':['.##','#..','#..','#..','.##'],
+'D':['##.','#.#','#.#','#.#','##.'],
+'E':['###','#..','##.','#..','###'],
+'F':['###','#..','##.','#..','#..'],
+'G':['.##','#..','#.#','#.#','.##'],
+'H':['#.#','#.#','###','#.#','#.#'],
+'I':['###','.#.','.#.','.#.','###'],
+'J':['..#','..#','..#','#.#','.#.'],
+'K':['#.#','#.#','##.','#.#','#.#'],
+'L':['#..','#..','#..','#..','###'],
+'M':['#.#','###','###','#.#','#.#'],
+'N':['#.#','##.','#.#','.##','#.#'],
+'O':['.#.','#.#','#.#','#.#','.#.'],
+'P':['##.','#.#','##.','#..','#..'],
+'Q':['.#.','#.#','#.#','.#.','..#'],
+'R':['##.','#.#','##.','#.#','#.#'],
+'S':['.##','#..','.#.','..#','##.'],
+'T':['###','.#.','.#.','.#.','.#.'],
+'U':['#.#','#.#','#.#','#.#','.#.'],
+'V':['#.#','#.#','#.#','#.#','.#.'],
+'W':['#.#','#.#','#.#','###','#.#'],
+'X':['#.#','#.#','.#.','#.#','#.#'],
+'Y':['#.#','#.#','.#.','.#.','.#.'],
+'Z':['###','..#','.#.','#..','###'],
+'0':['.#.','#.#','#.#','#.#','.#.'],
+'1':['.#.','##.','.#.','.#.','###'],
+'2':['##.','..#','.#.','#..','###'],
+'3':['##.','..#','.#.','..#','##.'],
+'4':['#.#','#.#','###','..#','..#'],
+'5':['###','#..','##.','..#','##.'],
+'6':['.##','#..','##.','#.#','.#.'],
+'7':['###','..#','.#.','.#.','.#.'],
+'8':['.#.','#.#','.#.','#.#','.#.'],
+'9':['.#.','#.#','.##','..#','.#.'],
+'.':['...','...','...','...','.#.'],
+'-':['...','...','###','...','...'],
+"'":['.#.','.#.','...','...','...'],
+',':['...','...','...','.#.','#..']
+};
+
+/* ---------------------------- shape primitives ---------------------------- */
+function circleShape(r){ const s=new THREE.Shape(); s.absarc(0,0,r,0,Math.PI*2,false); return s; }
+function ringShape(rOuter,rInner){
+  const s=circleShape(rOuter);
+  const hole=new THREE.Path(); hole.absarc(0,0,rInner,0,Math.PI*2,true);
+  s.holes.push(hole); return s;
+}
+function starShape(points,rOuter,rInner){
+  const s=new THREE.Shape(); const step=Math.PI/points;
+  for(let i=0;i<points*2;i++){
+    const r=(i%2===0)?rOuter:rInner;
+    const a=i*step - Math.PI/2;
+    const x=Math.cos(a)*r, y=Math.sin(a)*r;
+    if(i===0) s.moveTo(x,y); else s.lineTo(x,y);
+  }
+  s.closePath(); return s;
+}
+function polygonShape(sides,r,rot){
+  rot = rot||0;
+  const s=new THREE.Shape();
+  for(let i=0;i<sides;i++){
+    const a=i/sides*Math.PI*2 - Math.PI/2 + rot;
+    const x=Math.cos(a)*r, y=Math.sin(a)*r;
+    if(i===0) s.moveTo(x,y); else s.lineTo(x,y);
+  }
+  s.closePath(); return s;
+}
+function petalShape(length,width){
+  const s=new THREE.Shape();
+  s.moveTo(0,0);
+  s.quadraticCurveTo(width, length*0.35, 0, length);
+  s.quadraticCurveTo(-width, length*0.35, 0, 0);
+  s.closePath(); return s;
+}
+function rectShape(w,h){
+  const s=new THREE.Shape();
+  s.moveTo(-w/2,-h/2); s.lineTo(w/2,-h/2); s.lineTo(w/2,h/2); s.lineTo(-w/2,h/2);
+  s.closePath(); return s;
+}
+function crescentShape(rOuter,rInner,offsetX){
+  const s=circleShape(rOuter);
+  const hole=new THREE.Path(); hole.absarc(offsetX,0,rInner,0,Math.PI*2,true);
+  s.holes.push(hole); return s;
+}
+
+/* ---------------------------- relief depth tiers --------------------------- */
+const D_BASE=0.9, D_DETAIL=1.4, D_RING=0.5;
+const PLACEHOLDER_MAT = new THREE.MeshStandardMaterial({color:0xB8875A, metalness:0.9, roughness:0.35});
+
+function addShape(group, shape, depth, x, y, rotZ, scale){
+  scale = scale||1;
+  const geo=new THREE.ExtrudeGeometry(shape,{depth:depth,bevelEnabled:false,steps:1});
+  const mesh=new THREE.Mesh(geo, PLACEHOLDER_MAT);
+  mesh.scale.set(scale,scale,1);
+  mesh.position.set(x||0,y||0,0);
+  mesh.rotation.z = rotZ||0;
+  group.add(mesh);
+  return mesh;
+}
+function addBoxLocal(group,w,h,d,x,y){
+  const geo=new THREE.BoxGeometry(w,h,d);
+  const mesh=new THREE.Mesh(geo, PLACEHOLDER_MAT);
+  mesh.position.set(x,y,d/2);
+  group.add(mesh);
+}
+
+/* -------------------------------- glyph / text ------------------------------ */
+function buildGlyph(group, ch, px, x, y, rotZ){
+  const rows = PIXFONT[ch.toUpperCase()] || PIXFONT[' '];
+  const charGroup = new THREE.Group();
+  for(let r=0;r<5;r++){
+    const rowStr = rows[r];
+    for(let c=0;c<3;c++){
+      if(rowStr[c]==='#'){
+        const bx = (c-1)*px;
+        const by = (4-r)*px;
+        addBoxLocal(charGroup, px*0.82, px*0.82, D_BASE, bx, by);
+      }
+    }
+  }
+  charGroup.position.set(x,y,0);
+  charGroup.rotation.z = rotZ;
+  group.add(charGroup);
+}
+function arcText(group, text, radius, centerAngle, maxSpan, flip){
+  if(!text) return;
+  const chars = text.toUpperCase().split('');
+  const px = radius*0.052;
+  const advance = px*4.4;
+  const n = chars.length;
+  const totalWidth = n*advance;
+  const totalAngle = Math.min(maxSpan, totalWidth/radius);
+  const startAngle = centerAngle - totalAngle/2;
+  const stepAngle = n>0 ? totalAngle/n : 0;
+  chars.forEach((ch,i)=>{
+    const theta = startAngle + stepAngle*(i+0.5);
+    const x = radius*Math.sin(theta);
+    const y = radius*Math.cos(theta);
+    const rot = flip ? (-theta + Math.PI) : (-theta);
+    buildGlyph(group, ch, px, x, y, rot);
+  });
+}
+function flatText(group, text, cx, cy, px){
+  if(!text) return;
+  const chars = text.toUpperCase().split('');
+  const advance = px*4.4;
+  const totalWidth = chars.length*advance;
+  const startX = cx - totalWidth/2 + advance/2;
+  chars.forEach((ch,i)=>{
+    buildGlyph(group, ch, px, startX+i*advance, cy, 0);
+  });
+}
+
+/* --------------------------------- motifs ----------------------------------- */
+function motifStarBurst(r, points, innerRatio, ringOn){
+  points=points||5; innerRatio=innerRatio!==undefined?innerRatio:0.45;
+  const g=new THREE.Group();
+  addShape(g, starShape(points, r, r*innerRatio), D_DETAIL, 0,0,0);
+  if(ringOn) addShape(g, ringShape(r*1.28, r*1.16), D_BASE, 0,0,0);
+  return g;
+}
+function motifAnchor(r){
+  const g=new THREE.Group();
+  addShape(g, ringShape(r*0.34, r*0.20), D_DETAIL, 0, r*0.85, 0);
+  addShape(g, rectShape(r*0.18, r*1.55), D_BASE, 0, r*0.10, 0);
+  addShape(g, rectShape(r*0.95, r*0.18), D_BASE, 0, r*0.52, 0);
+  addShape(g, petalShape(r*0.75, r*0.30), D_BASE, -r*0.05, -r*0.75, Math.PI*1.12);
+  addShape(g, petalShape(r*0.75, r*0.30), D_BASE, r*0.05, -r*0.75, -Math.PI*0.12);
+  return g;
+}
+function motifWingFan(r, spread, count){
+  spread=spread||1.2; count=count||6;
+  const g=new THREE.Group();
+  addShape(g, starShape(5, r*0.24, r*0.12), D_DETAIL, 0,0,0);
+  for(let side=-1; side<=1; side+=2){
+    for(let i=0;i<count;i++){
+      const t = count>1 ? i/(count-1) : 0.5;
+      const off = (t-0.5)*spread;
+      const rot = side*(Math.PI/2) - off*side;
+      const len = r*(0.6 + (1-Math.abs(t-0.5)*2)*0.55);
+      addShape(g, petalShape(len, r*0.11), D_BASE, 0,0, rot);
+    }
+  }
+  return g;
+}
+function motifKnot(r){
+  const g=new THREE.Group();
+  for(let i=0;i<3;i++){
+    addShape(g, petalShape(r*1.1, r*0.32), D_BASE, 0,0, i*(Math.PI*2/3));
+  }
+  addShape(g, ringShape(r*0.24, r*0.13), D_DETAIL, 0,0,0);
+  return g;
+}
+function motifCompassRose(r){
+  const g=new THREE.Group();
+  addShape(g, starShape(8, r, r*0.32), D_DETAIL, 0,0,0);
+  addShape(g, ringShape(r*0.32, r*0.22), D_BASE, 0,0,0);
+  return g;
+}
+function motifCrescent(r){
+  const g=new THREE.Group();
+  addShape(g, crescentShape(r, r*0.82, r*0.36), D_DETAIL, 0,0,0);
+  addShape(g, starShape(5, r*0.20, r*0.09), D_BASE, r*0.10, r*0.05, 0);
+  return g;
+}
+function motifWaveRibbon(r){
+  const g=new THREE.Group();
+  const n=6;
+  for(let i=0;i<n;i++){
+    const t=i/(n-1);
+    const ang=(t-0.5)*Math.PI*1.5;
+    const rad=r*0.72;
+    const x=Math.cos(ang-Math.PI/2)*rad;
+    const y=Math.sin(ang-Math.PI/2)*rad;
+    addShape(g, polygonShape(3, r*0.24, ang), D_BASE, x, y, 0);
+  }
+  addShape(g, ringShape(r*0.20, r*0.10), D_DETAIL, 0,0,0);
+  return g;
+}
+function motifBadgeCross(r){
+  const g=new THREE.Group();
+  addShape(g, polygonShape(5, r, Math.PI), D_DETAIL, 0,0,0);
+  addShape(g, rectShape(r*0.26, r*1.25), D_BASE, 0,0,0);
+  addShape(g, rectShape(r*1.25, r*0.26), D_BASE, 0,0,0);
+  return g;
+}
+function motifCircuitGrid(r){
+  const g=new THREE.Group();
+  addShape(g, rectShape(r*0.55, r*0.55), D_DETAIL, 0,0,0);
+  const dirs=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];
+  dirs.forEach(([dx,dy])=>{
+    const x=dx*r*0.55, y=dy*r*0.55;
+    const rot=Math.atan2(dy,dx);
+    addShape(g, rectShape(r*0.5, r*0.09), D_BASE, x*0.55, y*0.55, rot);
+    addShape(g, ringShape(r*0.09, r*0.045), D_BASE, x, y, 0);
+  });
+  return g;
+}
+function motifGear(r){
+  const g=new THREE.Group();
+  addShape(g, starShape(12, r, r*0.86), D_DETAIL, 0,0,0);
+  addShape(g, ringShape(r*0.5, r*0.28), D_BASE, 0,0,0);
+  return g;
+}
+function motifGlobalStars(r){
+  const g=new THREE.Group();
+  addShape(g, ringShape(r*0.98, r*0.86), D_DETAIL, 0,0,0);
+  const n=8;
+  for(let i=0;i<n;i++){
+    const a=i/n*Math.PI*2;
+    addShape(g, starShape(5, r*0.16, r*0.08), D_BASE, Math.cos(a)*r*0.92, Math.sin(a)*r*0.92, a);
+  }
+  addShape(g, starShape(5, r*0.32, r*0.15), D_DETAIL, 0,0,0);
+  return g;
+}
+function motifJoker(r){
+  const g=new THREE.Group();
+  addShape(g, starShape(3, r*1.05, r*0.24), D_DETAIL, 0,0,0);
+  const tipR=r*1.0;
+  for(let i=0;i<3;i++){
+    const a=i*(Math.PI*2/3) - Math.PI/2;
+    addShape(g, circleShape(r*0.17), D_DETAIL, Math.cos(a)*tipR, Math.sin(a)*tipR, 0);
+  }
+  addShape(g, ringShape(r*0.22, r*0.11), D_BASE, 0,0,0);
+  return g;
+}
+
+/* -------------------------------- SVG icons --------------------------------- */
+function svgWrap(inner){ return `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`; }
+const ICONS = {
+  star: svgWrap(`<path d="M24 6 L28 19 L42 19 L31 27 L35 40 L24 32 L13 40 L17 27 L6 19 L20 19 Z"/>`),
+  anchor: svgWrap(`<circle cx="24" cy="10" r="4"/><line x1="24" y1="14" x2="24" y2="38"/><line x1="15" y1="20" x2="33" y2="20"/><path d="M12 26 C12 34 18 40 24 41"/><path d="M36 26 C36 34 30 40 24 41"/>`),
+  wings: svgWrap(`<circle cx="24" cy="24" r="4"/><path d="M22 22 C14 18 8 20 4 16 M22 24 C13 24 7 27 3 25 M22 26 C14 30 9 33 5 34"/><path d="M26 22 C34 18 40 20 44 16 M26 24 C35 24 41 27 45 25 M26 26 C34 30 39 33 43 34"/>`),
+  shield: svgWrap(`<path d="M24 5 L42 13 V24 C42 34 34 41 24 44 C14 41 6 34 6 24 V13 Z"/><line x1="24" y1="12" x2="24" y2="36"/><line x1="12" y1="24" x2="36" y2="24"/>`),
+  sun: svgWrap(`<circle cx="24" cy="24" r="9"/><g>${Array.from({length:12}).map((_,i)=>{const a=i*Math.PI/6;const x1=24+Math.cos(a)*15,y1=24+Math.sin(a)*15,x2=24+Math.cos(a)*21,y2=24+Math.sin(a)*21;return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;}).join('')}</g>`),
+  knot: svgWrap(`<circle cx="24" cy="16" r="9"/><circle cx="17" cy="30" r="9"/><circle cx="31" cy="30" r="9"/>`),
+  compass: svgWrap(`<circle cx="24" cy="24" r="18"/><line x1="24" y1="4" x2="24" y2="44"/><line x1="4" y1="24" x2="44" y2="24"/><path d="M24 10 L27 24 L24 38 L21 24 Z"/>`),
+  crescent: svgWrap(`<path d="M30 8 A16 16 0 1 0 30 40 A12 12 0 1 1 30 8 Z"/><path d="M36 20 L38 25 L43 26 L38 28 L36 33 L34 28 L29 26 L34 25 Z"/>`),
+  dragon: svgWrap(`<path d="M6 30 C12 14 18 40 24 24 C30 8 36 34 42 18"/><circle cx="24" cy="24" r="2.5" fill="currentColor"/>`),
+  bolt: svgWrap(`<path d="M26 4 L12 26 L22 26 L18 44 L38 18 L26 18 Z"/>`),
+  circuit: svgWrap(`<rect x="18" y="18" width="12" height="12"/><line x1="24" y1="6" x2="24" y2="18"/><line x1="24" y1="30" x2="24" y2="42"/><line x1="6" y1="24" x2="18" y2="24"/><line x1="30" y1="24" x2="42" y2="24"/><circle cx="24" cy="6" r="2"/><circle cx="24" cy="42" r="2"/><circle cx="6" cy="24" r="2"/><circle cx="42" cy="24" r="2"/>`),
+  gear: svgWrap(`<circle cx="24" cy="24" r="9"/><circle cx="24" cy="24" r="16"/><g>${Array.from({length:8}).map((_,i)=>{const a=i*Math.PI/4;const x1=24+Math.cos(a)*16,y1=24+Math.sin(a)*16,x2=24+Math.cos(a)*20,y2=24+Math.sin(a)*20;return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;}).join('')}</g>`),
+  globe: svgWrap(`<circle cx="24" cy="24" r="18"/><ellipse cx="24" cy="24" rx="8" ry="18"/><line x1="6" y1="24" x2="42" y2="24"/><line x1="9" y1="15" x2="39" y2="15"/><line x1="9" y1="33" x2="39" y2="33"/>`),
+  joker: svgWrap(`<path d="M8 34 L16 10 L24 22 L32 10 L40 34 Z"/><circle cx="16" cy="8" r="3"/><circle cx="24" cy="20" r="3"/><circle cx="32" cy="8" r="3"/><line x1="8" y1="34" x2="40" y2="34"/>`),
+  lock: svgWrap(`<rect x="12" y="21" width="24" height="18" rx="2"/><path d="M17 21 V14 a7 7 0 0 1 14 0 v7"/>`)
+};
+
+/* ------------------------------- templates ----------------------------------- */
+const TEMPLATES = [
+  {id:'valor-eagle', name:'Valor Eagle', sector:'Armed Forces', icon:'star', finish:'gold',
+    top:'DUTY HONOR COUNTRY', bottom:'', build:(r)=>motifStarBurst(r,5,0.45,true)},
+  {id:'naval-anchor', name:'Naval Anchor', sector:'Maritime Service', icon:'anchor', finish:'silver',
+    top:'FAIR WINDS', bottom:'FOLLOWING SEAS', build:(r)=>motifAnchor(r)},
+  {id:'sky-wing', name:'Sky Wing', sector:'Aviation Corps', icon:'wings', finish:'blacknickel',
+    top:'ABOVE ALL', bottom:'', build:(r)=>motifWingFan(r,1.3,7)},
+  {id:'thin-line', name:'Thin Line Shield', sector:'Law Enforcement & EMS', icon:'shield', finish:'blacknickel',
+    top:'SERVE', bottom:'PROTECT', build:(r)=>motifBadgeCross(r)},
+  {id:'rising-sun', name:'Rising Sun Crest', sector:'Japanese-Inspired', icon:'sun', finish:'gold',
+    top:'BUSHIDO', bottom:'', build:(r)=>motifStarBurst(r,16,0.62,false)},
+  {id:'celtic-guardian', name:'Celtic Guardian', sector:'Celtic Heritage', icon:'knot', finish:'bronze',
+    top:'SLAINTE', bottom:'', build:(r)=>motifKnot(r)},
+  {id:'vegvisir', name:'Vegvisir Voyager', sector:'Norse Heritage', icon:'compass', finish:'silver',
+    top:'ONWARD', bottom:'', build:(r)=>motifCompassRose(r)},
+  {id:'desert-falcon', name:'Desert Falcon', sector:'Middle Eastern-Inspired', icon:'crescent', finish:'gold',
+    top:'SWIFT', bottom:'AND SURE', build:(r)=>motifCrescent(r)},
+  {id:'jade-dragon', name:'Jade Dragon', sector:'Chinese-Inspired', icon:'dragon', finish:'bronze',
+    top:'FORTUNE FAVORS', bottom:'', build:(r)=>motifWaveRibbon(r)},
+  {id:'storm-guardian', name:'Storm Guardian', sector:'Elemental Spirit', icon:'bolt', finish:'gold',
+    top:'STORM BRINGER', bottom:'', build:(r)=>motifWingFan(r,1.6,5)},
+  {id:'cyber-sentinel', name:'Cyber Sentinel', sector:'Cyber & Tech', icon:'circuit', finish:'blacknickel',
+    top:'SECURE THE FUTURE', bottom:'', build:(r)=>motifCircuitGrid(r)},
+  {id:'iron-gearwork', name:'Iron Gearwork', sector:'Industrial & Engineering', icon:'gear', finish:'bronze',
+    top:'BUILT TO LAST', bottom:'', build:(r)=>motifGear(r)},
+  {id:'global-unity', name:'Global Unity', sector:'International Service', icon:'globe', finish:'silver',
+    top:'ONE WORLD', bottom:'', build:(r)=>motifGlobalStars(r)},
+];
+const JOKER_TEMPLATE = {id:'jokers-wild', name:"Joker's Wild", sector:'??? you found it', icon:'joker', finish:'rainbow',
+  top:'HAHA', bottom:'HAHA', build:(r)=>motifJoker(r), joker:true};
+const COMING_SOON = ['Arctic Expedition','Formula One Racing','Esports Champions'];
+
+/* ------------------------------- finishes -------------------------------- */
+const FINISHES = {
+  gold:      {label:'Antique Gold',   color:0xC9A227, metalness:0.9,  roughness:0.32},
+  silver:    {label:'Antique Silver', color:0xB9BEC7, metalness:0.9,  roughness:0.35},
+  blacknickel:{label:'Black Nickel',  color:0x2b2b2e, metalness:0.85, roughness:0.28},
+  bronze:    {label:'Bronze',         color:0xAD6F3B, metalness:0.85, roughness:0.38},
+  rainbow:   {label:'Rainbow (?!)',   color:0xffffff, metalness:0.9,  roughness:0.25, rainbow:true},
+};
+
+/* ============================== APPLICATION STATE ============================== */
+let state = {
+  templateId: 'valor-eagle',
+  top: 'DUTY HONOR COUNTRY',
+  bottom: '',
+  motto: '',
+  back: 'PRESENTED FOR EXCELLENCE',
+  diameter: 40,
+  thickness: 3,
+  edge: 'reeded',
+  finish: 'gold',
+};
+let jokerUnlocked = false;
+
+/* ================================ THREE.JS SETUP ================================ */
+const canvas = document.getElementById('stage-canvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 2000);
+camera.position.set(0,0,110);
+
+scene.add(new THREE.AmbientLight(0xfff2e0, 0.55));
+const key = new THREE.DirectionalLight(0xfff2e0, 1.3); key.position.set(60,80,120); scene.add(key);
+const fill = new THREE.DirectionalLight(0xcfe0ff, 0.5); fill.position.set(-80,-40,60); scene.add(fill);
+const rim = new THREE.DirectionalLight(0xffffff, 0.6); rim.position.set(0,-60,-100); scene.add(rim);
+
+let coinGroup = new THREE.Group();
+scene.add(coinGroup);
+let currentMaterial = new THREE.MeshStandardMaterial({color:FINISHES.gold.color, metalness:0.9, roughness:0.32});
+
+let rotY = 0.4, rotX = -0.15;
+let dragging=false, lastX=0, lastY=0;
+let autoRotate = true;
+let zoom = 110;
+
+function resize(){
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  renderer.setSize(w,h,false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+canvas.addEventListener('pointerdown', (e)=>{dragging=true; lastX=e.clientX; lastY=e.clientY; autoRotate=false;});
+window.addEventListener('pointerup', ()=>{dragging=false;});
+window.addEventListener('pointermove', (e)=>{
+  if(!dragging) return;
+  const dx=e.clientX-lastX, dy=e.clientY-lastY;
+  rotY += dx*0.008; rotX += dy*0.008;
+  rotX = Math.max(-1.2, Math.min(1.2, rotX));
+  lastX=e.clientX; lastY=e.clientY;
+});
+canvas.addEventListener('wheel', (e)=>{
+  e.preventDefault();
+  zoom += e.deltaY*0.05;
+  zoom = Math.max(55, Math.min(220, zoom));
+},{passive:false});
+
+let hueSpin = 0;
+function animate(){
+  requestAnimationFrame(animate);
+  if(autoRotate) rotY += 0.0035;
+  coinGroup.rotation.y = rotY;
+  coinGroup.rotation.x = rotX;
+  camera.position.set(0,0,zoom);
+  camera.lookAt(0,0,0);
+  if(state.finish==='rainbow'){
+    hueSpin += 0.004;
+    currentMaterial.color.setHSL(hueSpin%1, 0.65, 0.55);
+  }
+  renderer.render(scene, camera);
+}
+
+/* ============================== COIN CONSTRUCTION ================================ */
+function buildBase(R, thickness){
+  const g = new THREE.Group();
+  const geo = new THREE.ExtrudeGeometry(circleShape(R), {depth:thickness, bevelEnabled:false, steps:1});
+  const mesh = new THREE.Mesh(geo, currentMaterial);
+  mesh.position.z = -thickness/2;
+  g.add(mesh);
+  return g;
+}
+function buildEdge(R, thickness, style){
+  const g = new THREE.Group();
+  if(style==='smooth') return g;
+  const spacing = 2.0;
+  const circumference = 2*Math.PI*R;
+  const count = Math.max(28, Math.round(circumference/spacing));
+  const reedW = (circumference/count)*0.55;
+  const reedDepth = 0.5;
+  const reedLen = thickness*0.8;
+  for(let i=0;i<count;i++){
+    const theta = i/count*Math.PI*2;
+    const rr = R + reedDepth/2;
+    const x = rr*Math.cos(theta), y = rr*Math.sin(theta);
+    const geo = new THREE.BoxGeometry(reedDepth, reedW, reedLen);
+    const mesh = new THREE.Mesh(geo, currentMaterial);
+    mesh.position.set(x,y,0);
+    mesh.rotation.z = theta;
+    if(style==='rope' && i%2===1){ mesh.rotation.x = 0.55; }
+    g.add(mesh);
+  }
+  return g;
+}
+function buildFace(template, R, topText, bottomText, motto){
+  const g = new THREE.Group();
+  addShape(g, ringShape(R*0.94, R*0.90), D_RING, 0,0,0);
+  addShape(g, ringShape(R*0.64, R*0.615), D_RING, 0,0,0);
+  const emblem = template.build(R*0.5);
+  g.add(emblem);
+  arcText(g, topText, R*0.855, 0, Math.PI*0.9, false);
+  arcText(g, bottomText, R*0.855, Math.PI, Math.PI*0.9, true);
+  if(motto) flatText(g, motto, 0, -R*0.32, R*0.075);
+  g.traverse(o=>{ if(o.isMesh) o.material = currentMaterial; });
+  return g;
+}
+function buildCoin(p){
+  const R = p.diameter/2;
+  const thickness = p.thickness;
+  const template = [...TEMPLATES, JOKER_TEMPLATE].find(t=>t.id===p.templateId) || TEMPLATES[0];
+
+  const coin = new THREE.Group();
+  const base = buildBase(R, thickness);
+  base.traverse(o=>{ if(o.isMesh) o.material = currentMaterial; });
+  coin.add(base);
+
+  const edge = buildEdge(R, thickness, p.edge);
+  edge.traverse(o=>{ if(o.isMesh) o.material = currentMaterial; });
+  coin.add(edge);
+
+  const front = buildFace(template, R, p.top, p.bottom, p.motto);
+  front.position.z = thickness/2;
+  coin.add(front);
+
+  const back = new THREE.Group();
+  addShape(back, ringShape(R*0.94, R*0.90), D_RING, 0,0,0);
+  addShape(back, starShape(5, R*0.16, R*0.08), D_DETAIL, 0,0,0);
+  arcText(back, p.back, R*0.855, Math.PI, Math.PI*0.9, true);
+  back.traverse(o=>{ if(o.isMesh) o.material = currentMaterial; });
+  back.rotation.y = Math.PI;
+  back.position.z = -thickness/2;
+  coin.add(back);
+
+  return coin;
+}
+
+function countTriangles(group){
+  let n=0;
+  group.traverse(o=>{
+    if(o.isMesh){
+      const geo=o.geometry;
+      n += geo.index ? geo.index.count/3 : geo.attributes.position.count/3;
+    }
+  });
+  return Math.round(n);
+}
+
+function regenerate(){
+  scene.remove(coinGroup);
+  coinGroup.traverse(o=>{ if(o.isMesh) o.geometry.dispose(); });
+  coinGroup = buildCoin(state);
+  scene.add(coinGroup);
+
+  document.getElementById('stat-diam').textContent = state.diameter.toFixed(1)+'mm';
+  document.getElementById('stat-thick').textContent = state.thickness.toFixed(1)+'mm';
+  document.getElementById('stat-tris').textContent = countTriangles(coinGroup).toLocaleString();
+  const R = state.diameter/2;
+  const vol = (Math.PI*R*R*state.thickness/1000).toFixed(2);
+  document.getElementById('spec-vol').textContent = '~'+vol+' cm³';
+}
+
+/* ================================== STL EXPORT ================================== */
+function exportSTLBinary(root){
+  const triangles = [];
+  root.updateWorldMatrix(true,true);
+  root.traverse(obj=>{
+    if(!obj.isMesh) return;
+    const geo = obj.geometry;
+    const posAttr = geo.attributes.position;
+    const idx = geo.index;
+    const mw = obj.matrixWorld;
+    const getVertex = (i)=>{
+      const v = new THREE.Vector3().fromBufferAttribute(posAttr, i);
+      v.applyMatrix4(mw);
+      return v;
+    };
+    const addTri = (a,b,c)=>{
+      const cb = new THREE.Vector3().subVectors(c,b);
+      const ab = new THREE.Vector3().subVectors(a,b);
+      const normal = cb.cross(ab).normalize();
+      triangles.push({normal,a,b,c});
+    };
+    if(idx){
+      for(let i=0;i<idx.count;i+=3){
+        addTri(getVertex(idx.getX(i)), getVertex(idx.getX(i+1)), getVertex(idx.getX(i+2)));
+      }
+    } else {
+      for(let i=0;i<posAttr.count;i+=3){
+        addTri(getVertex(i), getVertex(i+1), getVertex(i+2));
+      }
+    }
+  });
+
+  const triCount = triangles.length;
+  const buffer = new ArrayBuffer(84 + 50*triCount);
+  const dv = new DataView(buffer);
+  let offset = 80;
+  dv.setUint32(offset, triCount, true); offset += 4;
+  for(const t of triangles){
+    dv.setFloat32(offset, t.normal.x, true); offset+=4;
+    dv.setFloat32(offset, t.normal.y, true); offset+=4;
+    dv.setFloat32(offset, t.normal.z, true); offset+=4;
+    for(const v of [t.a,t.b,t.c]){
+      dv.setFloat32(offset, v.x, true); offset+=4;
+      dv.setFloat32(offset, v.y, true); offset+=4;
+      dv.setFloat32(offset, v.z, true); offset+=4;
+    }
+    dv.setUint16(offset, 0, true); offset+=2;
+  }
+  return buffer;
+}
+
+function downloadSTL(){
+  const buffer = exportSTLBinary(coinGroup);
+  const blob = new Blob([buffer], {type:'application/octet-stream'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const name = (state.templateId||'coin').replace(/[^a-z0-9-]/gi,'_');
+  a.href = url;
+  a.download = `challenge-coin-${name}.stl`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+/* ==================================== UI WIRING =================================== */
+function renderGallery(){
+  const list = document.getElementById('tpl-list');
+  list.innerHTML = '';
+  const all = jokerUnlocked ? [...TEMPLATES, JOKER_TEMPLATE] : TEMPLATES;
+  all.forEach(t=>{
+    const card = document.createElement('div');
+    card.className = 'tpl-card' + (t.id===state.templateId ? ' active' : '') + (t.joker ? ' joker' : '');
+    card.innerHTML = `${ICONS[t.icon]}<div class="info"><b>${t.name}</b><small>${t.sector}</small></div>`;
+    card.addEventListener('click', ()=>{
+      state.templateId = t.id;
+      state.top = t.top; state.bottom = t.bottom;
+      state.finish = t.finish;
+      document.getElementById('in-top').value = t.top;
+      document.getElementById('in-bottom').value = t.bottom;
+      renderFinishGrid();
+      renderGallery();
+      regenerate();
+    });
+    list.appendChild(card);
+  });
+  COMING_SOON.forEach(name=>{
+    const card = document.createElement('div');
+    card.className = 'tpl-card locked';
+    card.innerHTML = `${ICONS.lock}<div class="info"><b>${name}</b><small>Coming soon</small></div>`;
+    list.appendChild(card);
+  });
+}
+
+function renderFinishGrid(){
+  const grid = document.getElementById('finish-grid');
+  grid.innerHTML = '';
+  Object.keys(FINISHES).forEach(key=>{
+    if(key==='rainbow' && !jokerUnlocked) return;
+    const f = FINISHES[key];
+    const sw = document.createElement('div');
+    sw.className = 'finish-swatch' + (state.finish===key ? ' active' : '');
+    const hex = '#'+f.color.toString(16).padStart(6,'0');
+    sw.style.background = key==='rainbow'
+      ? 'conic-gradient(red,orange,yellow,green,blue,violet,red)'
+      : `radial-gradient(circle at 35% 30%, ${hex}, #000 150%)`;
+    sw.innerHTML = `<span>${f.label}</span>`;
+    sw.addEventListener('click', ()=>{
+      state.finish = key;
+      applyFinish();
+      renderFinishGrid();
+    });
+    grid.appendChild(sw);
+  });
+}
+
+function applyFinish(){
+  const f = FINISHES[state.finish];
+  currentMaterial.color.setHex(f.color);
+  currentMaterial.metalness = f.metalness;
+  currentMaterial.roughness = f.roughness;
+}
+
+let debounceTimer=null;
+function scheduleRegenerate(){
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(regenerate, 140);
+}
+
+document.getElementById('in-top').addEventListener('input', (e)=>{
+  state.top = e.target.value;
+  checkJokerTextTrigger(e.target.value);
+  scheduleRegenerate();
+});
+document.getElementById('in-bottom').addEventListener('input', (e)=>{ state.bottom = e.target.value; scheduleRegenerate(); });
+document.getElementById('in-motto').addEventListener('input', (e)=>{ state.motto = e.target.value; scheduleRegenerate(); });
+document.getElementById('in-back').addEventListener('input', (e)=>{ state.back = e.target.value; scheduleRegenerate(); });
+
+document.getElementById('in-diam').addEventListener('input', (e)=>{
+  state.diameter = parseFloat(e.target.value);
+  document.getElementById('lbl-diam').textContent = state.diameter.toFixed(1)+' mm';
+  scheduleRegenerate();
+});
+document.getElementById('in-thick').addEventListener('input', (e)=>{
+  state.thickness = parseFloat(e.target.value);
+  document.getElementById('lbl-thick').textContent = state.thickness.toFixed(1)+' mm';
+  scheduleRegenerate();
+});
+
+document.querySelectorAll('#seg-edge button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#seg-edge button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.edge = btn.dataset.v;
+    scheduleRegenerate();
+  });
+});
+
+document.getElementById('btn-face-front').addEventListener('click', ()=>{
+  autoRotate=false; rotY=0; rotX=0;
+  document.getElementById('btn-face-front').classList.add('active');
+  document.getElementById('btn-face-back').classList.remove('active');
+});
+document.getElementById('btn-face-back').addEventListener('click', ()=>{
+  autoRotate=false; rotY=Math.PI; rotX=0;
+  document.getElementById('btn-face-back').classList.add('active');
+  document.getElementById('btn-face-front').classList.remove('active');
+});
+
+document.getElementById('btn-export').addEventListener('click', downloadSTL);
+
+/* ================================= EASTER EGG ==================================== */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3200);
+}
+function unlockJoker(){
+  if(jokerUnlocked) return;
+  jokerUnlocked = true;
+  showToast("🃏 A wild card appears — Joker's Wild unlocked!");
+  renderGallery();
+  renderFinishGrid();
+}
+function checkJokerTextTrigger(val){
+  if(val && val.trim().toUpperCase()==='JOKER'){
+    unlockJoker();
+  }
+}
+const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let konamiBuf = [];
+window.addEventListener('keydown', (e)=>{
+  const key = e.key.length===1 ? e.key.toLowerCase() : e.key;
+  konamiBuf.push(key);
+  if(konamiBuf.length > KONAMI.length) konamiBuf.shift();
+  if(konamiBuf.length===KONAMI.length && konamiBuf.every((k,i)=>k===KONAMI[i])){
+    unlockJoker();
+    konamiBuf = [];
+  }
+});
+
+/* =================================== BOOTSTRAP ==================================== */
+function init(){
+  document.getElementById('in-top').value = state.top;
+  document.getElementById('in-bottom').value = state.bottom;
+  document.getElementById('in-motto').value = state.motto;
+  document.getElementById('in-back').value = state.back;
+  document.getElementById('lbl-diam').textContent = state.diameter.toFixed(1)+' mm';
+  document.getElementById('lbl-thick').textContent = state.thickness.toFixed(1)+' mm';
+
+  renderGallery();
+  renderFinishGrid();
+  applyFinish();
+  resize();
+  regenerate();
+  animate();
+}
+init();
+</script>
+</body>
+</html>

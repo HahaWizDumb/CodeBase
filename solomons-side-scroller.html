@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solomon's Treasures • Side-Scrolling Wisdom</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            color: #ffd700;
+            font-family: 'Press Start 2P', system-ui;
+            overflow: hidden;
+            image-rendering: pixelated;
+        }
+        
+        #home-base {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(#111, #331100);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+        
+        .title {
+            font-size: 42px;
+            text-shadow: 0 0 30px #ff0000;
+            margin-bottom: 20px;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #ff8800;
+            margin-bottom: 40px;
+        }
+        
+        button {
+            background: #8b0000;
+            color: #ffd700;
+            border: 6px solid #ffd700;
+            padding: 18px 50px;
+            margin: 12px;
+            font-size: 18px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', system-ui;
+        }
+        
+        button:hover {
+            background: #ffd700;
+            color: #8b0000;
+        }
+        
+        #wisdom-list {
+            margin: 30px 0;
+            max-width: 700px;
+            text-align: left;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        #game-container {
+            display: none;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        canvas {
+            border: 8px solid #ffd700;
+            box-shadow: 0 0 40px #ff0000;
+            image-rendering: pixelated;
+        }
+        
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.9);
+            padding: 12px 25px;
+            border: 4px solid #ffd700;
+            z-index: 100;
+            font-size: 16px;
+        }
+        
+        #news-ticker {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #8b0000;
+            color: #ffd700;
+            padding: 12px;
+            font-size: 14px;
+            border: 4px solid #ff0000;
+            white-space: nowrap;
+            overflow: hidden;
+            z-index: 100;
+        }
+        
+        .ticker-content {
+            display: inline-block;
+            animation: ticker 28s linear infinite;
+        }
+        
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        #modal {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 560px;
+            background: #111;
+            border: 8px solid #ffd700;
+            box-shadow: 0 0 60px #ff0000;
+            padding: 40px;
+            text-align: center;
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== HOME BASE PAGE ==================== -->
+<div id="home-base">
+    <div class="title">SOLOMON'S TREASURES</div>
+    <div class="subtitle">SIDE-SCROLLING WISDOM IN A VIOLENT 2026 WORLD</div>
+    
+    <div style="margin:20px 0; font-size:18px;">
+        Collected: <span id="home-score">0</span>/8 Treasures of Wisdom
+    </div>
+    
+    <div id="wisdom-list">
+        <strong>YOUR WISDOM VAULT:</strong><br><br>
+        <div id="collected-wisdom"></div>
+    </div>
+    
+    <button onclick="startGame()">ENTER THE VIOLENT WORLD</button>
+    <button onclick="saveGame()">💾 SAVE PROGRESS</button>
+    <button onclick="loadGame()">📥 LOAD PROGRESS</button>
+    <button onclick="resetGame()" style="background:#330000; border-color:#ff8800;">RESET JOURNEY</button>
+    
+    <div style="margin-top:40px; font-size:12px; opacity:0.6; max-width:600px;">
+        Side-scroll through war-torn lands • Dodge Pharisee hypocrites &amp; Herodian guards<br>
+        Defeat mythological beast bosses • Collect Solomon's wisdom before the world burns
+    </div>
+</div>
+
+<!-- ==================== GAME SCREEN ==================== -->
+<div id="game-container">
+    <canvas id="canvas" width="1100" height="620"></canvas>
+    
+    <!-- HUD -->
+    <div id="hud">
+        <span id="game-score">0</span>/8 WISDOM • 
+        ❤️ <span id="game-health">4</span> • 
+        <span id="distance">DISTANCE: 0m</span>
+    </div>
+    
+    <!-- News ticker reflecting today's real-time conflicts -->
+    <div id="news-ticker">
+        <div class="ticker-content" id="ticker-content">
+            🔥 MARCH 28 2026 • EASTERN EUROPE FRONTLINES EXPLODE • MIDDLE EAST CEASEFIRE CRUMBLES • 
+            INDO-PACIFIC NAVAL STANDOFF • GLOBAL PROTESTS ERUPT INTO RIOTS • CYBER WARS BLACKOUT CITIES • 
+            ONLY SOLOMON'S WISDOM CAN SAVE US • 
+        </div>
+    </div>
+    
+    <!-- Pause / Return button -->
+    <button onclick="returnToBase()" 
+            style="position:absolute; top:20px; right:20px; z-index:100; padding:10px 20px; font-size:14px;">
+        ⬅ RETURN TO HOME BASE
+    </button>
+    
+    <!-- Wisdom modal -->
+    <div id="modal">
+        <h2 id="modal-title" style="color:#ffd700;">✨ TREASURE OF WISDOM ✨</h2>
+        <div id="modal-text" style="margin:25px 0; font-size:16px; line-height:1.5;"></div>
+        <button onclick="closeModal()" style="width:60%;">CONTINUE THE SCROLL</button>
+    </div>
+</div>
+
+<script>
+// =============== GAME STATE (saved with localStorage) ===============
+let gameState = {
+    collected: [false, false, false, false, false, false, false, false], // 8 treasures
+    score: 0,
+    health: 4
+};
+
+// =============== CANVAS SETUP ===============
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const WORLD_WIDTH = 4200;
+const WORLD_HEIGHT = 620;
+
+let player = {
+    x: 150,
+    y: 400,
+    vx: 0,
+    vy: 0,
+    width: 34,
+    height: 48,
+    speed: 7,
+    jump: -18,
+    onGround: false
+};
+
+let camera = { x: 0 };
+let keys = {};
+let scrollSpeed = 0;
+let distance = 0;
+
+// Treasures (placed along the long side-scrolling world)
+const treasuresData = [
+    {x: 650, y: 380, collected: false, title: "Gentle Answer", text: "A gentle answer turns away wrath.\n— Proverbs 15:1"},
+    {x: 1180, y: 220, collected: false, title: "Pride Falls", text: "Pride goes before destruction.\n— Proverbs 16:18"},
+    {x: 1650, y: 480, collected: false, title: "Patient Warrior", text: "Better a patient person than a warrior.\n— Proverbs 16:32"},
+    {x: 2120, y: 150, collected: false, title: "Store Knowledge", text: "The wise store up knowledge.\n— Proverbs 10:14"},
+    {x: 2580, y: 410, collected: false, title: "Overcome Evil", text: "Do not be overcome by evil,\nbut overcome evil with good."},
+    {x: 3050, y: 280, collected: false, title: "Wisdom > Rubies", text: "Wisdom is more precious than rubies."},
+    {x: 3480, y: 120, collected: false, title: "Fear of the Lord", text: "The fear of the Lord is the beginning of wisdom."},
+    {x: 3900, y: 450, collected: false, title: "Final Shield", text: "You walked the fire of 2026.\nWisdom is your eternal shield."}
+];
+
+// Enemies: Pharisees (robed, slow, throw "stones") + Herodians (armored, fast)
+let enemies = [];
+function spawnEnemies() {
+    enemies = [];
+    // Pharisees
+    for (let i = 0; i < 6; i++) {
+        enemies.push({
+            x: 800 + i * 520,
+            y: 420,
+            width: 32,
+            height: 48,
+            vx: -1.8,
+            type: 'pharisee',
+            health: 2
+        });
+    }
+    // Herodians
+    for (let i = 0; i < 5; i++) {
+        enemies.push({
+            x: 1400 + i * 480,
+            y: 380,
+            width: 34,
+            height: 52,
+            vx: 2.6,
+            type: 'herodian',
+            health: 3
+        });
+    }
+}
+
+// Mythological Beast Boss (Leviathan – appears near the end)
+let boss = null;
+function spawnBoss() {
+    boss = {
+        x: 3700,
+        y: 180,
+        width: 120,
+        height: 110,
+        vx: -1.5,
+        health: 8,
+        type: 'leviathan'
+    };
+}
+
+// Platforms for side-scrolling platformer feel
+const platforms = [
+    {x: 400, y: 520, w: 340, h: 20},
+    {x: 900, y: 380, w: 280, h: 20},
+    {x: 1450, y: 480, w: 220, h: 20},
+    {x: 1900, y: 260, w: 310, h: 20},
+    {x: 2400, y: 510, w: 260, h: 20},
+    {x: 2900, y: 340, w: 380, h: 20},
+    {x: 3350, y: 460, w: 250, h: 20},
+    {x: 3750, y: 220, w: 420, h: 20}
+];
+
+// =============== INPUT ===============
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup',   e => keys[e.key.toLowerCase()] = false);
+
+// =============== LOAD / SAVE ===============
+function saveGame() {
+    localStorage.setItem('solomonSave', JSON.stringify(gameState));
+    alert("💾 PROGRESS SAVED TO YOUR WISDOM VAULT");
+}
+
+function loadGame() {
+    const saved = localStorage.getItem('solomonSave');
+    if (saved) {
+        gameState = JSON.parse(saved);
+        alert("📥 PROGRESS LOADED");
+        updateHomeUI();
+    } else {
+        alert("No save file found.");
+    }
+}
+
+function resetGame() {
+    if (confirm("Erase all progress and start a new journey?")) {
+        localStorage.removeItem('solomonSave');
+        gameState = { collected: [false,false,false,false,false,false,false,false], score: 0, health: 4 };
+        updateHomeUI();
+    }
+}
+
+function updateHomeUI() {
+    document.getElementById('home-score').textContent = gameState.score;
+    
+    let listHTML = '';
+    treasuresData.forEach((t, i) => {
+        if (gameState.collected[i]) {
+            listHTML += `✅ ${t.title}<br>`;
+        }
+    });
+    if (listHTML === '') listHTML = '<em style="opacity:0.5">No treasures yet... enter the world to begin collecting</em>';
+    document.getElementById('collected-wisdom').innerHTML = listHTML;
+}
+
+// =============== GAME SCREENS ===============
+function startGame() {
+    // Sync treasures with saved state
+    treasuresData.forEach((t, i) => t.collected = gameState.collected[i]);
+    
+    document.getElementById('home-base').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+    
+    spawnEnemies();
+    boss = null;
+    player.x = 150;
+    player.y = 400;
+    camera.x = 0;
+    distance = 0;
+    
+    gameLoop();
+}
+
+function returnToBase() {
+    // Save current progress
+    treasuresData.forEach((t, i) => gameState.collected[i] = t.collected);
+    gameState.score = treasuresData.filter(t => t.collected).length;
+    gameState.health = player.health || 4;
+    
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('home-base').style.display = 'flex';
+    updateHomeUI();
+}
+
+function showWisdomModal(treasure) {
+    document.getElementById('modal-title').innerHTML = `✨ ${treasure.title} ✨`;
+    document.getElementById('modal-text').innerHTML = treasure.text.replace(/\n/g, '<br>');
+    document.getElementById('modal').style.display = 'block';
+}
+
+// =============== MAIN GAME LOOP ===============
+let gameRunning = true;
+
+function gameLoop() {
+    if (!gameRunning) return;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // ---- PLAYER MOVEMENT (side-scrolling) ----
+    player.vx = 0;
+    if (keys['a'] || keys['arrowleft']) player.vx = -player.speed;
+    if (keys['d'] || keys['arrowright']) player.vx = player.speed;
+    
+    if ((keys[' '] || keys['w'] || keys['arrowup']) && player.onGround) {
+        player.vy = player.jump;
+        player.onGround = false;
+    }
+    
+    // Gravity
+    player.vy += 0.9;
+    player.x += player.vx;
+    player.y += player.vy;
+    
+    // World bounds
+    if (player.x < 40) player.x = 40;
+    if (player.x > WORLD_WIDTH - 60) player.x = WORLD_WIDTH - 60;
+    
+    // Platform collision
+    player.onGround = false;
+    for (let p of platforms) {
+        if (player.x < p.x + p.w && player.x + player.width > p.x &&
+            player.y + player.height > p.y && player.y + player.height - player.vy <= p.y) {
+            player.y = p.y - player.height;
+            player.vy = 0;
+            player.onGround = true;
+        }
+    }
+    
+    // Camera follow (side-scrolling)
+    camera.x = Math.max(0, Math.min(player.x - canvas.width / 2, WORLD_WIDTH - canvas.width));
+    distance = Math.floor(player.x);
+    
+    // ---- UPDATE ENEMIES ----
+    enemies.forEach(e => {
+        e.x += e.vx;
+        // Simple patrol
+        if (e.type === 'pharisee' && (e.x < 300 || e.x > WORLD_WIDTH - 400)) e.vx *= -1;
+        if (e.type === 'herodian' && (e.x < 800 || e.x > WORLD_WIDTH - 300)) e.vx *= -1;
+        
+        // Touch player = damage
+        if (player.x < e.x + e.width && player.x + player.width > e.x &&
+            player.y < e.y + e.height && player.y + player.height > e.y) {
+            gameState.health--;
+            document.getElementById('game-health').textContent = gameState.health;
+            player.x -= 80; // knockback
+            if (gameState.health <= 0) {
+                gameRunning = false;
+                alert("💥 THE VIOLENT WORLD CLAIMED YOU...\nReturn to base and try again.");
+                returnToBase();
+            }
+        }
+    });
+    
+    // Boss logic
+    if (!boss && player.x > 3400) spawnBoss();
+    if (boss) {
+        boss.x += boss.vx;
+        if (boss.x < 3400 || boss.x > 4000) boss.vx *= -1;
+        
+        // Boss collision
+        if (player.x < boss.x + boss.width && player.x + player.width > boss.x &&
+            player.y < boss.y + boss.height && player.y + player.height > boss.y) {
+            gameState.health--;
+            document.getElementById('game-health').textContent = gameState.health;
+            player.x -= 120;
+            boss.health--;
+            if (boss.health <= 0) {
+                alert("🏆 YOU DEFEATED THE LEVIATHAN BEAST BOSS!\nWisdom conquers myth and chaos.");
+                boss = null;
+            }
+        }
+    }
+    
+    // ---- TREASURE COLLECTION ----
+    treasuresData.forEach((t, i) => {
+        if (t.collected) return;
+        const dx = player.x + player.width/2 - t.x;
+        const dy = player.y + player.height/2 - t.y;
+        if (Math.sqrt(dx*dx + dy*dy) < 55) {
+            t.collected = true;
+            gameState.score++;
+            document.getElementById('game-score').textContent = gameState.score;
+            showWisdomModal(t);
+        }
+    });
+    
+    // ---- DRAWING THE WORLD ----
+    // Background (war-torn sky)
+    ctx.fillStyle = '#1a0f00';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Scrolling distant mountains / smoke
+    ctx.fillStyle = '#331100';
+    for (let i = 0; i < 8; i++) {
+        const off = (camera.x * 0.2 + i * 380) % (WORLD_WIDTH + 800);
+        ctx.fillRect(off - camera.x, 280 + Math.sin(i) * 30, 240, 340);
+    }
+    
+    // Ground
+    ctx.fillStyle = '#2a1a0a';
+    ctx.fillRect(0 - camera.x, 540, WORLD_WIDTH, WORLD_HEIGHT);
+    
+    // Platforms
+    ctx.fillStyle = '#8b5a00';
+    for (let p of platforms) {
+        ctx.fillRect(p.x - camera.x, p.y, p.w, p.h);
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(p.x - camera.x, p.y, p.w, 8); // gold trim
+        ctx.fillStyle = '#8b5a00';
+    }
+    
+    // Draw treasures
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = '#ffd700';
+    treasuresData.forEach(t => {
+        if (t.collected) return;
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(t.x - camera.x, t.y, 26 + Math.sin(Date.now()/120)*6, 0, Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#b8860b';
+        ctx.beginPath();
+        ctx.arc(t.x - camera.x, t.y, 18, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = '#111';
+        ctx.font = '36px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('📜', t.x - camera.x, t.y);
+    });
+    
+    // Draw enemies
+    enemies.forEach(e => {
+        ctx.fillStyle = e.type === 'pharisee' ? '#660000' : '#440000';
+        ctx.fillRect(e.x - camera.x, e.y, e.width, e.height);
+        ctx.fillStyle = '#ffdd88';
+        ctx.font = 'bold 28px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(e.type === 'pharisee' ? '🧥' : '🛡️', e.x + e.width/2 - camera.x, e.y + 28);
+    });
+    
+    // Draw boss (Leviathan)
+    if (boss) {
+        ctx.fillStyle = '#004400';
+        ctx.fillRect(boss.x - camera.x, boss.y, boss.width, boss.height);
+        ctx.fillStyle = '#00ff88';
+        ctx.font = 'bold 70px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🐉', boss.x + boss.width/2 - camera.x, boss.y + 75);
+        ctx.fillStyle = '#ff0000';
+        ctx.fillText('🔥', boss.x + boss.width/2 - camera.x + 30, boss.y + 30);
+    }
+    
+    // Draw player (explorer with hood)
+    const px = player.x - camera.x;
+    const py = player.y;
+    ctx.fillStyle = '#00aaff';
+    ctx.fillRect(px, py, player.width, player.height);
+    ctx.fillStyle = '#f4a261';
+    ctx.beginPath();
+    ctx.arc(px + 17, py + 14, 14, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px + player.width, py);
+    ctx.lineTo(px + 17, py - 24);
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.fillRect(px + 8, py + 8, 6, 8);
+    ctx.fillRect(px + 20, py + 8, 6, 8);
+    
+    // HUD updates
+    document.getElementById('game-score').textContent = gameState.score;
+    document.getElementById('game-health').textContent = gameState.health;
+    document.getElementById('distance').textContent = `DISTANCE: ${distance}m`;
+    
+    // Win condition
+    if (gameState.score >= 8 && !boss) {
+        gameRunning = false;
+        setTimeout(() => {
+            alert("🏆 YOU HAVE COLLECTED ALL 8 TREASURES OF SOLOMON!\n\nYou defeated Pharisees, Herodians, and the Leviathan beast.\nWisdom has triumphed over the violent world of 2026.");
+            returnToBase();
+        }, 500);
+    }
+    
+    requestAnimationFrame(gameLoop);
+}
+
+function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+}
+
+// Initial home UI
+updateHomeUI();
+</script>
+
+</body>
+</html>

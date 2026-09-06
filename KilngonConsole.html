@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🪓 KLINGON IMPERIAL TRADE WARRIOR v2.0 🪓</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;display=swap');
+        
+        :root {
+            --klingon-red: #c8102e;
+            --klingon-gold: #ffcc00;
+            --klingon-black: #0f0a00;
+            --klingon-dark: #1a1100;
+            --klingon-glow: #ff6600;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: linear-gradient(#0f0a00, #2a1a00);
+            color: var(--klingon-gold);
+            font-family: 'Press Start 2P', system-ui;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            image-rendering: pixelated;
+            position: relative;
+        }
+        
+        /* ENHANCED KLINGON VISUAL EFFECTS */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at center, transparent 40%, rgba(200,16,46,0.15) 100%);
+            pointer-events: none;
+            animation: klingon-pulse 8s ease infinite;
+            z-index: -1;
+            box-shadow: inset 0 0 120px rgba(255,102,0,0.3);
+        }
+        
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 3px,
+                rgba(200, 16, 46, 0.12) 3px,
+                rgba(200, 16, 46, 0.12) 6px
+            );
+            pointer-events: none;
+            z-index: 9999;
+            animation: scanline 3s linear infinite;
+            mix-blend-mode: overlay;
+        }
+        
+        @keyframes klingon-pulse {
+            0%,100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes scanline {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100%; }
+        }
+        
+        .header {
+            background: var(--klingon-dark);
+            border-bottom: 8px solid var(--klingon-red);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 0 30px var(--klingon-red);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 32px;
+            text-shadow: 0 0 15px var(--klingon-red), 6px 6px 0 #000;
+        }
+        
+        .title {
+            font-size: 26px;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+        }
+        
+        /* NEWS TICKER - ENHANCED */
+        .news-ticker {
+            background: #111;
+            border-top: 3px solid var(--klingon-red);
+            border-bottom: 3px solid var(--klingon-red);
+            padding: 6px 20px;
+            white-space: nowrap;
+            overflow: hidden;
+            font-size: 13px;
+            color: #ff6600;
+            box-shadow: 0 0 15px var(--klingon-glow);
+        }
+        
+        .ticker-content {
+            display: inline-block;
+            animation: ticker-slide 35s linear infinite;
+        }
+        
+        @keyframes ticker-slide {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        /* MAIN SCREEN - now with galactic toggle */
+        .main-screen {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .panel {
+            background: var(--klingon-dark);
+            border: 6px ridge var(--klingon-red);
+            box-shadow: 0 0 30px rgba(200,16,46,0.7), inset 0 0 30px rgba(255,204,0,0.3);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            border-radius: 4px;
+        }
+        
+        .left-panel { width: 280px; }
+        .center-panel { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+        .right-panel { width: 340px; }
+        
+        /* TABS FOR RIGHT PANEL */
+        .tab-bar {
+            display: flex;
+            background: #111;
+            border-bottom: 4px solid var(--klingon-red);
+            margin-bottom: 8px;
+        }
+        .tab {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: var(--klingon-red);
+            color: var(--klingon-gold);
+            box-shadow: 0 0 12px var(--klingon-gold);
+        }
+        
+        .agent-avatar {
+            width: 100%;
+            height: 130px;
+            background: linear-gradient(#330000, #1a1100);
+            border: 5px solid var(--klingon-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 72px;
+            margin-bottom: 15px;
+            position: relative;
+            animation: batleth-shake 1.2s infinite alternate;
+        }
+        
+        @keyframes batleth-shake {
+            0% { transform: rotate(-4deg); }
+            100% { transform: rotate(4deg); }
+        }
+        
+        .chart-container { flex: 1; background: #000; border: 6px ridge var(--klingon-red); position: relative; }
+        
+        canvas { width: 100% !important; height: 100% !important; }
+        
+        /* COMMODITIES TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 2px solid #330000;
+        }
+        th { background: rgba(200,16,46,0.3); }
+        
+        /* WEATHER RADAR */
+        .radar-container {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            background: #000;
+            border: 6px ridge var(--klingon-red);
+            overflow: hidden;
+        }
+        
+        /* MUSIC PLAYER */
+        .music-player {
+            background: #111;
+            padding: 12px;
+            border: 4px solid var(--klingon-gold);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+        }
+        
+        button {
+            background: var(--klingon-red);
+            color: var(--klingon-gold);
+            border: 4px solid var(--klingon-gold);
+            padding: 12px 24px;
+            font-family: 'Press Start 2P', system-ui;
+            font-size: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: var(--klingon-gold);
+            color: var(--klingon-red);
+            transform: scale(1.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15,10,0,0.96);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: var(--klingon-dark);
+            border: 10px ridge var(--klingon-red);
+            width: 92%;
+            max-width: 820px;
+            padding: 30px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        pre {
+            background: #000;
+            padding: 12px;
+            font-size: 12px;
+            overflow: auto;
+            border: 2px solid var(--klingon-gold);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <div class="logo">
+            <span style="font-size:48px;">🪓</span>
+            KLINGON IMPERIAL
+            <span style="font-size:48px;">🪓</span>
+        </div>
+        
+        <div>
+            <div class="title">TRADE WARRIOR v2.0</div>
+            <div style="font-size:13px; letter-spacing:8px; color:#ff6600;">QAPLA'! • LIVE GALACTIC DOMINATION</div>
+        </div>
+        
+        <div style="display:flex; align-items:center; gap:20px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div style="width:18px;height:18px;background:#00ff00;border-radius:50%;box-shadow:0 0 15px #00ff00;animation:pulse 1s infinite;"></div>
+                <span>LIVE BATTLEFEED</span>
+            </div>
+            
+            <div class="hull" style="padding:6px 16px;border:4px solid var(--klingon-red);">
+                HULL: <span id="hull">100%</span> • SHIELDS: <span id="shields">87%</span>
+            </div>
+            
+            <button onclick="showApiModal()" style="padding:10px 20px;font-size:13px;">🔌 API TUTORIALS</button>
+            
+            <!-- GALACTIC TOGGLE -->
+            <button onclick="toggleMarketMode()" id="market-toggle-btn" style="background:#0066aa;padding:10px 20px;">
+                🌌 GALACTIC MODE
+            </button>
+        </div>
+    </div>
+    
+    <!-- LIVE NEWS TICKER (disasters, wars, conflicts) -->
+    <div class="news-ticker" id="news-ticker">
+        <div class="ticker-content" id="ticker-content">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+    
+    <!-- MAIN SCREEN -->
+    <div class="main-screen">
+        
+        <!-- LEFT: AGENT -->
+        <div class="panel left-panel">
+            <div class="agent-header" style="text-align:center;font-size:18px;margin-bottom:12px;text-shadow:0 0 10px var(--klingon-gold);">🛡️ AGENT K'PLAAR 🛡️</div>
+            
+            <div class="agent-avatar" id="agent-avatar">⚔️</div>
+            
+            <div style="margin-bottom:15px;">
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+                    <span>STRATEGY:</span>
+                    <span id="strategy-name" style="color:#ff6600;">HONOR + CHAOS</span>
+                </div>
+                <div style="height:14px;background:#111;border:3px solid #ffcc00;position:relative;">
+                    <div id="strategy-bar" style="width:92%;height:100%;background:linear-gradient(to right,#ffcc00,#c8102e);"></div>
+                </div>
+            </div>
+            
+            <div style="font-size:13px;line-height:1.6;">
+                CONFIDENCE: <span id="confidence">94%</span><br>
+                LAST DECISION: <span id="last-decision" style="color:#00ff00;">BUY BLOODWINE</span><br>
+                WIN STREAK: <span id="win-streak">11 TRADES</span>
+            </div>
+            
+            <div style="margin-top:auto;padding-top:15px;border-top:3px dashed var(--klingon-red);text-align:center;font-size:12px;">
+                "TODAY IS A GOOD DAY TO TRADE... AND CONQUER!"
+            </div>
+            
+            <div style="margin-top:20px;background:#111;padding:12px;border:3px solid var(--klingon-gold);">
+                CASH: <span id="cash-display" style="color:#00ff88;font-size:18px;">$18,440</span><br>
+                PORTFOLIO: <span id="portfolio-value" style="color:#00ff88;font-size:18px;">$41,920</span>
+            </div>
+        </div>
+        
+        <!-- CENTER: LIVE MARKET + CHART -->
+        <div class="panel center-panel">
+            <div id="market-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div style="font-size:18px;" id="market-title">FEDERATION STOCKS — LIVE</div>
+                <div style="font-size:14px;color:#ff6600;" id="market-subtitle">AGENT SCANNING FOR HONOR</div>
+            </div>
+            
+            <!-- TICKER -->
+            <div id="ticker-bar" class="ticker-bar" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;">
+                <!-- JS populated -->
+            </div>
+            
+            <!-- CHART -->
+            <div class="chart-container">
+                <div style="position:absolute;top:10px;left:15px;font-size:14px;background:rgba(0,0,0,0.8);padding:6px 14px;z-index:5;">
+                    LIVE HISTORY — <span id="chart-symbol">AAPL</span>
+                </div>
+                <canvas id="price-chart" width="900" height="360"></canvas>
+            </div>
+            
+            <div style="display:flex;justify-content:space-between;font-size:13px;background:#111;padding:8px 15px;border-top:4px solid var(--klingon-red);">
+                <div>AGENT THINKING: <span id="agent-thinking" class="blink" style="color:#ff6600;">CALCULATING WAR PROFITS...</span></div>
+                <div id="next-action">NEXT TRADE IN <span id="countdown">4s</span></div>
+            </div>
+        </div>
+        
+        <!-- RIGHT: TABBED PANEL (Log / Commodities / News / Radar) -->
+        <div class="panel right-panel">
+            
+            <div class="tab-bar">
+                <div class="tab active" onclick="switchTab(0)" id="tab-0">📜 TRADE LOG</div>
+                <div class="tab" onclick="switchTab(1)" id="tab-1">📊 COMMODITIES</div>
+                <div class="tab" onclick="switchTab(2)" id="tab-2">⚡ NEWS</div>
+                <div class="tab" onclick="switchTab(3)" id="tab-3">🌩️ RADAR</div>
+            </div>
+            
+            <!-- TAB 0: TRADE LOG -->
+            <div id="content-0" class="log-container">
+                <div id="trade-log" class="log" style="flex:1;overflow-y:auto;font-size:13px;line-height:1.4;background:#000;padding:10px;border:3px inset #330000;">
+                    <!-- JS -->
+                </div>
+            </div>
+            
+            <!-- TAB 1: COMMODITIES TABLE -->
+            <div id="content-1" class="log-container" style="display:none;flex:1;overflow:auto;">
+                <table id="commodities-table">
+                    <thead><tr><th>SYMBOL</th><th>PRICE</th><th>CHANGE</th></tr></thead>
+                    <tbody><!-- JS --></tbody>
+                </table>
+            </div>
+            
+            <!-- TAB 2: LIVE NEWS FEED -->
+            <div id="content-2" class="log-container" style="display:none;flex:1;overflow:auto;font-size:13px;">
+                <div id="news-feed" style="padding:10px;line-height:1.5;"></div>
+            </div>
+            
+            <!-- TAB 3: WEATHER RADAR -->
+            <div id="content-3" class="log-container" style="display:none;">
+                <div style="text-align:center;font-size:13px;margin-bottom:8px;color:#00ff88;">US SECTOR WEATHER RADAR • Qo'noS Orbit View</div>
+                <div class="radar-container">
+                    <canvas id="radar-canvas" width="300" height="220"></canvas>
+                </div>
+                <div style="margin-top:8px;font-size:12px;text-align:center;">
+                    TEMP: <span id="temp">62°F</span> • WIND: <span id="wind">14 mph</span> • STORM RISK: <span id="storm" style="color:#ff0000;">HIGH</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MUSIC PLAYER + BOTTOM BAR -->
+    <div style="background:var(--klingon-dark);border-top:6px solid var(--klingon-red);padding:10px 20px;display:flex;align-items:center;gap:25px;justify-content:space-between;">
+        
+        <!-- MUSIC -->
+        <div class="music-player">
+            <div style="font-size:18px;">🎵</div>
+            <div>
+                <strong>KLINGON BATTLE ANTHEM</strong><br>
+                <span id="now-playing" style="font-size:11px;color:#ff6600;">"QAPLA' WAR DRUMS" — LIVE</span>
+            </div>
+            <button onclick="toggleMusic()" id="music-btn" style="padding:8px 16px;font-size:12px;">▶️ PLAY</button>
+            <input type="range" id="volume" min="0" max="100" value="70" style="width:120px;" oninput="setVolume(this.value)">
+        </div>
+        
+        <!-- CONTROLS -->
+        <div style="display:flex;gap:12px;">
+            <button onclick="toggleSimulation()">⏸️ PAUSE WAR</button>
+            <button onclick="boostVolatility()">🔥 VOLATILITY WARP</button>
+            <button onclick="manualTrade()">⚔️ FORCE TRADE</button>
+            <button onclick="resetSimulation()">♻️ NEW BATTLE</button>
+        </div>
+        
+        <div style="font-size:13px;opacity:0.8;">
+            GALACTIC DRUGS &amp; TRANSPORT • PRICES TIED TO LIVE NEWS
+        </div>
+    </div>
+    
+    <!-- API TUTORIAL MODAL -->
+    <div id="api-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="text-align:center;margin-bottom:20px;">🔌 KLINGON API WAR MANUAL</h2>
+            <p style="margin-bottom:25px;text-align:center;font-size:14px;">Replace fake data with REAL-TIME feeds. All tutorials below work in under 15 lines of JS.</p>
+            
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:20px;">
+                
+                <!-- STOCKS / COMMODITIES -->
+                <div style="border:4px solid var(--klingon-gold);padding:18px;">
+                    <h3 style="color:#ffcc00;">1. STOCKS + COMMODITIES (Polygon.io)</h3>
+                    <a href="https://polygon.io/stocks" target="_blank">Get free key →</a><br>
+                    <pre>// Real-time + commodities
+fetch(`https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?apiKey=YOUR_KEY`)</pre>
+                    <small>Also supports futures: CRUDE, GOLD, etc.</small>
+                </div>
+                
+                <!-- NEWS (disasters/wars) -->
+                <div style="border:4px solid #ff6600;padding:18px;">
+                    <h3 style="color:#ff6600;">2. LIVE NEWS (NewsAPI.org)</h3>
+                    <a href="https://newsapi.org/" target="_blank">Free dev key →</a><br>
+                    <pre>// Filter disasters + wars
+fetch(`https://newsapi.org/v2/everything?q=war+OR+disaster+OR+conflict&amp;apiKey=YOUR_KEY`)</pre>
+                    <small>Update galactic drug prices based on headlines (oil spikes = higher transport cost)</small>
+                </div>
+                
+                <!-- WEATHER RADAR -->
+                <div style="border:4px solid #00ff88;padding:18px;">
+                    <h3 style="color:#00ff88;">3. WEATHER + RADAR (OpenWeatherMap)</h3>
+                    <a href="https://openweathermap.org/api" target="_blank">Free key →</a><br>
+                    <pre>// Current + forecast
+fetch(`https://api.openweathermap.org/data/2.5/weather?lat=37.77&amp;lon=-122.41&amp;appid=YOUR_KEY`)</pre>
+                    <small>Radar: Use their map tiles or canvas overlay. Perfect for "US Sector" view.</small>
+                </div>
+                
+                <!-- GALACTIC DRUGS / TRANSPORT -->
+                <div style="border:4px solid #c8102e;padding:18px;">
+                    <h3 style="color:#c8102e;">4. GALACTIC DRUGS &amp; TRANSPORT</h3>
+                    <strong>Fictional but real-time powered</strong><br>
+                    Replace random walk with news impact:<br>
+                    <pre>if (news.includes("war")) { bloodwine.price *= 1.25; }</pre>
+                    <small>Transport cost = fuel (oil) + conflict risk</small>
+                </div>
+            </div>
+            
+            <div style="text-align:center;margin-top:30px;">
+                <button onclick="hideApiModal()" style="background:#c8102e;padding:16px 50px;font-size:18px;">CLOSE TRANSMISSION • QAPLA'!</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ==================== ENHANCED KLINGON DATA ====================
+        let marketMode = 'stocks'; // 'stocks' or 'galactic'
+        
+        let stocks = {
+            AAPL: {symbol:"AAPL",name:"APPLE",price:227.85,prev:227.85,change:0,history:Array(60).fill(0).map(()=>225+Math.random()*8)},
+            TSLA: {symbol:"TSLA",name:"TESLA",price:342.10,prev:342.10,change:0,history:Array(60).fill(0).map(()=>335+Math.random()*15)},
+            NVDA: {symbol:"NVDA",name:"NVIDIA",price:128.90,prev:128.90,change:0,history:Array(60).fill(0).map(()=>125+Math.random()*12)}
+        };
+        
+        let galacticItems = {
+            BLOODWINE: {symbol:"BLOODWINE",name:"KLINGON BLOODWINE FUTURES",price:87.40,prev:87.40,change:0,history:Array(60).fill(0).map(()=>82+Math.random()*12)},
+            GAGH: {symbol:"GAGH",name:"LIVE GAGH TRANSPORT",price:14.20,prev:14.20,change:0,history:Array(60).fill(0).map(()=>12+Math.random()*6)},
+            RISAN: {symbol:"RISAN",name:"RISAN SPICE (GALACTIC DRUG)",price:231.80,prev:231.80,change:0,history:Array(60).fill(0).map(()=>220+Math.random()*25)},
+            LATINUM: {symbol:"LATINUM",name:"LATINUM SMUGGLE ROUTE",price:459.00,prev:459.00,change:0,history:Array(60).fill(0).map(()=>440+Math.random()*40)}
+        };
+        
+        let commodities = [
+            {symbol:"CRUDE", name:"CRUDE OIL", price:99.64, change:5.46},
+            {symbol:"BRENT", name:"BRENT CRUDE", price:112.57, change:4.8},
+            {symbol:"GOLD", name:"GOLD", price:4451, change:-1.2},
+            {symbol:"NGAS", name:"NATURAL GAS", price:3.02, change:0.71},
+            {symbol:"SILVER", name:"SILVER", price:69.32, change:-2.6}
+        ];
+        
+        // LIVE NEWS from current events (March 2026)
+        let liveNews = [
+            {text:"IRAN WAR DAY 29 • Houthis strike Israel • Oil +9%", color:"#ff0000"},
+            {text:"PAKISTAN-AFGHAN BORDER COLLAPSES • Taliban attacks surge", color:"#ff6600"},
+            {text:"MIDWEST TORNADOES HIT FEDERATION SUPPLY LINES", color:"#00aaff"},
+            {text:"US-ISRAEL STRIKES DEGRADE IRAN MISSILE CAPACITY", color:"#ff0000"},
+            {text:"HOUTHIS JOIN IRAN WAR • Red Sea shipping halted", color:"#ff6600"},
+            {text:"GOLD HITS RECORD $4,451 ON GEOPOLITICAL CHAOS", color:"#ffcc00"}
+        ];
+        
+        let tradeLog = [
+            {time:"09:48", msg:"AGENT: BUY 42 BLOODWINE @ $88"},
+            {time:"09:44", msg:"AGENT: SELL GAGH TRANSPORT @ $14"},
+        ];
+        
+        let portfolio = { cash: 18440, holdings: { AAPL: {shares:15,avg:212} } };
+        let isRunning = true;
+        let volatility = 1.2;
+        let currentSymbol = "AAPL";
+        let currentDataSet = stocks; // switches with mode
+        
+        let musicPlaying = false;
+        let audioContext;
+        
+        // ==================== RENDER HELPERS ====================
+        function renderTicker() {
+            const container = document.getElementById('ticker-bar');
+            container.innerHTML = '';
+            const data = currentDataSet;
+            Object.keys(data).forEach(key => {
+                const s = data[key];
+                const cls = s.change >= 0 ? 'color:#00ff00' : 'color:#ff0000';
+                const html = `
+                <div onclick="selectStock('${key}')" style="min-width:170px;background:#111;border:4px solid var(--klingon-red);padding:10px;cursor:pointer;">
+                    <div style="font-size:22px">${s.symbol}</div>
+                    <div style="font-size:28px">$${s.price.toFixed(2)}</div>
+                    <div style="${cls}">${s.change >= 0 ? '▲' : '▼'} ${Math.abs(s.change).toFixed(1)}%</div>
+                </div>`;
+                container.innerHTML += html;
+            });
+        }
+        
+        function renderPortfolio() {
+            let holdingsVal = 0;
+            Object.keys(portfolio.holdings || {}).forEach(k => {
+                if (stocks[k]) holdingsVal += portfolio.holdings[k].shares * stocks[k].price;
+            });
+            document.getElementById('cash-display').textContent = '$' + portfolio.cash.toFixed(0);
+            document.getElementById('portfolio-value').textContent = '$' + (portfolio.cash + holdingsVal).toFixed(0);
+            document.getElementById('confidence').textContent = (82 + Math.random()*17|0) + '%';
+        }
+        
+        function renderLog() {
+            const el = document.getElementById('trade-log');
+            el.innerHTML = '';
+            tradeLog.forEach(e => {
+                const div = document.createElement('div');
+                div.style.marginBottom = '10px';
+                div.style.padding = '6px 10px';
+                div.style.background = 'rgba(200,16,46,0.15)';
+                div.innerHTML = `<strong>[${e.time}]</strong> ${e.msg}`;
+                el.appendChild(div);
+            });
+            el.scrollTop = el.scrollHeight;
+        }
+        
+        function drawChart() {
+            const canvas = document.getElementById('price-chart');
+            const ctx = canvas.getContext('2d');
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth - 12;
+            canvas.height = container.clientHeight - 12;
+            
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            
+            const data = currentDataSet[currentSymbol].history;
+            if (!data.length) return;
+            
+            const max = Math.max(...data);
+            const min = Math.min(...data);
+            const range = max - min || 1;
+            
+            // Klingon grid
+            ctx.strokeStyle = 'rgba(200,16,46,0.4)';
+            for (let i=0;i<7;i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height/7*i);
+                ctx.lineTo(canvas.width, canvas.height/7*i);
+                ctx.stroke();
+            }
+            
+            // Price line with glow
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#ffcc00';
+            ctx.strokeStyle = '#ffcc00';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            data.forEach((p,i) => {
+                const x = (i/(data.length-1)) * canvas.width;
+                const y = canvas.height - ((p-min)/range * canvas.height);
+                i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+            });
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            // Current price
+            ctx.fillStyle = '#ffcc00';
+            ctx.font = 'bold 22px Press Start 2P';
+            ctx.fillText('$' + data[data.length-1].toFixed(2), canvas.width-150, 50);
+            
+            document.getElementById('chart-symbol').textContent = currentSymbol;
+        }
+        
+        function renderCommodities() {
+            const tbody = document.querySelector('#commodities-table tbody');
+            tbody.innerHTML = '';
+            commodities.forEach(c => {
+                const tr = document.createElement('tr');
+                const cls = c.change >= 0 ? 'color:#00ff00' : 'color:#ff0000';
+                tr.innerHTML = `
+                <td><strong>${c.symbol}</strong></td>
+                <td>$${c.price}</td>
+                <td style="${cls}">${c.change >= 0 ? '▲' : '▼'} ${Math.abs(c.change)}%</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function renderNewsFeed() {
+            const container = document.getElementById('news-feed');
+            container.innerHTML = '<h4 style="margin-bottom:12px;color:#ff6600">⚠️ LIVE CONFLICT &amp; DISASTER FEED</h4>';
+            liveNews.forEach(n => {
+                const div = document.createElement('div');
+                div.style.marginBottom = '14px';
+                div.style.padding = '8px';
+                div.style.borderLeft = `6px solid ${n.color}`;
+                div.innerHTML = `<strong>${n.text}</strong><br><small style="opacity:0.7">— IMPACT: Galactic transport + volatility</small>`;
+                container.appendChild(div);
+            });
+        }
+        
+        // Simple animated radar
+        function drawRadar() {
+            const canvas = document.getElementById('radar-canvas');
+            const ctx = canvas.getContext('2d');
+            let angle = 0;
+            
+            function animate() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                
+                // Background circle
+                ctx.strokeStyle = '#00ff88';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(canvas.width/2, canvas.height/2, 95, 0, Math.PI*2);
+                ctx.stroke();
+                
+                // Concentric rings
+                for (let r=20;r<100;r+=25) {
+                    ctx.beginPath();
+                    ctx.arc(canvas.width/2, canvas.height/2, r, 0, Math.PI*2);
+                    ctx.stroke();
+                }
+                
+                // Sweep
+                ctx.save();
+                ctx.translate(canvas.width/2, canvas.height/2);
+                ctx.rotate(angle);
+                const grad = ctx.createLinearGradient(0,0,110,0);
+                grad.addColorStop(0, 'transparent');
+                grad.addColorStop(1, 'rgba(0,255,136,0.7)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.moveTo(0,0);
+                ctx.lineTo(110,0);
+                ctx.lineTo(110,8);
+                ctx.lineTo(0,0);
+                ctx.fill();
+                ctx.restore();
+                
+                // Random blips (storms)
+                ctx.fillStyle = '#ff0000';
+                for (let i=0;i<6;i++) {
+                    if (Math.random()>0.7) {
+                        const x = canvas.width/2 + Math.random()*80 - 40;
+                        const y = canvas.height/2 + Math.random()*80 - 40;
+                        ctx.fillRect(x,y,4,4);
+                    }
+                }
+                
+                angle += 0.12;
+                if (isRunning) requestAnimationFrame(animate);
+            }
+            animate();
+        }
+        
+        // Music using Web Audio API (Klingon drums)
+        function initMusic() {
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        function playKlingonDrums() {
+            if (!audioContext) initMusic();
+            let beat = 0;
+            const interval = setInterval(() => {
+                if (!musicPlaying) { clearInterval(interval); return; }
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                
+                // Deep drum
+                osc.frequency.setValueAtTime(beat % 3 === 0 ? 80 : 120, audioContext.currentTime);
+                gain.gain.value = 0.8;
+                gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.6);
+                
+                beat++;
+            }, 180);
+        }
+        
+        function toggleMusic() {
+            musicPlaying = !musicPlaying;
+            const btn = document.getElementById('music-btn');
+            btn.textContent = musicPlaying ? '⏹️ STOP' : '▶️ PLAY';
+            if (musicPlaying) playKlingonDrums();
+        }
+        
+        function setVolume(v) {
+            // Web Audio volume handled by gain in real impl, here just demo
+        }
+        
+        // ==================== SIMULATION CORE ====================
+        function updatePrices() {
+            if (!isRunning) return;
+            const dataset = currentDataSet;
+            Object.keys(dataset).forEach(key => {
+                const item = dataset[key];
+                const swing = (Math.random() * 4.5 - 2.2) * volatility;
+                item.prev = item.price;
+                item.price = Math.max(5, item.price * (1 + swing/100));
+                item.change = ((item.price - item.prev)/item.prev) * 100;
+                item.history.push(item.price);
+                if (item.history.length > 60) item.history.shift();
+            });
+            
+            // News-driven boost for galactic
+            if (marketMode === 'galactic' && Math.random() > 0.8) {
+                Object.keys(dataset).forEach(k => dataset[k].price *= 1.08);
+            }
+            
+            renderTicker();
+            drawChart();
+            renderPortfolio();
+        }
+        
+        function agentThink() {
+            if (!isRunning) return;
+            const dataset = currentDataSet;
+            const keys = Object.keys(dataset);
+            const target = keys[Math.floor(Math.random()*keys.length)];
+            const item = dataset[target];
+            
+            const shouldBuy = item.change < -1.2 || Math.random() > 0.65;
+            let qty = 5 + Math.random()*20 | 0;
+            
+            if (shouldBuy) {
+                portfolio.cash = Math.max(0, portfolio.cash - item.price * qty);
+                tradeLog.unshift({time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}), msg: `AGENT: BUY ${qty} ${target} @ $${item.price.toFixed(2)}`});
+            } else if (Math.random() > 0.5) {
+                tradeLog.unshift({time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}), msg: `AGENT: SELL ${qty} ${target} @ $${item.price.toFixed(2)}`});
+            }
+            
+            if (tradeLog.length > 10) tradeLog.pop();
+            renderLog();
+            renderPortfolio();
+            
+            document.getElementById('last-decision').textContent = (Math.random()>0.5 ? 'BUY ' : 'SELL ') + target;
+        }
+        
+        function selectStock(sym) {
+            currentSymbol = sym;
+            drawChart();
+            renderTicker();
+        }
+        
+        function toggleMarketMode() {
+            marketMode = marketMode === 'stocks' ? 'galactic' : 'stocks';
+            currentDataSet = marketMode === 'stocks' ? stocks : galacticItems;
+            currentSymbol = Object.keys(currentDataSet)[0];
+            
+            const title = document.getElementById('market-title');
+            const sub = document.getElementById('market-subtitle');
+            const btn = document.getElementById('market-toggle-btn');
+            
+            if (marketMode === 'galactic') {
+                title.innerHTML = '🌌 GALACTIC DRUGS &amp; TRANSPORT';
+                sub.textContent = 'CONTRABAND PRICES TIED TO WAR NEWS';
+                btn.textContent = '📈 STOCKS MODE';
+                btn.style.background = '#c8102e';
+            } else {
+                title.innerHTML = 'FEDERATION STOCKS — LIVE';
+                sub.textContent = 'AGENT SCANNING FOR HONOR';
+                btn.textContent = '🌌 GALACTIC MODE';
+                btn.style.background = '#0066aa';
+            }
+            
+            renderTicker();
+            drawChart();
+        }
+        
+        function switchTab(n) {
+            document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===n));
+            document.querySelectorAll('.log-container').forEach((c,i) => c.style.display = i===n ? 'flex' : 'none');
+        }
+        
+        function toggleSimulation() { isRunning = !isRunning; }
+        
+        function boostVolatility() {
+            volatility = Math.min(volatility + 1.1, 4);
+            document.body.style.filter = 'brightness(1.6) hue-rotate(30deg)';
+            setTimeout(() => document.body.style.filter = '', 600);
+        }
+        
+        function manualTrade() { agentThink(); }
+        
+        function resetSimulation() {
+            Object.keys(stocks).forEach(k => { stocks[k].price = 200 + Math.random()*200; stocks[k].history = Array(60).fill(0).map(()=>stocks[k].price-10+Math.random()*30); });
+            Object.keys(galacticItems).forEach(k => { galacticItems[k].price = 50 + Math.random()*400; galacticItems[k].history = Array(60).fill(0).map(()=>galacticItems[k].price-20+Math.random()*50); });
+            portfolio.cash = 18440;
+            tradeLog = [{time:"NOW", msg:"BATTLE RESET • HONOR RESTORED"}];
+            volatility = 1.2;
+            renderTicker(); renderLog(); renderPortfolio(); drawChart(); renderCommodities();
+        }
+        
+        function showApiModal() { document.getElementById('api-modal').style.display = 'flex'; }
+        function hideApiModal() { document.getElementById('api-modal').style.display = 'none'; }
+        
+        // ==================== NEWS TICKER + RADAR + START ====================
+        function startNewsTicker() {
+            const container = document.getElementById('ticker-content');
+            let index = 0;
+            setInterval(() => {
+                container.innerHTML = `<span style="color:${liveNews[index].color}">⚠️ ${liveNews[index].text}</span> &nbsp;&nbsp;&nbsp;&nbsp; `;
+                index = (index + 1) % liveNews.length;
+                
+                // Occasionally affect galactic prices
+                if (marketMode === 'galactic') {
+                    Object.keys(galacticItems).forEach(k => {
+                        galacticItems[k].price *= (Math.random() > 0.5 ? 1.06 : 0.94);
+                    });
+                }
+            }, 4200);
+        }
+        
+        function startKlingonConsole() {
+            console.log('%c🪓 KLINGON IMPERIAL TRADE WARRIOR v2.0 INITIALIZED 🪓', 'color:#c8102e;font-size:20px');
+            
+            // Initial renders
+            renderTicker();
+            renderLog();
+            renderPortfolio();
+            drawChart();
+            renderCommodities();
+            renderNewsFeed();
+            drawRadar();
+            startNewsTicker();
+            
+            // Price engine
+            setInterval(updatePrices, 950);
+            
+            // Agent decisions
+            setInterval(() => { if (isRunning) agentThink(); }, 3800);
+            
+            // Occasional hull flicker
+            setInterval(() => {
+                if (Math.random() > 0.75) {
+                    document.getElementById('hull').textContent = (88 + Math.random()*12|0) + '%';
+                    setTimeout(() => document.getElementById('hull').textContent = '100%', 1200);
+                }
+            }, 6500);
+            
+            console.log('✅ All systems armed. Real APIs ready via modal.');
+        }
+        
+        window.onload = startKlingonConsole;
+    </script>
+</body>
+</html>
