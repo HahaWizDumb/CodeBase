@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIS INTELLIGENCE ARCHIVES // DROIDEKA DOSSIER</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        :root {
+            --cis-blue: #0a1f3f;
+            --accent-red: #c41e3a;
+            --holo-green: #00ff9d;
+            --text-glow: #00ff9d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #02080f 0%, #00111f 100%);
+            color: var(--holo-green);
+            font-family: 'VT323', monospace;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Scanline & CRT effect */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0px,
+                transparent 2px,
+                rgba(0, 255, 157, 0.08) 2px,
+                rgba(0, 255, 157, 0.08) 4px
+            );
+            pointer-events: none;
+            animation: scan 4s linear infinite;
+            z-index: 10;
+        }
+
+        @keyframes scan {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100%; }
+        }
+
+        .header {
+            background: linear-gradient(to right, var(--cis-blue), #001a33);
+            border-bottom: 6px solid var(--accent-red);
+            padding: 12px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 0 25px var(--accent-red);
+            position: relative;
+            z-index: 20;
+        }
+
+        .cis-logo {
+            width: 80px;
+            height: 80px;
+            background: #001f3f;
+            border: 6px solid #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .cis-logo svg {
+            width: 65px;
+            height: 65px;
+        }
+
+        .header-title {
+            flex: 1;
+        }
+
+        .header-title h1 {
+            font-size: 2.8rem;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            text-shadow: 
+                0 0 10px var(--holo-green),
+                0 0 20px var(--holo-green);
+            color: #ffffff;
+        }
+
+        .header-subtitle {
+            font-size: 1.4rem;
+            color: var(--accent-red);
+            letter-spacing: 6px;
+            text-shadow: 0 0 15px var(--accent-red);
+        }
+
+        .clearance {
+            font-size: 1.2rem;
+            background: var(--accent-red);
+            color: #000;
+            padding: 8px 20px;
+            border: 3px solid #fff;
+            text-transform: uppercase;
+            animation: blink 1.5s infinite;
+        }
+
+        .main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 380px 1fr 340px;
+            gap: 15px;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .panel {
+            background: rgba(10, 31, 63, 0.95);
+            border: 4px solid var(--accent-red);
+            box-shadow: 
+                0 0 20px var(--accent-red),
+                inset 0 0 30px rgba(0, 255, 157, 0.3);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .panel::before {
+            content: 'CONFEDERACY OF INDEPENDENT SYSTEMS';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--cis-blue);
+            padding: 0 12px;
+            font-size: 1rem;
+            color: var(--holo-green);
+            letter-spacing: 3px;
+        }
+
+        .section-header {
+            font-size: 1.6rem;
+            margin-bottom: 12px;
+            color: #fff;
+            text-shadow: 0 0 12px var(--holo-green);
+            border-bottom: 2px solid var(--holo-green);
+            padding-bottom: 6px;
+        }
+
+        /* BLUEPRINT PANEL */
+        .blueprint {
+            grid-column: 1;
+        }
+
+        .blueprint-svg {
+            width: 100%;
+            height: 420px;
+            background: #0b1428;
+            border: 3px dashed #00ff9d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* COMBAT FOOTAGE PANEL */
+        .footage {
+            grid-column: 2;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border: 4px solid #c41e3a;
+            overflow: hidden;
+        }
+
+        .video-container::after {
+            content: 'LIVE SEPARATIST COMBAT FEED';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--accent-red);
+            color: #fff;
+            font-size: 1rem;
+            padding: 4px 14px;
+            letter-spacing: 2px;
+            animation: blink 1s infinite;
+            z-index: 5;
+        }
+
+        /* GRIEVOUS LINK PANEL */
+        .grievous {
+            grid-column: 3;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .stat {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border: 2px solid var(--holo-green);
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            color: var(--accent-red);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: #001a33;
+            border-bottom: 4px solid var(--accent-red);
+            margin-bottom: 12px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 14px;
+            text-align: center;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: var(--accent-red);
+            color: #000;
+            box-shadow: 0 0 15px var(--accent-red);
+        }
+
+        /* Propaganda banner */
+        .propaganda {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(90deg, transparent, var(--accent-red), transparent);
+            color: #fff;
+            text-align: center;
+            font-size: 1.4rem;
+            padding: 10px;
+            letter-spacing: 6px;
+            animation: marquee 15s linear infinite;
+            white-space: nowrap;
+            overflow: hidden;
+            z-index: 30;
+            text-shadow: 0 0 10px #000;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* Footer terminal line */
+        .footer {
+            background: #001a33;
+            padding: 10px 30px;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            border-top: 4px solid var(--accent-red);
+            color: #00cc99;
+        }
+
+        .blink-cursor {
+            animation: blink 0.8s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <!-- CIS Logo -->
+        <div class="cis-logo">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- Outer circle -->
+                <circle cx="100" cy="100" r="92" fill="none" stroke="#ffffff" stroke-width="14"/>
+                <!-- Hexagon emblem -->
+                <polygon points="100,40 140,60 140,140 100,160 60,140 60,60" fill="none" stroke="#ffffff" stroke-width="18" stroke-linejoin="round"/>
+                <polygon points="100,55 130,70 130,130 100,145 70,130 70,70" fill="#001f3f" stroke="#ffffff" stroke-width="8" stroke-linejoin="round"/>
+                <!-- Inner hex core -->
+                <polygon points="100,78 115,88 115,112 100,122 85,112 85,88" fill="#ffffff"/>
+            </svg>
+        </div>
+
+        <div class="header-title">
+            <h1>SEPARATIST INTELLIGENCE BUREAU</h1>
+            <div class="header-subtitle">DROIDEKA DESTROYER DROID — MARK I</div>
+        </div>
+
+        <div>
+            <div class="clearance">LEVEL 7 CLEARANCE • PROPAGANDA DIVISION</div>
+            <div style="text-align: right; font-size: 1.1rem; margin-top: 6px;">FOR THE GLORY OF THE CONFEDERACY</div>
+        </div>
+
+        <div style="font-size: 2.2rem; color: var(--accent-red); text-shadow: 0 0 20px var(--accent-red);">☠️</div>
+    </div>
+
+    <div class="main">
+        
+        <!-- BLUEPRINT PANEL -->
+        <div class="panel blueprint">
+            <div class="section-header">◆ TECHNICAL BLUEPRINT ◆</div>
+            
+            <div class="blueprint-svg">
+                <svg width="340" height="400" viewBox="0 0 340 400" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 15px #00ff9d);">
+                    <!-- Wheel mode (collapsed) -->
+                    <circle cx="80" cy="280" r="55" fill="none" stroke="#00cc99" stroke-width="12" stroke-dasharray="8 6"/>
+                    <circle cx="80" cy="280" r="38" fill="#112233" stroke="#c41e3a" stroke-width="18"/>
+                    <!-- Legs retracted -->
+                    <line x1="80" y1="280" x2="25" y2="340" stroke="#c41e3a" stroke-width="14" stroke-linecap="round"/>
+                    <line x1="80" y1="280" x2="135" y2="340" stroke="#c41e3a" stroke-width="14" stroke-linecap="round"/>
+                    
+                    <!-- Deployed tripod mode (main view) -->
+                    <!-- Body shell -->
+                    <ellipse cx="220" cy="140" rx="72" ry="95" fill="#1a2a3a" stroke="#c41e3a" stroke-width="22" transform="rotate(-8 220 140)"/>
+                    <!-- Head / shield generator -->
+                    <rect x="180" y="68" width="80" height="55" rx="12" fill="#334455" stroke="#00ff9d" stroke-width="10"/>
+                    <!-- Blaster cannons -->
+                    <rect x="130" y="115" width="42" height="18" fill="#c41e3a" rx="4" transform="rotate(-35 150 124)"/>
+                    <rect x="260" y="115" width="42" height="18" fill="#c41e3a" rx="4" transform="rotate(35 280 124)"/>
+                    <!-- Shield arcs -->
+                    <circle cx="220" cy="140" r="118" fill="none" stroke="#00ff9d" stroke-width="8" opacity="0.4"/>
+                    <circle cx="220" cy="140" r="128" fill="none" stroke="#00ff9d" stroke-width="4" opacity="0.3"/>
+                    
+                    <!-- Legs deployed -->
+                    <line x1="160" y1="220" x2="110" y2="340" stroke="#c41e3a" stroke-width="22" stroke-linecap="round"/>
+                    <line x1="220" y1="220" x2="220" y2="350" stroke="#c41e3a" stroke-width="22" stroke-linecap="round"/>
+                    <line x1="280" y1="220" x2="330" y2="340" stroke="#c41e3a" stroke-width="22" stroke-linecap="round"/>
+                    
+                    <!-- Labels -->
+                    <!-- Cannon -->
+                    <text x="20" y="125" fill="#00ff9d" font-size="18" font-weight="bold">TWIN HEAVY BLASTER CANNONS</text>
+                    <line x1="130" y1="118" x2="45" y2="125" stroke="#00ff9d" stroke-width="3" marker-end="url(#arrow)"/>
+                    <!-- Shield -->
+                    <text x="230" y="45" fill="#00ff9d" font-size="18" font-weight="bold">DEFLECTOR SHIELD</text>
+                    <line x1="220" y1="95" x2="220" y2="55" stroke="#00ff9d" stroke-width="3" marker-end="url(#arrow)"/>
+                    <!-- Legs -->
+                    <text x="10" y="355" fill="#00ff9d" font-size="18" font-weight="bold">TRIPOD DEPLOYMENT</text>
+                    <!-- Body -->
+                    <text x="255" y="195" fill="#00ff9d" font-size="18" font-weight="bold">COLICOID CHASSIS</text>
+                    
+                    <defs>
+                        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                            <path d="M 0 0 L 10 5 L 0 10 z" fill="#00ff9d"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+            
+            <div style="margin-top: auto; font-size: 1.1rem; text-align: center; color: #c41e3a;">
+                ROLLING MODE → 75 KM/H • DEPLOYED MODE → INDESTRUCTIBLE
+            </div>
+        </div>
+
+        <!-- COMBAT FOOTAGE PANEL -->
+        <div class="panel footage">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab(0)">LIVE COMBAT FEED</div>
+                <div class="tab" onclick="switchTab(1)">GEONOSIS ASSAULT</div>
+                <div class="tab" onclick="switchTab(2)">JEDI TERMINATION</div>
+            </div>
+
+            <div class="video-container" id="video-panel">
+                <iframe id="combat-video" width="100%" height="340" 
+                        src="https://www.youtube.com/embed/8z5f8z8z8z8" 
+                        title="Droideka Combat Footage - Separatist Propaganda" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                </iframe>
+                <!-- Fallback animated overlay if no internet / for demo -->
+                <div id="demo-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); display:none; flex-direction:column; align-items:center; justify-content:center; color:#c41e3a; font-size:2rem; text-shadow:0 0 20px #c41e3a;">
+                    <div style="animation: blink 0.6s infinite;">■ FIRING ■</div>
+                    <div style="margin-top:20px; font-size:1.4rem;">DROIDEKAS ANNIHILATING CLONE SCUM</div>
+                    <div style="font-size:1rem; margin-top:40px;">(Replace iframe src with any official Droideka footage URL)</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 12px; font-size: 1.3rem; text-align: center; color: #fff;">
+                ★ UNSTOPPABLE. UNMERCIFUL. UNDEFEATABLE. ★
+            </div>
+        </div>
+
+        <!-- GRIEVOUS CONNECTION + STATS PANEL -->
+        <div class="panel grievous">
+            <div class="section-header">◆ GENERAL GRIEVOUS DIRECTIVE ◆</div>
+            
+            <div style="display:flex; align-items:center; gap:15px; margin-bottom:18px;">
+                <div style="font-size:4rem; filter: drop-shadow(0 0 15px #c41e3a);">☠️</div>
+                <div>
+                    <h2 style="color:#c41e3a; font-size:2rem;">GENERAL GRIEVOUS</h2>
+                    <p style="font-size:1.4rem;">Kaleesh cyborg supreme commander of the droid army</p>
+                </div>
+            </div>
+            
+            <p style="line-height:1.4; font-size:1.3rem;">
+                The Droideka is the iron fist of <strong>GENERAL GRIEVOUS</strong>.<br>
+                Deployed under his personal command, these droids have crushed Jedi on Geonosis, Felucia, and every battlefield where the Republic dares resist the will of the Confederacy.
+            </p>
+            
+            <div style="margin: 20px 0; padding: 14px; background: rgba(196, 30, 58, 0.2); border: 3px dashed #c41e3a; text-align:center; font-size:1.5rem;">
+                “THEY WILL BE THE LAST THING THE JEDI EVER SEE.”<br>
+                — GENERAL GRIEVOUS
+            </div>
+
+            <!-- Stats -->
+            <div class="section-header">◆ SPECIFICATIONS ◆</div>
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-label">MANUFACTURER</div>
+                    <div class="stat-value">COLICOID CREATION NEST</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">HEIGHT</div>
+                    <div class="stat-value">1.83 M (DEPLOYED)</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">ARMAMENT</div>
+                    <div class="stat-value">2× HEAVY BLASTER CANNONS</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">DEFENSES</div>
+                    <div class="stat-value">PERSONAL DEFLECTOR SHIELD</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">SPEED</div>
+                    <div class="stat-value">75 KM/H (ROLLING)</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">COST</div>
+                    <div class="stat-value">HIGH • WORTH EVERY CREDIT</div>
+                </div>
+            </div>
+
+            <div style="margin-top:auto; text-align:center; font-size:1.1rem; color:#c41e3a;">
+                Droids do not tire.<br>
+                Droids do not fear the Force.
+            </div>
+        </div>
+    </div>
+
+    <!-- PROPAGANDA MARQUEE -->
+    <div class="propaganda">
+        THE REPUBLIC FALLS • DROIDEKAS RISE • JOIN THE SEPARATIST ALLIANCE • FREEDOM FROM JEDI TYRANNY • DROID ARMY SUPERIORITY GUARANTEED • LONG LIVE COUNT DOOKU •
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <div>
+            ARCHIVE ID: CIS-DRO-001 • TRANSMISSION SECURED • <span class="blink-cursor">_</span>
+        </div>
+        <div style="color:#c41e3a;">
+            FOR INTERNAL SEPARATIST USE ONLY • ANY REPUBLIC SPY WILL BE TERMINATED
+        </div>
+        <div onclick="selfDestruct()" style="cursor:pointer; color:#c41e3a;">
+            [ SELF-DESTRUCT PROTOCOL ]
+        </div>
+    </div>
+
+    <script>
+        // Simple tab switching for footage panel
+        function switchTab(tabIndex) {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach((t, i) => {
+                t.classList.toggle('active', i === tabIndex);
+            });
+            
+            const iframe = document.getElementById('combat-video');
+            const overlay = document.getElementById('demo-overlay');
+            
+            // You can replace these with real YouTube IDs of Droideka / Clone Wars scenes
+            const videoSources = [
+                "https://www.youtube.com/embed/8z5f8z8z8z8", // placeholder – replace with actual Droideka combat clip
+                "https://www.youtube.com/embed/4J8QJ0g3z0Y", // example real ID (Geonosis droid battle – user can swap)
+                "https://www.youtube.com/embed/6zX8Kz0zKzM"  // another placeholder – swap for Jedi vs Droideka scene
+            ];
+            
+            if (tabIndex < videoSources.length) {
+                iframe.src = videoSources[tabIndex];
+                overlay.style.display = 'none';
+            } else {
+                iframe.src = '';
+                overlay.style.display = 'flex';
+            }
+        }
+
+        // Fake self-destruct animation
+        function selfDestruct() {
+            const body = document.body;
+            body.style.transition = 'all 1.2s';
+            body.style.filter = 'invert(1) hue-rotate(180deg)';
+            setTimeout(() => {
+                body.innerHTML = `
+                <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:#c41e3a; display:flex; align-items:center; justify-content:center; color:#000; font-size:6rem; text-align:center; flex-direction:column;">
+                    <div>SELF-DESTRUCT SEQUENCE INITIATED</div>
+                    <div style="font-size:2rem; margin-top:30px;">FOR THE CONFEDERACY</div>
+                    <div style="margin-top:80px; font-size:1.5rem;">The droid army will rise again...</div>
+                </div>`;
+            }, 800);
+        }
+
+        // Console-style boot animation
+        console.log('%cCIS ARCHIVES ONLINE — DROIDEKA DOSSIER LOADED', 'color:#c41e3a; font-size:22px; font-family:monospace');
+        
+        // Random "signal interference" every 12 seconds
+        setInterval(() => {
+            if (Math.random() > 0.7) {
+                const panels = document.querySelectorAll('.panel');
+                panels.forEach(p => {
+                    p.style.transition = '0.3s';
+                    p.style.opacity = '0.3';
+                    setTimeout(() => p.style.opacity = '1', 180);
+                });
+            }
+        }, 12000);
+
+        console.log('Separatist propaganda GUI ready. May the droids be with you.');
+    </script>
+</body>
+</html>

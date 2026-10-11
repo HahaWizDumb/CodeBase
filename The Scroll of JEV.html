@@ -1,0 +1,681 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The Scroll of JEV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+SC:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Fira+Code:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --desk:#17131d;
+  --desk-2:#221b2b;
+  --vellum:#efe4c6;
+  --vellum-deep:#e2d3ac;
+  --ink:#2a1e17;
+  --ink-soft:#5a4838;
+  --rubric:#8f2b1d;
+  --verdigris:#2d6b5f;
+  --gold:#b38628;
+  --gold-hi:#e0b95a;
+  --code-bg:#241d18;
+  --code-ink:#ecdfc0;
+  --rule:rgba(90,72,56,.35);
+  --display:"UnifrakturMaguntia","Old English Text MT",Georgia,serif;
+  --caps:"Cormorant SC","Cormorant Garamond",Georgia,serif;
+  --body:"EB Garamond",Garamond,"Times New Roman",serif;
+  --mono:"Fira Code",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{
+  background:
+    radial-gradient(ellipse at 50% -10%, #3a2a4a 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 100%, #1f2a33 0%, transparent 50%),
+    var(--desk);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:19px;
+  line-height:1.6;
+  padding-inline:16px;
+  padding-block:32px 64px;
+  min-height:100%;
+}
+.frame{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:230px minmax(0,1fr);gap:32px;align-items:start}
+@media (max-width:860px){.frame{grid-template-columns:minmax(0,1fr)}}
+
+/* Rune index */
+nav.index{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);color:var(--vellum);font-family:var(--caps)}
+nav.index h2{font-family:var(--caps);font-size:15px;letter-spacing:.18em;color:var(--gold-hi);margin:0 0 12px;font-weight:700}
+nav.index ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+nav.index a{display:flex;gap:10px;align-items:baseline;color:#cfc2a4;text-decoration:none;padding:6px 8px;border-radius:3px;font-size:17px;line-height:1.25}
+nav.index a:hover,nav.index a:focus-visible{background:rgba(224,185,90,.12);color:var(--gold-hi);outline:none}
+nav.index .glyph{font-family:var(--body);color:var(--gold);width:1.4em;flex:none;text-align:center}
+nav.index a.done .glyph::after{content:"✓";color:#7fc2a8;margin-left:2px;font-size:.8em}
+.progress{margin-top:18px;font-size:14px;letter-spacing:.08em;color:#b8ab8c}
+.bar{height:6px;background:rgba(255,255,255,.08);border-radius:3px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--verdigris),var(--gold-hi));transition:width .4s}
+@media (max-width:860px){
+  nav.index{position:static}
+  nav.index ol{flex-direction:row;flex-wrap:wrap;gap:4px}
+  nav.index a{font-size:15px;padding:4px 8px;border:1px solid rgba(224,185,90,.25)}
+  nav.index a .t{display:none}
+}
+
+/* The scroll */
+.scroll{position:relative;min-width:0}
+.rod{height:34px;margin-inline:-14px;border-radius:17px;
+  background:linear-gradient(180deg,#6b4a2a 0%,#a7773f 30%,#d7a864 45%,#8a5d31 70%,#4a311b 100%);
+  box-shadow:0 6px 14px rgba(0,0,0,.5);position:relative;z-index:2}
+.rod::before,.rod::after{content:"";position:absolute;top:-6px;width:26px;height:46px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,var(--gold-hi),#7a5518 70%)}
+.rod::before{left:-10px}.rod::after{right:-10px}
+.sheet{
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.35), transparent 40%),
+    radial-gradient(ellipse at 80% 70%, rgba(160,120,60,.14), transparent 50%),
+    linear-gradient(90deg, var(--vellum-deep) 0%, var(--vellum) 6%, var(--vellum) 94%, var(--vellum-deep) 100%);
+  margin-block:-8px;
+  padding:56px clamp(20px,5vw,64px) 48px;
+  box-shadow:0 20px 40px rgba(0,0,0,.45);
+}
+
+/* Hero */
+header.hero{text-align:left;border-bottom:1px solid var(--rule);padding-bottom:28px;margin-bottom:8px}
+.eyebrow{font-family:var(--caps);letter-spacing:.2em;font-size:15px;color:var(--rubric);font-weight:700}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(44px,8vw,84px);line-height:1;margin:.15em 0 .2em;color:var(--ink);text-wrap:balance}
+h1 .j{color:var(--rubric)}
+.lede{font-size:21px;max-width:60ch;margin:0}
+.lede em{color:var(--verdigris)}
+.anatomy{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:26px}
+@media (max-width:640px){.anatomy{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.organ{border:1px solid var(--rule);padding:10px 12px;border-radius:2px;background:rgba(255,255,255,.18)}
+.organ b{display:block;font-family:var(--caps);font-size:17px;color:var(--rubric);letter-spacing:.06em}
+.organ span{font-size:15px;line-height:1.35;display:block;color:var(--ink-soft)}
+
+/* Chapters */
+section.circle{padding-block:40px 8px;border-bottom:1px solid var(--rule)}
+section.circle:last-of-type{border-bottom:0}
+.circle-head{display:flex;gap:18px;align-items:flex-start}
+.seal{flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 30%,#c0453a,var(--rubric) 60%,#5c170f);
+  color:#f7dcc0;font-family:var(--caps);font-size:22px;font-weight:700;box-shadow:inset 0 -3px 6px rgba(0,0,0,.35),0 2px 4px rgba(0,0,0,.25)}
+.circle-head .k{font-family:var(--caps);letter-spacing:.16em;font-size:14px;color:var(--verdigris);font-weight:700}
+h2{font-family:var(--caps);font-weight:700;font-size:clamp(28px,4vw,38px);line-height:1.1;margin:2px 0 0;text-wrap:balance;color:var(--ink)}
+h3{font-family:var(--caps);font-weight:700;font-size:22px;margin:28px 0 6px;color:var(--rubric);letter-spacing:.03em}
+p,li{max-width:66ch}
+.circle > p:first-of-type::first-letter{font-family:var(--display);float:left;font-size:3.4em;line-height:.82;padding:6px 8px 0 0;color:var(--rubric)}
+code{font-family:var(--mono);font-size:.82em;background:rgba(42,30,23,.08);padding:1px 5px;border-radius:2px}
+ul,ol.steps{padding-left:1.3em}
+li{margin-block:4px}
+
+.spell{position:relative;margin:16px 0;border-radius:3px;background:var(--code-bg);color:var(--code-ink);box-shadow:inset 0 0 0 1px rgba(224,185,90,.25)}
+.spell .lbl{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid rgba(224,185,90,.2);font-family:var(--caps);font-size:14px;letter-spacing:.12em;color:var(--gold-hi)}
+.spell pre{margin:0;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:14px;line-height:1.55;tab-size:4}
+.spell pre code{background:none;padding:0;font-size:inherit;color:inherit}
+.c{color:#8fb59c;font-style:italic}.s{color:#e6b877}.kw{color:#e08a6e}
+button{font:inherit;cursor:pointer}
+.copy{background:transparent;border:1px solid rgba(224,185,90,.4);color:var(--gold-hi);font-family:var(--caps);font-size:13px;letter-spacing:.1em;padding:2px 10px;border-radius:2px}
+.copy:hover,.copy:focus-visible{background:rgba(224,185,90,.15);outline:none}
+
+.ward{margin:20px 0;padding:14px 18px;border-left:3px solid var(--rubric);background:rgba(143,43,29,.07)}
+.ward b{font-family:var(--caps);letter-spacing:.1em;color:var(--rubric)}
+.lore{margin:20px 0;padding:14px 18px;border-left:3px solid var(--verdigris);background:rgba(45,107,95,.08)}
+.lore b{font-family:var(--caps);letter-spacing:.1em;color:var(--verdigris)}
+
+.mastered{display:flex;align-items:center;gap:10px;margin:26px 0 8px;font-family:var(--caps);font-size:17px;letter-spacing:.08em;color:var(--ink-soft)}
+.mastered input{width:20px;height:20px;accent-color:var(--verdigris)}
+
+.tablewrap{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;min-width:520px;font-size:17px}
+th,td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--caps);letter-spacing:.08em;color:var(--rubric);font-weight:700}
+td{font-variant-numeric:tabular-nums}
+
+/* Forge */
+.forge{margin:18px 0;border:1px solid var(--rule);padding:18px;background:rgba(255,255,255,.2)}
+.forge fieldset{border:0;padding:0;margin:0 0 12px}
+.forge legend{font-family:var(--caps);font-weight:700;letter-spacing:.1em;color:var(--rubric);margin-bottom:6px}
+.forge label{display:flex;gap:8px;align-items:flex-start;font-size:17px;margin:4px 0;line-height:1.35}
+.forge input[type=checkbox],.forge input[type=radio]{accent-color:var(--rubric);margin-top:4px}
+.forge input[type=text]{font:inherit;font-size:17px;padding:4px 8px;border:1px solid var(--rule);background:var(--vellum);color:var(--ink);width:min(100%,320px)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px}
+@media (max-width:640px){.grid2{grid-template-columns:minmax(0,1fr)}}
+
+/* Council */
+.council{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+@media (max-width:700px){.council{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.seat{border-top:3px solid var(--gold);padding:10px 12px;background:rgba(255,255,255,.2)}
+.seat b{font-family:var(--caps);font-size:18px;display:block;color:var(--ink)}
+.seat span{font-size:15px;line-height:1.35;color:var(--ink-soft);display:block}
+
+dl.grimoire{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 20px;margin:12px 0}
+dl.grimoire dt{font-family:var(--caps);font-weight:700;color:var(--rubric)}
+dl.grimoire dd{margin:0;max-width:60ch}
+@media (max-width:560px){dl.grimoire{grid-template-columns:minmax(0,1fr)}dl.grimoire dd{margin-bottom:8px}}
+
+footer.colophon{margin-top:36px;padding-top:18px;border-top:1px solid var(--rule);font-size:15px;color:var(--ink-soft);font-style:italic}
+a{color:var(--verdigris)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+</style>
+
+<div class="frame">
+  <nav class="index" aria-label="Chapters">
+    <h2>Index of Circles</h2>
+    <ol id="navlist">
+      <li><a href="#prologue"><span class="glyph">✶</span><span class="t">Prologue</span></a></li>
+      <li><a href="#c1" data-c="c1"><span class="glyph">I</span><span class="t">Gather the Reagents</span></a></li>
+      <li><a href="#c2" data-c="c2"><span class="glyph">II</span><span class="t">First Incantation</span></a></li>
+      <li><a href="#c3" data-c="c3"><span class="glyph">III</span><span class="t">The Charter</span></a></li>
+      <li><a href="#c4" data-c="c4"><span class="glyph">IV</span><span class="t">The Library</span></a></li>
+      <li><a href="#c5" data-c="c5"><span class="glyph">V</span><span class="t">The Truth-Seer</span></a></li>
+      <li><a href="#c6" data-c="c6"><span class="glyph">VI</span><span class="t">Scrying the World</span></a></li>
+      <li><a href="#c7" data-c="c7"><span class="glyph">VII</span><span class="t">The Council</span></a></li>
+      <li><a href="#c8" data-c="c8"><span class="glyph">VIII</span><span class="t">The Face</span></a></li>
+      <li><a href="#c9" data-c="c9"><span class="glyph">IX</span><span class="t">Wards &amp; Trials</span></a></li>
+      <li><a href="#grimoire"><span class="glyph">❦</span><span class="t">Grimoire of Terms</span></a></li>
+    </ol>
+    <div class="progress"><span id="progtxt">0 of 9 circles mastered</span><div class="bar"><i id="progbar"></i></div></div>
+  </nav>
+
+  <main class="scroll">
+    <div class="rod" aria-hidden="true"></div>
+    <article class="sheet">
+
+      <header class="hero" id="prologue">
+        <div class="eyebrow">A sorcerer's scroll · Novice to Adept</div>
+        <h1>The Scroll of <span class="j">JEV</span></h1>
+        <p class="lede">How to raise your own research familiar: an AI that reads your sources, checks claims against evidence, admits what it doesn't know, and convenes a council of minds to brainstorm with you. All you need is a computer, patience, and the willingness to copy spells carefully.</p>
+        <p class="lede" style="margin-top:14px">The first truth of the craft: <em>you do not forge the mind from nothing.</em> Training a large language model from scratch costs millions. Instead, a sorcerer binds an existing open model and surrounds it with organs of their own design. JEV is those five organs working together.</p>
+        <div class="anatomy" aria-label="The five organs of JEV">
+          <div class="organ"><b>The Mind</b><span>A language model running on your machine (Ollama)</span></div>
+          <div class="organ"><b>The Charter</b><span>Standing rules: cite, doubt, admit ignorance</span></div>
+          <div class="organ"><b>The Library</b><span>Your documents, searchable by meaning</span></div>
+          <div class="organ"><b>The Truth-Seer</b><span>A pipeline that judges claims against evidence</span></div>
+          <div class="organ"><b>The Council</b><span>Several personas that argue, then synthesize</span></div>
+        </div>
+      </header>
+
+      <!-- I -->
+      <section class="circle" id="c1">
+        <div class="circle-head"><div class="seal">I</div><div><div class="k">First Circle · Apprentice</div><h2>Gather the Reagents</h2></div></div>
+        <p>Every working needs its materials. You will install three things, each free: a Python interpreter to speak spells, an editor to write them, and Ollama, which houses the model on your own machine so your research never leaves it.</p>
+        <ol class="steps">
+          <li><b>Python 3.11 or newer</b> from python.org. On Windows, tick "Add python.exe to PATH" during install.</li>
+          <li><b>VS Code</b> from code.visualstudio.com, then add its Python extension.</li>
+          <li><b>Ollama</b> from ollama.com. It runs quietly in the background and serves models at <code>http://localhost:11434</code>.</li>
+        </ol>
+        <p>Now summon a mind. Open a terminal (Terminal on macOS, PowerShell on Windows) and speak:</p>
+        <div class="spell"><div class="lbl"><span>Terminal</span><button class="copy">Copy</button></div><pre><code>ollama pull llama3.1:8b
+ollama pull nomic-embed-text
+ollama run llama3.1:8b "Name three uses of a fact-checking assistant."</code></pre></div>
+        <p>The first model is the Mind. The second, <code>nomic-embed-text</code>, is a small model that turns text into coordinates of meaning; the Library will need it in the Fourth Circle.</p>
+        <h3>Choosing a mind for your vessel</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Your machine's memory</th><th>Model size to try</th><th>What to expect</th></tr></thead>
+          <tbody>
+            <tr><td>8 GB RAM</td><td>3–4B parameters</td><td>Quick, shallow reasoning. Good for learning the craft.</td></tr>
+            <tr><td>16 GB RAM</td><td>7–8B parameters</td><td>The sweet spot for a beginner's JEV.</td></tr>
+            <tr><td>GPU with 12–24 GB</td><td>14–32B parameters</td><td>Noticeably sharper judgment on claims.</td></tr>
+          </tbody>
+        </table></div>
+        <div class="lore"><b>Lore.</b> Model names change often. Browse the library on ollama.com and pick any well-regarded instruct model in your size range. Every spell below works with any of them; you only change the name.</div>
+        <p>Last, prepare a sanctum folder and the Python reagents:</p>
+        <div class="spell"><div class="lbl"><span>Terminal</span><button class="copy">Copy</button></div><pre><code>mkdir jev
+cd jev
+python -m venv .venv
+<span class="c"># macOS / Linux:</span>
+source .venv/bin/activate
+<span class="c"># Windows PowerShell:</span>
+.venv\Scripts\Activate.ps1
+
+pip install ollama chromadb pypdf streamlit</code></pre></div>
+        <label class="mastered"><input type="checkbox" id="m-c1" data-c="c1"> This circle is mastered</label>
+      </section>
+
+      <!-- II -->
+      <section class="circle" id="c2">
+        <div class="circle-head"><div class="seal">II</div><div><div class="k">Second Circle · Apprentice</div><h2>The First Incantation</h2></div></div>
+        <p>A conversation with a model is a list of messages. Each has a <code>role</code> (who speaks) and <code>content</code> (what is said). The <code>system</code> role carries standing orders, <code>user</code> is you, and <code>assistant</code> is JEV. The model has no memory between calls; you give it memory by sending the whole list each time.</p>
+        <div class="spell"><div class="lbl"><span>jev_chat.py</span><button class="copy">Copy</button></div><pre><code><span class="kw">import</span> ollama
+
+MODEL = <span class="s">"llama3.1:8b"</span>
+history = [{<span class="s">"role"</span>: <span class="s">"system"</span>, <span class="s">"content"</span>: <span class="s">"You are JEV, a careful research assistant."</span>}]
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    question = input(<span class="s">"\nYou: "</span>)
+    <span class="kw">if</span> question.lower() <span class="kw">in</span> (<span class="s">"quit"</span>, <span class="s">"exit"</span>):
+        <span class="kw">break</span>
+    history.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question})
+    reply = ollama.chat(model=MODEL, messages=history)
+    answer = reply[<span class="s">"message"</span>][<span class="s">"content"</span>]
+    history.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: answer})
+    print(<span class="s">"\nJEV:"</span>, answer)</code></pre></div>
+        <p>Run it with <code>python jev_chat.py</code>. You now have a familiar that speaks. It is also, at this stage, a confident liar: it will answer from memory, invent citations, and never say "I'm not sure." The next circles fix that.</p>
+        <label class="mastered"><input type="checkbox" id="m-c2" data-c="c2"> This circle is mastered</label>
+      </section>
+
+      <!-- III -->
+      <section class="circle" id="c3">
+        <div class="circle-head"><div class="seal">III</div><div><div class="k">Third Circle · Initiate</div><h2>The Charter</h2></div></div>
+        <p>The system prompt is JEV's binding oath. A vague oath yields a vague familiar. A good charter names the job, the method, the output shape, and what to do when evidence runs out. Forge one below; the scroll writes the oath as you choose.</p>
+        <div class="forge" id="forge">
+          <div class="grid2">
+            <fieldset>
+              <legend>Name &amp; domain</legend>
+              <label for="f-name">Familiar's name <input type="text" id="f-name" value="JEV"></label>
+              <label for="f-domain">Field of study <input type="text" id="f-domain" value="history and comparative religion"></label>
+            </fieldset>
+            <fieldset>
+              <legend>Temperament</legend>
+              <label><input type="radio" name="f-tone" id="f-tone-1" value="plain" checked> Plain and direct</label>
+              <label><input type="radio" name="f-tone" id="f-tone-2" value="scholarly"> Scholarly and thorough</label>
+              <label><input type="radio" name="f-tone" id="f-tone-3" value="socratic"> Socratic: asks questions back</label>
+            </fieldset>
+          </div>
+          <fieldset>
+            <legend>Vows</legend>
+            <div class="grid2">
+              <label><input type="checkbox" id="v-cite" checked> Cite a source for every factual claim</label>
+              <label><input type="checkbox" id="v-idk" checked> Say "I don't know" when evidence is missing</label>
+              <label><input type="checkbox" id="v-conf" checked> Rate confidence: high, medium, or low</label>
+              <label><input type="checkbox" id="v-sep" checked> Separate facts from interpretation</label>
+              <label><input type="checkbox" id="v-counter"> Offer the strongest counter-view</label>
+              <label><input type="checkbox" id="v-ctx" checked> Prefer provided documents over memory</label>
+            </div>
+          </fieldset>
+          <div class="spell"><div class="lbl"><span>charter.txt</span><button class="copy">Copy</button></div><pre><code id="charter-out"></code></pre></div>
+        </div>
+        <p>Save your forged oath as <code>charter.txt</code> in the sanctum folder. Every later spell reads it.</p>
+        <div class="lore"><b>Lore.</b> Small models obey short, numbered rules better than long paragraphs. If JEV ignores a vow, move it higher and phrase it as a command.</div>
+        <label class="mastered"><input type="checkbox" id="m-c3" data-c="c3"> This circle is mastered</label>
+      </section>
+
+      <!-- IV -->
+      <section class="circle" id="c4">
+        <div class="circle-head"><div class="seal">IV</div><div><div class="k">Fourth Circle · Initiate</div><h2>The Library</h2></div></div>
+        <p>A model's memory is blurry and frozen at its training date. The Library gives JEV sharp, current, verifiable knowledge: your own PDFs and notes. The technique is called <b>retrieval-augmented generation</b>, or RAG, and it works in three motions.</p>
+        <ol class="steps">
+          <li><b>Cut</b> each document into passages of a few hundred words, overlapping slightly so no idea is sliced in half.</li>
+          <li><b>Embed</b> each passage: the embedding model turns it into a list of numbers that places it on a map of meaning. Passages about similar ideas land near each other.</li>
+          <li><b>Summon</b>: when you ask a question, embed the question too, fetch the nearest passages, and hand them to the Mind as evidence.</li>
+        </ol>
+        <p>Place your PDFs and <code>.txt</code> files in a folder named <code>tomes</code>, then cast the binding:</p>
+        <div class="spell"><div class="lbl"><span>library.py</span><button class="copy">Copy</button></div><pre><code><span class="kw">import</span> pathlib, ollama, chromadb
+<span class="kw">from</span> pypdf <span class="kw">import</span> PdfReader
+
+EMBED = <span class="s">"nomic-embed-text"</span>
+db = chromadb.PersistentClient(path=<span class="s">"jev_library"</span>)
+shelf = db.get_or_create_collection(<span class="s">"tomes"</span>)
+
+<span class="kw">def</span> read_tome(path):
+    <span class="kw">if</span> path.suffix.lower() == <span class="s">".pdf"</span>:
+        pages = PdfReader(path).pages
+        <span class="kw">return</span> [(i + 1, p.extract_text() <span class="kw">or</span> <span class="s">""</span>) <span class="kw">for</span> i, p <span class="kw">in</span> enumerate(pages)]
+    <span class="kw">return</span> [(1, path.read_text(encoding=<span class="s">"utf-8"</span>, errors=<span class="s">"ignore"</span>))]
+
+<span class="kw">def</span> cut(text, size=180, overlap=40):
+    words = text.split()
+    step = size - overlap
+    <span class="kw">for</span> start <span class="kw">in</span> range(0, max(len(words), 1), step):
+        piece = <span class="s">" "</span>.join(words[start:start + size])
+        <span class="kw">if</span> piece.strip():
+            <span class="kw">yield</span> piece
+
+<span class="kw">def</span> embed(text):
+    <span class="kw">return</span> ollama.embed(model=EMBED, input=text)[<span class="s">"embeddings"</span>][0]
+
+<span class="kw">def</span> bind_library(folder=<span class="s">"tomes"</span>):
+    <span class="kw">for</span> path <span class="kw">in</span> pathlib.Path(folder).glob(<span class="s">"*"</span>):
+        <span class="kw">if</span> path.suffix.lower() <span class="kw">not in</span> (<span class="s">".pdf"</span>, <span class="s">".txt"</span>, <span class="s">".md"</span>):
+            <span class="kw">continue</span>
+        <span class="kw">for</span> page, text <span class="kw">in</span> read_tome(path):
+            <span class="kw">for</span> n, piece <span class="kw">in</span> enumerate(cut(text)):
+                shelf.upsert(
+                    ids=[f<span class="s">"{path.name}-p{page}-{n}"</span>],
+                    documents=[piece],
+                    embeddings=[embed(piece)],
+                    metadatas=[{<span class="s">"source"</span>: path.name, <span class="s">"page"</span>: page}],
+                )
+        print(<span class="s">"Bound:"</span>, path.name)
+
+<span class="kw">def</span> summon(question, k=5):
+    hits = shelf.query(query_embeddings=[embed(question)], n_results=k)
+    <span class="kw">return</span> [
+        {<span class="s">"text"</span>: d, <span class="s">"source"</span>: m[<span class="s">"source"</span>], <span class="s">"page"</span>: m[<span class="s">"page"</span>]}
+        <span class="kw">for</span> d, m <span class="kw">in</span> zip(hits[<span class="s">"documents"</span>][0], hits[<span class="s">"metadatas"</span>][0])
+    ]
+
+<span class="kw">if</span> __name__ == <span class="s">"__main__"</span>:
+    bind_library()</code></pre></div>
+        <p>Run <code>python library.py</code> once to bind your tomes; run it again whenever you add new ones. The library persists in the <code>jev_library</code> folder.</p>
+        <label class="mastered"><input type="checkbox" id="m-c4" data-c="c4"> This circle is mastered</label>
+      </section>
+
+      <!-- V -->
+      <section class="circle" id="c5">
+        <div class="circle-head"><div class="seal">V</div><div><div class="k">Fifth Circle · Journeyman</div><h2>The Truth-Seer</h2></div></div>
+        <p>Fact-checking is not one question but three steps, and a small model does each far better alone than all at once. Split the text into single claims, gather evidence for each, then judge each claim only against that evidence.</p>
+        <div class="spell"><div class="lbl"><span>truthseer.py</span><button class="copy">Copy</button></div><pre><code><span class="kw">import</span> json, ollama
+<span class="kw">from</span> library <span class="kw">import</span> summon
+
+MODEL = <span class="s">"llama3.1:8b"</span>
+CHARTER = open(<span class="s">"charter.txt"</span>, encoding=<span class="s">"utf-8"</span>).read()
+
+<span class="kw">def</span> ask(prompt, as_json=<span class="kw">False</span>):
+    reply = ollama.chat(
+        model=MODEL,
+        messages=[{<span class="s">"role"</span>: <span class="s">"system"</span>, <span class="s">"content"</span>: CHARTER},
+                  {<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: prompt}],
+        format=<span class="s">"json"</span> <span class="kw">if</span> as_json <span class="kw">else</span> <span class="kw">None</span>,
+        options={<span class="s">"temperature"</span>: 0},   <span class="c"># steady hand, no improvising</span>
+    )
+    text = reply[<span class="s">"message"</span>][<span class="s">"content"</span>]
+    <span class="kw">return</span> json.loads(text) <span class="kw">if</span> as_json <span class="kw">else</span> text
+
+<span class="c"># Step 1: split text into atomic, checkable claims</span>
+<span class="kw">def</span> extract_claims(text):
+    out = ask(
+        <span class="s">"List every checkable factual claim in the text below as short standalone "</span>
+        <span class="s">'sentences. Reply as JSON: {"claims": ["..."]}\n\n'</span> + text,
+        as_json=<span class="kw">True</span>)
+    <span class="kw">return</span> out.get(<span class="s">"claims"</span>, [])
+
+<span class="c"># Steps 2 and 3: gather evidence, then judge only against it</span>
+<span class="kw">def</span> judge(claim):
+    evidence = summon(claim, k=5)
+    numbered = <span class="s">"\n\n"</span>.join(
+        f<span class="s">"[{i+1}] ({e['source']}, p.{e['page']}) {e['text']}"</span>
+        <span class="kw">for</span> i, e <span class="kw">in</span> enumerate(evidence))
+    verdict = ask(
+        f<span class="s">"CLAIM: {claim}\n\nEVIDENCE:\n{numbered}\n\n"</span>
+        <span class="s">"Judge the claim using ONLY the evidence above. Reply as JSON: "</span>
+        <span class="s">'{"verdict": "SUPPORTED" | "REFUTED" | "NOT ENOUGH EVIDENCE", '</span>
+        <span class="s">'"cited": [evidence numbers], "reason": "one sentence"}'</span>,
+        as_json=<span class="kw">True</span>)
+    verdict[<span class="s">"claim"</span>] = claim
+    verdict[<span class="s">"sources"</span>] = [evidence[n-1] <span class="kw">for</span> n <span class="kw">in</span> verdict.get(<span class="s">"cited"</span>, [])
+                          <span class="kw">if</span> isinstance(n, int) <span class="kw">and</span> 0 &lt; n &lt;= len(evidence)]
+    <span class="kw">return</span> verdict
+
+<span class="kw">def</span> fact_check(text):
+    <span class="kw">return</span> [judge(c) <span class="kw">for</span> c <span class="kw">in</span> extract_claims(text)]
+
+<span class="kw">if</span> __name__ == <span class="s">"__main__"</span>:
+    <span class="kw">for</span> v <span class="kw">in</span> fact_check(input(<span class="s">"Paste text to check: "</span>)):
+        print(f<span class="s">"\n{v['verdict']}: {v['claim']}\n  why: {v.get('reason')}"</span>)
+        <span class="kw">for</span> s <span class="kw">in</span> v[<span class="s">"sources"</span>]:
+            print(f<span class="s">"  - {s['source']} p.{s['page']}"</span>)</code></pre></div>
+        <div class="ward"><b>Ward.</b> "Not enough evidence" is a victory, not a failure. A Truth-Seer that always reaches a verdict is guessing. Test it with a claim your tomes don't cover and make sure it refuses to rule.</div>
+        <label class="mastered"><input type="checkbox" id="m-c5" data-c="c5"> This circle is mastered</label>
+      </section>
+
+      <!-- VI -->
+      <section class="circle" id="c6">
+        <div class="circle-head"><div class="seal">VI</div><div><div class="k">Sixth Circle · Journeyman</div><h2>Scrying the World</h2></div></div>
+        <p>Your Library only knows what you've fed it. To check claims about the wider world, JEV needs a scrying glass: a web search it can consult. The pattern is identical to the Library, only the evidence comes from search results instead of your tomes.</p>
+        <h3>Choosing a glass</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Glass</th><th>Cost</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>SearXNG</td><td>Free, self-hosted</td><td>Runs on your machine; private; takes some setup (Docker).</td></tr>
+            <tr><td>A search API (Brave, Tavily, others)</td><td>Free tier, then paid</td><td>Easiest. Sign up, get a key, send one web request.</td></tr>
+            <tr><td>Wikipedia API</td><td>Free, no key</td><td>Narrow but excellent for a first experiment.</td></tr>
+          </tbody>
+        </table></div>
+        <p>Start with Wikipedia, which needs no account. Add <code>requests</code> with <code>pip install requests</code>:</p>
+        <div class="spell"><div class="lbl"><span>scry.py</span><button class="copy">Copy</button></div><pre><code><span class="kw">import</span> requests
+
+<span class="kw">def</span> scry(query, k=3):
+    <span class="s">"""Search Wikipedia and return short passages in the same shape as summon()."""</span>
+    api = <span class="s">"https://en.wikipedia.org/w/api.php"</span>
+    headers = {<span class="s">"User-Agent"</span>: <span class="s">"JEV-research-familiar/0.1"</span>}
+    found = requests.get(api, headers=headers, params={
+        <span class="s">"action"</span>: <span class="s">"query"</span>, <span class="s">"list"</span>: <span class="s">"search"</span>, <span class="s">"srsearch"</span>: query,
+        <span class="s">"srlimit"</span>: k, <span class="s">"format"</span>: <span class="s">"json"</span>}).json()
+    results = []
+    <span class="kw">for</span> hit <span class="kw">in</span> found[<span class="s">"query"</span>][<span class="s">"search"</span>]:
+        page = requests.get(api, headers=headers, params={
+            <span class="s">"action"</span>: <span class="s">"query"</span>, <span class="s">"prop"</span>: <span class="s">"extracts"</span>, <span class="s">"explaintext"</span>: 1,
+            <span class="s">"exintro"</span>: 1, <span class="s">"titles"</span>: hit[<span class="s">"title"</span>], <span class="s">"format"</span>: <span class="s">"json"</span>}).json()
+        text = next(iter(page[<span class="s">"query"</span>][<span class="s">"pages"</span>].values())).get(<span class="s">"extract"</span>, <span class="s">""</span>)
+        results.append({<span class="s">"text"</span>: text[:1500], <span class="s">"source"</span>: <span class="s">"Wikipedia: "</span> + hit[<span class="s">"title"</span>], <span class="s">"page"</span>: 1})
+    <span class="kw">return</span> results</code></pre></div>
+        <p>Because <code>scry()</code> returns the same shape as <code>summon()</code>, you can blend them in the Truth-Seer: <code>evidence = summon(claim, 3) + scry(claim, 2)</code>. JEV now weighs your private tomes and the public record side by side.</p>
+        <div class="lore"><b>Lore.</b> Search engines match keywords, not meaning. Before scrying, ask the Mind to rewrite the claim as a short search query ("Rosetta Stone discovery year") for far better results.</div>
+        <label class="mastered"><input type="checkbox" id="m-c6" data-c="c6"> This circle is mastered</label>
+      </section>
+
+      <!-- VII -->
+      <section class="circle" id="c7">
+        <div class="circle-head"><div class="seal">VII</div><div><div class="k">Seventh Circle · Adept</div><h2>The Council</h2></div></div>
+        <p>Here JEV becomes a think tank. One model can wear many masks. Give each mask a distinct duty, let them respond to the same question in turn, each reading what came before, and finally let a Moderator weave the debate into a single brief. Disagreement is the point; a council that always agrees is one voice in costume.</p>
+        <div class="council">
+          <div class="seat"><b>The Visionary</b><span>Proposes bold ideas and unexplored directions.</span></div>
+          <div class="seat"><b>The Skeptic</b><span>Hunts for weak evidence, hidden assumptions, and failure modes.</span></div>
+          <div class="seat"><b>The Historian</b><span>Finds precedent: who tried this before and what happened.</span></div>
+          <div class="seat"><b>The Pragmatist</b><span>Turns ideas into first steps, costs, and a timeline.</span></div>
+        </div>
+        <div class="spell"><div class="lbl"><span>council.py</span><button class="copy">Copy</button></div><pre><code><span class="kw">import</span> ollama
+
+MODEL = <span class="s">"llama3.1:8b"</span>
+SEATS = {
+    <span class="s">"Visionary"</span>:  <span class="s">"Propose three bold, specific ideas. Favor the unexplored."</span>,
+    <span class="s">"Skeptic"</span>:    <span class="s">"Attack the ideas so far. Name weak evidence and hidden assumptions."</span>,
+    <span class="s">"Historian"</span>:  <span class="s">"Cite real precedents for these ideas and what became of them. Say so if unsure."</span>,
+    <span class="s">"Pragmatist"</span>: <span class="s">"Pick the most promising idea and give five concrete first steps."</span>,
+}
+
+<span class="kw">def</span> speak(duty, transcript):
+    reply = ollama.chat(model=MODEL, options={<span class="s">"temperature"</span>: 0.8}, messages=[
+        {<span class="s">"role"</span>: <span class="s">"system"</span>, <span class="s">"content"</span>: f<span class="s">"You sit on a research council. Your duty: {duty} Be concise."</span>},
+        {<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: transcript},
+    ])
+    <span class="kw">return</span> reply[<span class="s">"message"</span>][<span class="s">"content"</span>]
+
+<span class="kw">def</span> convene(question, rounds=2):
+    transcript = f<span class="s">"QUESTION BEFORE THE COUNCIL: {question}\n"</span>
+    <span class="kw">for</span> r <span class="kw">in</span> range(rounds):
+        <span class="kw">for</span> name, duty <span class="kw">in</span> SEATS.items():
+            words = speak(duty, transcript)
+            transcript += f<span class="s">"\n--- {name} (round {r+1}) ---\n{words}\n"</span>
+            print(f<span class="s">"\n[{name}]\n{words}"</span>)
+    brief = speak(<span class="s">"You are the Moderator. Summarize: best ideas, strongest objections, "</span>
+                  <span class="s">"open questions, and a recommended next step."</span>, transcript)
+    print(<span class="s">"\n=== MODERATOR'S BRIEF ===\n"</span> + brief)
+    <span class="kw">return</span> brief
+
+<span class="kw">if</span> __name__ == <span class="s">"__main__"</span>:
+    convene(input(<span class="s">"What shall the council consider? "</span>))</code></pre></div>
+        <p>Notice the temperature: 0 for the Truth-Seer, 0.8 for the Council. Low temperature makes answers steady and repeatable; high temperature makes them varied and inventive. Judgment wants the first, brainstorming the second.</p>
+        <label class="mastered"><input type="checkbox" id="m-c7" data-c="c7"> This circle is mastered</label>
+      </section>
+
+      <!-- VIII -->
+      <section class="circle" id="c8">
+        <div class="circle-head"><div class="seal">VIII</div><div><div class="k">Eighth Circle · Adept</div><h2>The Face</h2></div></div>
+        <p>A familiar confined to the terminal is hard to share. Streamlit gives JEV a face in your web browser with a few dozen lines: three chambers for asking, checking, and convening.</p>
+        <div class="spell"><div class="lbl"><span>app.py</span><button class="copy">Copy</button></div><pre><code><span class="kw">import</span> streamlit <span class="kw">as</span> st, ollama
+<span class="kw">from</span> library <span class="kw">import</span> summon
+<span class="kw">from</span> truthseer <span class="kw">import</span> fact_check, CHARTER, MODEL
+<span class="kw">from</span> council <span class="kw">import</span> convene
+
+st.set_page_config(page_title=<span class="s">"JEV"</span>, page_icon=<span class="s">"✶"</span>)
+st.title(<span class="s">"✶ JEV"</span>)
+ask_tab, check_tab, council_tab = st.tabs([<span class="s">"Ask"</span>, <span class="s">"Fact-check"</span>, <span class="s">"Council"</span>])
+
+<span class="kw">with</span> ask_tab:
+    q = st.text_input(<span class="s">"Ask the library"</span>)
+    <span class="kw">if</span> q:
+        ev = summon(q)
+        context = <span class="s">"\n\n"</span>.join(f<span class="s">"({e['source']} p.{e['page']}) {e['text']}"</span> <span class="kw">for</span> e <span class="kw">in</span> ev)
+        reply = ollama.chat(model=MODEL, messages=[
+            {<span class="s">"role"</span>: <span class="s">"system"</span>, <span class="s">"content"</span>: CHARTER},
+            {<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: f<span class="s">"SOURCES:\n{context}\n\nQUESTION: {q}"</span>}])
+        st.write(reply[<span class="s">"message"</span>][<span class="s">"content"</span>])
+        <span class="kw">with</span> st.expander(<span class="s">"Passages consulted"</span>):
+            <span class="kw">for</span> e <span class="kw">in</span> ev:
+                st.caption(f<span class="s">"{e['source']} · p.{e['page']}"</span>)
+                st.write(e[<span class="s">"text"</span>])
+
+<span class="kw">with</span> check_tab:
+    text = st.text_area(<span class="s">"Paste a passage to check"</span>, height=180)
+    <span class="kw">if</span> st.button(<span class="s">"Check claims"</span>) <span class="kw">and</span> text:
+        <span class="kw">with</span> st.spinner(<span class="s">"The Truth-Seer deliberates..."</span>):
+            <span class="kw">for</span> v <span class="kw">in</span> fact_check(text):
+                mark = {<span class="s">"SUPPORTED"</span>: <span class="s">"🟢"</span>, <span class="s">"REFUTED"</span>: <span class="s">"🔴"</span>}.get(v.get(<span class="s">"verdict"</span>), <span class="s">"🟡"</span>)
+                st.markdown(f<span class="s">"{mark} **{v.get('verdict')}**: {v['claim']}"</span>)
+                st.caption(v.get(<span class="s">"reason"</span>, <span class="s">""</span>))
+
+<span class="kw">with</span> council_tab:
+    topic = st.text_input(<span class="s">"Question for the council"</span>)
+    <span class="kw">if</span> st.button(<span class="s">"Convene"</span>) <span class="kw">and</span> topic:
+        <span class="kw">with</span> st.spinner(<span class="s">"The council debates..."</span>):
+            st.markdown(convene(topic, rounds=1))</code></pre></div>
+        <p>Launch it with <code>streamlit run app.py</code>. Your browser opens to JEV's face. Your sanctum should now hold:</p>
+        <div class="spell"><div class="lbl"><span>The sanctum</span><button class="copy">Copy</button></div><pre><code>jev/
+├── charter.txt      <span class="c"># the oath (Third Circle)</span>
+├── jev_chat.py      <span class="c"># first incantation (Second)</span>
+├── library.py       <span class="c"># binding and summoning (Fourth)</span>
+├── truthseer.py     <span class="c"># claim judgment (Fifth)</span>
+├── scry.py          <span class="c"># web evidence (Sixth)</span>
+├── council.py       <span class="c"># the think tank (Seventh)</span>
+├── app.py           <span class="c"># the face (Eighth)</span>
+├── tomes/           <span class="c"># your PDFs and notes</span>
+└── jev_library/     <span class="c"># the bound library (created for you)</span></code></pre></div>
+        <label class="mastered"><input type="checkbox" id="m-c8" data-c="c8"> This circle is mastered</label>
+      </section>
+
+      <!-- IX -->
+      <section class="circle" id="c9">
+        <div class="circle-head"><div class="seal">IX</div><div><div class="k">Ninth Circle · Adept</div><h2>Wards &amp; Trials</h2></div></div>
+        <p>An adept does not trust their familiar; they test it. Build a <b>trial ledger</b>: twenty claims whose truth you already know, some true, some false, some your tomes can't answer. Run the Truth-Seer across them after every change to the charter, the model, or the chunk size, and count how many it gets right. That number is how you know an "improvement" actually improved anything.</p>
+        <div class="spell"><div class="lbl"><span>trials.py</span><button class="copy">Copy</button></div><pre><code><span class="kw">from</span> truthseer <span class="kw">import</span> judge
+
+LEDGER = [
+    (<span class="s">"The Rosetta Stone was found in 1799."</span>, <span class="s">"SUPPORTED"</span>),
+    (<span class="s">"The Rosetta Stone is written in four scripts."</span>, <span class="s">"REFUTED"</span>),
+    (<span class="s">"The Rosetta Stone's carver was named Ptolemy the Scribe."</span>, <span class="s">"NOT ENOUGH EVIDENCE"</span>),
+    <span class="c"># add claims drawn from your own tomes...</span>
+]
+
+passed = 0
+<span class="kw">for</span> claim, expected <span class="kw">in</span> LEDGER:
+    got = judge(claim).get(<span class="s">"verdict"</span>)
+    ok = got == expected
+    passed += ok
+    print(<span class="s">"PASS"</span> <span class="kw">if</span> ok <span class="kw">else</span> <span class="s">"FAIL"</span>, <span class="s">"|"</span>, claim, <span class="s">"| expected"</span>, expected, <span class="s">"got"</span>, got)
+print(f<span class="s">"\n{passed}/{len(LEDGER)} trials passed"</span>)</code></pre></div>
+        <h3>The standing wards</h3>
+        <ul>
+          <li><b>Always open the source.</b> JEV points you to a page; you confirm it says what JEV claims. Models can misread evidence that's sitting right in front of them.</li>
+          <li><b>Beware the fluent lie.</b> A confident, well-written answer is no more likely to be true. Hallucination sounds exactly like knowledge.</li>
+          <li><b>Mind the date.</b> The Mind's memory stops at its training cutoff. For anything recent, rely on the Library or the scrying glass.</li>
+          <li><b>Your tomes carry their own biases.</b> JEV can only be as balanced as what you feed it. Bind sources that disagree with each other.</li>
+          <li><b>Keep secrets local.</b> Everything here runs on your machine. If you later swap in a cloud model, your documents travel to that provider.</li>
+        </ul>
+        <h3>Paths beyond the ninth circle</h3>
+        <ul>
+          <li>Save council briefs and verdicts to files so JEV builds a research journal over time.</li>
+          <li>Add a re-ranking step: after summoning ten passages, ask the Mind which five truly bear on the question.</li>
+          <li>Let JEV decide for itself when to consult the Library or the glass, using the model's tool-calling ability.</li>
+          <li>Learn the frameworks others have built for this (LangChain, LlamaIndex) once you understand what they automate.</li>
+        </ul>
+        <label class="mastered"><input type="checkbox" id="m-c9" data-c="c9"> This circle is mastered</label>
+      </section>
+
+      <section class="circle" id="grimoire">
+        <div class="circle-head"><div class="seal">❦</div><div><div class="k">Appendix</div><h2>Grimoire of Terms</h2></div></div>
+        <dl class="grimoire">
+          <dt>LLM</dt><dd>Large language model. A program trained on vast text to predict the next word. The Mind.</dd>
+          <dt>Parameters</dt><dd>The model's learned numbers. "8B" means eight billion. More usually means smarter, slower, and hungrier for memory.</dd>
+          <dt>Quantization</dt><dd>Compressing those numbers (e.g. to 4 bits) so a model fits on ordinary hardware, at a small cost in quality.</dd>
+          <dt>Prompt</dt><dd>The text you send. The system prompt is the standing instruction; the charter.</dd>
+          <dt>Context window</dt><dd>How much text the model can read at once. Evidence, history, and question must all fit.</dd>
+          <dt>Token</dt><dd>A word-fragment, the unit models read and write in. Roughly three-quarters of a word.</dd>
+          <dt>Temperature</dt><dd>Randomness of the reply. Near 0 for judgment, 0.7–1.0 for invention.</dd>
+          <dt>Embedding</dt><dd>A list of numbers placing text on a map of meaning. Similar ideas sit close together.</dd>
+          <dt>Vector database</dt><dd>A store that finds the nearest embeddings quickly. Here, ChromaDB.</dd>
+          <dt>RAG</dt><dd>Retrieval-augmented generation. Fetch relevant passages first, then answer from them.</dd>
+          <dt>Chunking</dt><dd>Cutting documents into passages small enough to retrieve precisely.</dd>
+          <dt>Hallucination</dt><dd>A fluent, confident statement with no basis in fact or evidence.</dd>
+          <dt>Agent</dt><dd>A model allowed to choose actions (search, read, calculate) in a loop until a goal is met.</dd>
+        </dl>
+        <footer class="colophon">Scribed for the apprentice who would become adept. Copy each spell exactly, test after every circle, and trust no answer you have not traced to its source.</footer>
+      </section>
+
+    </article>
+    <div class="rod" aria-hidden="true"></div>
+  </main>
+</div>
+
+<script>
+(function(){
+  // Copy buttons
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var code = btn.closest('.spell').querySelector('pre');
+      var text = code.innerText;
+      var done = function(){ btn.textContent = 'Copied'; setTimeout(function(){ btn.textContent = 'Copy'; }, 1400); };
+      var fallback = function(){
+        var r = document.createRange(); r.selectNodeContents(code);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        btn.textContent = 'Selected: press Ctrl+C';
+      };
+      try { navigator.clipboard.writeText(text).then(done, fallback); } catch(e){ fallback(); }
+    });
+  });
+
+  // Charter forge
+  var tones = {
+    plain: 'Speak plainly and briefly. Lead with the answer.',
+    scholarly: 'Answer thoroughly, as a careful scholar would, noting nuance and competing interpretations.',
+    socratic: 'When a question is vague, ask one clarifying question before answering.'
+  };
+  function val(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+  function on(id){ var el = document.getElementById(id); return el && el.checked; }
+  function forge(){
+    var name = val('f-name') || 'JEV';
+    var domain = val('f-domain') || 'general research';
+    var tone = (document.querySelector('input[name="f-tone"]:checked') || {}).value || 'plain';
+    var rules = [];
+    if (on('v-ctx')) rules.push('Base answers on the SOURCES provided. Use your own memory only when no sources are given, and say that you are doing so.');
+    if (on('v-cite')) rules.push('Cite a source, as (filename, page), for every factual claim.');
+    if (on('v-idk')) rules.push('If the evidence does not answer the question, say "I don\'t know" and state what evidence would settle it. Never invent sources.');
+    if (on('v-sep')) rules.push('Keep facts and interpretation separate. Label interpretation as such.');
+    if (on('v-conf')) rules.push('End each answer with a confidence rating: HIGH, MEDIUM, or LOW, and one reason.');
+    if (on('v-counter')) rules.push('After your answer, give the strongest reasonable counter-view.');
+    rules.push(tones[tone]);
+    var out = 'You are ' + name + ', a research and fact-checking assistant specializing in ' + domain + '.\n\nRULES:\n' +
+      rules.map(function(r,i){ return (i+1) + '. ' + r; }).join('\n');
+    document.getElementById('charter-out').textContent = out;
+  }
+  document.getElementById('forge').addEventListener('input', forge);
+  document.getElementById('forge').addEventListener('change', forge);
+  forge();
+
+  // Mastery progress
+  var KEY = 'jev-scroll-mastery';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e){ state = {}; }
+  var boxes = document.querySelectorAll('.mastered input');
+  function render(){
+    var n = 0;
+    boxes.forEach(function(b){
+      var c = b.dataset.c; b.checked = !!state[c]; if (state[c]) n++;
+      var link = document.querySelector('nav a[data-c="' + c + '"]');
+      if (link) link.classList.toggle('done', !!state[c]);
+    });
+    document.getElementById('progtxt').textContent = n + ' of 9 circles mastered' + (n === 9 ? ' · Adept' : '');
+    document.getElementById('progbar').style.width = (n / 9 * 100) + '%';
+  }
+  boxes.forEach(function(b){
+    b.addEventListener('change', function(){
+      state[b.dataset.c] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){}
+      render();
+    });
+  });
+  render();
+})();
+</script>
+
+</body></html>

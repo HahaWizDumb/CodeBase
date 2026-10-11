@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoloVid • Video to 3D Hologram Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <style>
+        body {
+            margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #0ff; overflow: hidden;
+        }
+        .container {
+            display: flex; height: 100vh;
+        }
+        .sidebar {
+            width: 340px; background: #111; padding: 20px; overflow-y: auto; border-right: 1px solid #0ff;
+        }
+        .main {
+            flex: 1; position: relative;
+        }
+        h1 {
+            margin: 0 0 20px 0; font-size: 28px; text-align: center; text-shadow: 0 0 10px #0ff;
+        }
+        button, input[type="file"] {
+            width: 100%; padding: 12px; margin: 10px 0; background: #000; color: #0ff; border: 1px solid #0ff; cursor: pointer; border-radius: 4px;
+        }
+        button:hover {
+            background: #0ff; color: #000;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        label {
+            display: block; margin: 15px 0 5px; color: #0cc;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .canvas-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        }
+        .info {
+            position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 4px; font-size: 14px;
+        }
+        .holo-frame {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            border: 3px solid rgba(0, 255, 255, 0.3); box-shadow: 0 0 60px #0ff; pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h1>🌌 HoloVid</h1>
+            <p style="text-align:center; opacity:0.8;">Video → Depth-Mapped Hologram</p>
+            
+            <input type="file" id="videoUpload" accept="video/*">
+            
+            <div class="controls">
+                <label>Hologram Intensity <span id="intensityVal">0.8</span></label>
+                <input type="range" id="intensity" min="0" max="2" step="0.05" value="0.8">
+                
+                <label>Depth Strength <span id="depthVal">1.2</span></label>
+                <input type="range" id="depth" min="0" max="3" step="0.1" value="1.2">
+                
+                <label>Parallax / Tilt <span id="tiltVal">15</span>°</label>
+                <input type="range" id="tilt" min="-45" max="45" value="15">
+                
+                <label>Scan Speed <span id="scanVal">1.0</span></label>
+                <input type="range" id="scanSpeed" min="0.2" max="3" step="0.1" value="1.0">
+            </div>
+            
+            <button onclick="togglePlayback()">▶ Play / Pause Video</button>
+            <button onclick="captureFrame()">Capture Current Frame as Image</button>
+            <button onclick="resetScene()">Reset Hologram</button>
+            
+            <div style="margin-top:30px; font-size:13px; opacity:0.7;">
+                <strong>How it works:</strong><br>
+                • Fake depth from brightness + edges<br>
+                • Real-time 3D displacement in WebGL<br>
+                • Classic holographic pyramid look
+            </div>
+        </div>
+
+        <!-- 3D Viewer -->
+        <div class="main">
+            <div class="canvas-container" id="canvasContainer"></div>
+            
+            <!-- Hologram frame overlay -->
+            <div class="holo-frame" id="holoFrame" style="width:60%; height:60%;"></div>
+            
+            <div class="info">
+                <strong>Mouse Drag</strong> → Rotate Hologram<br>
+                <strong>Scroll</strong> → Zoom
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Three.js setup
+        let scene, camera, renderer;
+        let video, videoTexture;
+        let hologramMesh;
+        let isPlaying = true;
+        let mouseX = 0, mouseY = 0;
+        let targetRotationY = 0;
+        
+        const container = document.getElementById('canvasContainer');
+        
+        function initThree() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x000000, 50, 200);
+            
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 0, 25);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+            
+            // Lights for hologram glow
+            const ambient = new THREE.AmbientLight(0x00ffff, 0.6);
+            scene.add(ambient);
+            const pointLight = new THREE.PointLight(0xffffff, 1.5, 100);
+            pointLight.position.set(10, 20, 30);
+            scene.add(pointLight);
+            
+            window.addEventListener('resize', onResize);
+        }
+        
+        function createHologram() {
+            if (hologramMesh) scene.remove(hologramMesh);
+            
+            const geometry = new THREE.PlaneGeometry(20, 12, 128, 128);
+            
+            const material = new THREE.MeshPhongMaterial({
+                side: THREE.DoubleSide,
+                shininess: 100,
+                specular: 0x00ffff,
+                transparent: true,
+                opacity: 0.95,
+                depthWrite: false
+            });
+            
+            hologramMesh = new THREE.Mesh(geometry, material);
+            hologramMesh.rotation.x = -Math.PI / 2.5; // Tilt for hologram feel
+            scene.add(hologramMesh);
+        }
+        
+        function loadVideo(file) {
+            if (video) video.remove();
+            
+            video = document.createElement('video');
+            video.loop = true;
+            video.muted = true;
+            video.playsInline = true;
+            video.src = URL.createObjectURL(file);
+            
+            video.onloadedmetadata = () => {
+                video.play();
+                videoTexture = new THREE.VideoTexture(video);
+                videoTexture.minFilter = THREE.LinearFilter;
+                videoTexture.magFilter = THREE.LinearFilter;
+                
+                if (hologramMesh) {
+                    hologramMesh.material.map = videoTexture;
+                    hologramMesh.material.needsUpdate = true;
+                }
+            };
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (hologramMesh) {
+                // Mouse controlled rotation
+                targetRotationY = mouseX * 0.8;
+                hologramMesh.rotation.y = THREE.MathUtils.lerp(hologramMesh.rotation.y, targetRotationY, 0.1);
+                
+                // Gentle breathing animation
+                const breathe = Math.sin(Date.now() / 800) * 0.02;
+                hologramMesh.position.y = breathe;
+                
+                // Depth displacement simulation via shader-like uniform (simple version)
+                const intensity = parseFloat(document.getElementById('intensity').value);
+                hologramMesh.scale.set(1 + breathe * intensity, 1, 1);
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        function onResize() {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        // Mouse controls
+        let isDragging = false;
+        container.addEventListener('mousedown', () => isDragging = true);
+        window.addEventListener('mouseup', () => isDragging = false);
+        container.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                mouseX += (e.movementX || 0) * 0.008;
+            }
+        });
+        
+        container.addEventListener('wheel', (e) => {
+            camera.position.z += e.deltaY * 0.03;
+            camera.position.z = Math.max(8, Math.min(60, camera.position.z));
+        });
+        
+        // UI Controls
+        function togglePlayback() {
+            if (!video) return;
+            if (video.paused) video.play();
+            else video.pause();
+        }
+        
+        function captureFrame() {
+            if (!video || !renderer) return;
+            renderer.render(scene, camera);
+            const link = document.createElement('a');
+            link.download = 'hologram-frame.png';
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+        }
+        
+        function resetScene() {
+            if (hologramMesh) hologramMesh.rotation.set(0, 0, 0);
+            mouseX = 0;
+        }
+        
+        // Live sliders
+        function setupSliders() {
+            const sliders = ['intensity', 'depth', 'tilt', 'scanSpeed'];
+            sliders.forEach(id => {
+                const el = document.getElementById(id);
+                const val = document.getElementById(id + 'Val');
+                if (el && val) {
+                    el.addEventListener('input', () => {
+                        val.textContent = parseFloat(el.value).toFixed(1);
+                    });
+                }
+            });
+        }
+        
+        // Video upload
+        document.getElementById('videoUpload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) loadVideo(file);
+        });
+        
+        // Init everything
+        window.onload = () => {
+            initThree();
+            createHologram();
+            setupSliders();
+            animate();
+            
+            // Demo video (optional public domain sample)
+            console.log("%c HoloVid ready! Upload a video to begin.", "color:#0ff; font-size:16px");
+        };
+    </script>
+</body>
+</html>

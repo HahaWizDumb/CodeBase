@@ -1,0 +1,283 @@
+html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Church of Christ vs. Swaminarayan Sampradaya</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.8rem;
+        }
+        
+        h2 {
+            color: #1e3a8a;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 0.5rem;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            padding: 1.2rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .comparison-table th {
+            background: #1e3a8a;
+            color: white;
+            font-size: 1.1rem;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        .category {
+            background: #e0f2fe;
+            font-weight: 700;
+            color: #1e40af;
+        }
+        
+        .similarity {
+            background: #ecfdf5;
+        }
+        
+        .difference {
+            background: #fef3f2;
+        }
+        
+        .section {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.8rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .coc {
+            border-top: 6px solid #1e3a8a;
+        }
+        
+        .swaminarayan {
+            border-top: 6px solid #e11d48;
+        }
+        
+        footer {
+            background: #1e2937;
+            color: #cbd5e1;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+        
+        table caption {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #1e3a8a;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Compare &amp; Contrast</h1>
+            <p style="font-size: 1.4rem; margin-top: 0.5rem;">Church of Christ &amp; Swaminarayan Sampradaya (Shree Swaminarayan Temple Tradition)</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Introduction -->
+        <div class="section">
+            <h2>Introduction</h2>
+            <p><strong>Church of Christ</strong> is a Christian denomination that emerged from the 19th-century American Restoration Movement. It seeks to restore the practices of the early New Testament church.</p>
+            <p><strong>Swaminarayan Sampradaya</strong> (also known as Swaminarayan Hinduism) is a Vaishnava Hindu tradition founded by Bhagwan Swaminarayan (Sahajanand Swami) in early 19th-century Gujarat, India. It emphasizes devotion (bhakti) to Swaminarayan as the supreme manifestation of God (Purushottam).</p>
+        </div>
+
+        <!-- Side-by-Side Cards -->
+        <div class="card-grid">
+            <!-- Church of Christ Card -->
+            <div class="card coc">
+                <h2 style="color: #1e3a8a;">🏛️ Church of Christ</h2>
+                <ul>
+                    <li>Christian (Restoration Movement)</li>
+                    <li>Founded: Early 19th century (restoring 1st-century church)</li>
+                    <li>Holy Book: Bible (New Testament emphasis)</li>
+                    <li>Central Figure: Jesus Christ as Son of God and Savior</li>
+                    <li>Worship: A cappella singing, weekly Lord's Supper, preaching</li>
+                    <li>Key Practice: Believer's baptism by immersion for remission of sins</li>
+                </ul>
+            </div>
+            
+            <!-- Swaminarayan Card -->
+            <div class="card swaminarayan">
+                <h2 style="color: #e11d48;">🛕 Swaminarayan Sampradaya</h2>
+                <ul>
+                    <li>Hindu (Vaishnava bhakti tradition)</li>
+                    <li>Founded: 19th century by Swaminarayan (1781–1830)</li>
+                    <li>Holy Books: Vachanamrut, Shikshapatri, Hindu scriptures</li>
+                    <li>Central Figure: Bhagwan Swaminarayan as Purushottam (Supreme God)</li>
+                    <li>Worship: Temple rituals (arti, darshan), bhajans, festivals</li>
+                    <li>Key Practice: Strict moral code, vegetarianism, devotion through Akshar-Purushottam philosophy</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Detailed Comparison Table -->
+        <div class="section">
+            <h2>Detailed Comparison</h2>
+            <table class="comparison-table">
+                <caption>Key Beliefs and Practices</caption>
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Aspect</th>
+                        <th style="width: 37.5%; background: #1e3a8a; color: white;">Church of Christ</th>
+                        <th style="width: 37.5%; background: #e11d48; color: white;">Swaminarayan Sampradaya</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="category">
+                        <td>Origin &amp; Founder</td>
+                        <td>Restoration of 1st-century Christianity (Jesus Christ). 19th-century leaders: Alexander Campbell, Barton W. Stone.</td>
+                        <td>Founded by Sahajanand Swami (Swaminarayan) in Gujarat, India (early 1800s).</td>
+                    </tr>
+                    <tr>
+                        <td>View of God</td>
+                        <td>Trinitarian: One God in three persons (Father, Son, Holy Spirit). Jesus is fully God and fully man.</td>
+                        <td>Monotheistic within Hinduism. Swaminarayan is Purushottam (Supreme God). Akshar (Brahman) and various deities recognized. [](grok_render_citation_card_json={"cardIds":["a17fdc"]})</td>
+                    </tr>
+                    <tr>
+                        <td>Scripture</td>
+                        <td>Bible alone (sola scriptura). New Testament as pattern for church practice.</td>
+                        <td>Vachanamrut (primary), Shikshapatri, Vedas, Upanishads, Bhagavad Gita.</td>
+                    </tr>
+                    <tr class="category">
+                        <td>Salvation / Liberation</td>
+                        <td>Faith, repentance, baptism by immersion, continued faithfulness. Grace through obedience to Gospel.</td>
+                        <td>Bhakti (devotion) to God, following dharma, attaining Brahmarupa (form of Akshar) for eternal bliss with God. [](grok_render_citation_card_json={"cardIds":["6ba71d"]})</td>
+                    </tr>
+                    <tr>
+                        <td>Worship Style</td>
+                        <td>Simple, non-liturgical. A cappella singing only (no instruments), prayers, preaching, Lord's Supper every Sunday.</td>
+                        <td>Temple-centric: Arti, darshan of murtis, devotional singing (bhajans/kirtans), festivals, rituals.</td>
+                    </tr>
+                    <tr>
+                        <td>Leadership</td>
+                        <td>Congregational autonomy. Plurality of male elders. No central hierarchy.</td>
+                        <td>Gurus / Sadhus (monks), temple administrators, and spiritual lineage (varies by branch, e.g., BAPS).</td>
+                    </tr>
+                    <tr class="similarity">
+                        <td>📍 Similarities</td>
+                        <td colspan="2">
+                            <strong>Both emphasize:</strong><br>
+                            • Strict moral living &amp; personal holiness<br>
+                            • Weekly congregational worship<br>
+                            • Importance of scripture and devotion to God<br>
+                            • Missionary/evangelistic outreach<br>
+                            • Community service and charity
+                        </td>
+                    </tr>
+                    <tr class="difference">
+                        <td>⚡ Major Differences</td>
+                        <td colspan="2">
+                            <strong>Theological:</strong> Christianity (monotheism + Trinity) vs. Hindu bhakti tradition with murti worship.<br>
+                            <strong>Afterlife:</strong> Heaven/Hell vs. Moksha / cycle of rebirth &amp; liberation.<br>
+                            <strong>Practices:</strong> No idols vs. vibrant temple iconography and festivals.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Global Presence</td>
+                        <td>Primarily in USA, strong in Southern states, also worldwide missions.</td>
+                        <td>Strong in Gujarat &amp; India; large global diaspora with magnificent temples (especially BAPS).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Key Contrasts Section -->
+        <div class="section">
+            <h2>Key Points of Contrast</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                <div style="background: #fef3f2; padding: 1.5rem; border-radius: 10px;">
+                    <h3 style="color: #b91c1c;">Church of Christ</h3>
+                    <ul>
+                        <li>Rejects instrumental music in worship ("a cappella only")</li>
+                        <li>No clergy-laity distinction; priesthood of all believers</li>
+                        <li>Baptism essential for salvation</li>
+                        <li>Focus on New Testament pattern</li>
+                    </ul>
+                </div>
+                <div style="background: #ecfdf5; padding: 1.5rem; border-radius: 10px;">
+                    <h3 style="color: #166534;">Swaminarayan Sampradaya</h3>
+                    <ul>
+                        <li>Elaborate temple architecture and murti puja</li>
+                        <li>Strict vegetarianism and lifestyle codes (e.g., no onions/garlic in some groups)</li>
+                        <li>Emphasis on living guru/parampara in some branches</li>
+                        <li>Beautiful festivals (Janmashtami, Diwali, etc.)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p><strong>Educational Comparison Only</strong> — Information based on general knowledge of both traditions. Practices may vary by congregation or branch (e.g., BAPS vs. other Swaminarayan groups).</p>
+        <p style="margin-top: 1rem;">Built as a neutral comparative resource • Respect all faiths</p>
+    </footer>
+</body>
+</html>
+

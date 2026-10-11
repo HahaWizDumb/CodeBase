@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CRT-TV // Analog Signal Emulator</title>
+<style>
+  :root{
+    --amber:#ffb000; --green:#39ff88; --panel-bg:rgba(10,12,10,0.92);
+    --border:#2c3a2c;
+  }
+  html,body{margin:0;height:100%;background:#050605;overflow:hidden;
+    font-family:'Courier New',monospace;color:var(--green);}
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;}
+  #glcanvas{width:100%;height:100%;display:block;cursor:pointer;}
+  #hud{position:fixed;inset:0;pointer-events:none;padding:14px;
+    font-size:13px;letter-spacing:1px;text-shadow:0 0 4px currentColor;}
+  #hud .tl{position:absolute;top:12px;left:16px;font-size:26px;color:var(--green);font-weight:bold;}
+  #hud .tr{position:absolute;top:12px;right:16px;text-align:right;color:var(--amber);line-height:1.5;}
+  #hud .bl{position:absolute;bottom:10px;left:16px;color:var(--green);opacity:.75;font-size:11px;}
+  #panel{
+    position:fixed;top:12px;right:12px;width:290px;max-height:calc(100% - 24px);
+    overflow-y:auto;background:var(--panel-bg);border:1px solid var(--border);
+    border-radius:6px;padding:12px;box-shadow:0 0 20px rgba(0,0,0,.6);
+    font-size:12px;transition:transform .25s ease;z-index:10;
+  }
+  #panel.hidden{transform:translateX(340px);}
+  #panel h3{margin:10px 0 6px;color:var(--amber);font-size:11px;letter-spacing:2px;
+    border-bottom:1px solid var(--border);padding-bottom:4px;text-transform:uppercase;}
+  #panel h3:first-child{margin-top:0;}
+  #panel label{display:block;margin:7px 0 2px;color:#8fae8f;}
+  #panel .row{display:flex;justify-content:space-between;font-size:11px;color:#cfe;}
+  #panel input[type=range]{width:100%;accent-color:var(--green);}
+  #panel select,#panel input[type=file]{width:100%;background:#111;color:var(--green);
+    border:1px solid var(--border);padding:4px;font-family:inherit;font-size:11px;}
+  #panel button{
+    background:#111;color:var(--green);border:1px solid var(--border);
+    padding:6px 8px;font-family:inherit;font-size:11px;cursor:pointer;border-radius:3px;
+    width:100%;margin-top:4px;
+  }
+  #panel button:hover{background:#1a2a1a;}
+  #togglePanel{
+    position:fixed;top:12px;right:12px;z-index:11;background:var(--panel-bg);
+    color:var(--green);border:1px solid var(--border);border-radius:6px;
+    padding:8px 10px;font-family:inherit;cursor:pointer;font-size:11px;
+  }
+  #chanRow{display:flex;gap:6px;}
+  #chanRow button{flex:1;}
+  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:#243024;border-radius:4px;}
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <canvas id="glcanvas"></canvas>
+  <div id="hud">
+    <div class="tl" id="chLabel">CH1</div>
+    <div class="tr" id="statusLabel">V-SYNC:OK&nbsp;&nbsp;H-SYNC:OK<br>60.0FPS<br>VHF:90.83MHz&nbsp;AUD:95.33MHz<br>DELAY V:35ms A:88ms</div>
+    <div class="bl">click screen for percussive maintenance</div>
+  </div>
+</div>
+
+<button id="togglePanel">⚙ SETTINGS</button>
+<div id="panel">
+  <h3>Source</h3>
+  <select id="sourceSelect">
+    <option value="test">Test Pattern</option>
+    <option value="video">Video File</option>
+    <option value="webcam">Webcam</option>
+    <option value="external">External Canvas (hooked)</option>
+  </select>
+  <input type="file" id="videoFile" accept="video/*" style="margin-top:6px;display:none;">
+
+  <div id="chanRow" style="margin-top:8px;">
+    <button id="chDown">◀ CH</button>
+    <button id="chUp">CH ▶</button>
+  </div>
+
+  <h3>Tuning</h3>
+  <label>Fine Tune (center = locked)</label>
+  <input type="range" id="fineTune" min="-100" max="100" value="0">
+  <label>Noise / Static</label>
+  <input type="range" id="noise" min="0" max="100" value="12">
+  <label>Sync Jitter</label>
+  <input type="range" id="jitter" min="0" max="100" value="8">
+  <label>Vertical Roll</label>
+  <input type="range" id="roll" min="0" max="100" value="0">
+  <label>Flicker</label>
+  <input type="range" id="flicker" min="0" max="100" value="10">
+
+  <h3>Optics</h3>
+  <label>Curvature</label>
+  <input type="range" id="curvature" min="0" max="100" value="35">
+  <label>Vignette</label>
+  <input type="range" id="vignette" min="0" max="100" value="45">
+  <label>Glow / Bloom</label>
+  <input type="range" id="glow" min="0" max="100" value="30">
+
+  <h3>Color</h3>
+  <label>Chroma Aberration</label>
+  <input type="range" id="aberration" min="0" max="100" value="25">
+  <label>Color Bleed</label>
+  <input type="range" id="bleed" min="0" max="100" value="35">
+  <label>Saturation</label>
+  <input type="range" id="saturation" min="0" max="200" value="105">
+  <label>Brightness</label>
+  <input type="range" id="brightness" min="0" max="200" value="100">
+  <label>Contrast</label>
+  <input type="range" id="contrast" min="0" max="200" value="110">
+
+  <h3>Mask</h3>
+  <label>Scanline Intensity</label>
+  <input type="range" id="scanline" min="0" max="100" value="55">
+  <label>Shadow Mask Type</label>
+  <select id="maskType">
+    <option value="0">None</option>
+    <option value="1" selected>Aperture Grille</option>
+    <option value="2">Shadow Mask</option>
+  </select>
+  <label>Mask Intensity</label>
+  <input type="range" id="maskIntensity" min="0" max="100" value="35">
+
+  <h3>Presets</h3>
+  <button id="presetCrisp">Crisp CRT</button>
+  <button id="presetBad">Battered Portable</button>
+  <button id="presetGhost">Ghosting Antenna</button>
+</div>
+
+<script>
+// ---------- WebGL2 setup ----------
+const canvas = document.getElementById('glcanvas');
+const gl = canvas.getContext('webgl2', {antialias:false, alpha:false});
+if(!gl){ document.body.innerHTML = '<p style="color:#fff;padding:40px;font-family:monospace">WebGL2 unavailable in this browser.</p>'; }
+
+function resize(){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  canvas.width = window.innerWidth*dpr;
+  canvas.height = window.innerHeight*dpr;
+  canvas.style.width = window.innerWidth+'px';
+  canvas.style.height = window.innerHeight+'px';
+  gl.viewport(0,0,canvas.width,canvas.height);
+}
+window.addEventListener('resize', resize);
+resize();
+
+const vertSrc = `#version 300 es
+in vec2 a_pos;
+out vec2 v_uv;
+void main(){
+  v_uv = a_pos*0.5+0.5;
+  gl_Position = vec4(a_pos,0.0,1.0);
+}`;
+
+const fragSrc = `#version 300 es
+precision highp float;
+in vec2 v_uv;
+out vec4 outColor;
+
+uniform sampler2D u_tex;
+uniform vec2 u_resolution;
+uniform vec2 u_srcAspectFit; // scale to letterbox source into 4:3-ish frame
+uniform float u_time;
+uniform float u_curvature;
+uniform float u_scanline;
+uniform float u_maskType;
+uniform float u_maskIntensity;
+uniform float u_aberration;
+uniform float u_bleed;
+uniform float u_noise;
+uniform float u_flicker;
+uniform float u_vignette;
+uniform float u_brightness;
+uniform float u_contrast;
+uniform float u_saturation;
+uniform float u_jitter;
+uniform float u_roll;
+uniform float u_glow;
+uniform float u_syncLock; // 0..1, improved by percussive maintenance
+uniform float u_tuneOffset; // -1..1 fine tune drift
+
+float rand(vec2 co){
+  return fract(sin(dot(co, vec2(12.9898,78.233))) * 43758.5453);
+}
+
+vec2 barrel(vec2 uv, float amount){
+  vec2 cc = uv - 0.5;
+  float dist = dot(cc,cc);
+  return uv + cc * dist * amount;
+}
+
+vec3 sampleAberrated(vec2 uv, float ab, float bleed){
+  float shift = ab * 0.006;
+  float r = texture(u_tex, clamp(uv + vec2(shift,0.0),0.0,1.0)).r;
+  float g = texture(u_tex, uv).g;
+  float b = texture(u_tex, clamp(uv - vec2(shift,0.0),0.0,1.0)).b;
+
+  // horizontal chroma bleed: blur a few taps
+  float bleedAmt = bleed * 0.004;
+  vec3 bl = vec3(0.0);
+  float wsum = 0.0;
+  for(int i=-2;i<=2;i++){
+    float fi = float(i);
+    float w = 1.0 - abs(fi)/3.0;
+    vec2 o = vec2(bleedAmt*fi, 0.0);
+    bl += texture(u_tex, clamp(uv+o,0.0,1.0)).rgb * w;
+    wsum += w;
+  }
+  bl /= max(wsum,0.0001);
+
+  vec3 base = vec3(r,g,b);
+  return mix(base, bl, clamp(bleed/100.0*1.5,0.0,1.0)*0.6 + 0.0);
+}
+
+void main(){
+  vec2 uv = v_uv;
+
+  // letterbox / fit source
+  uv = (uv - 0.5) / u_srcAspectFit + 0.5;
+
+  // lens curvature
+  uv = barrel(uv, u_curvature*0.0035);
+
+  // horizontal sync jitter (line-based)
+  float lineNoise = rand(vec2(floor(uv.y*220.0), floor(u_time*30.0)));
+  float jitterAmt = (u_jitter/100.0) * (1.0 - u_syncLock) * 0.02;
+  uv.x += (lineNoise-0.5) * jitterAmt;
+
+  // vertical roll when unlocked
+  float rollSpeed = u_roll/100.0 * (1.0-u_syncLock);
+  uv.y = fract(uv.y + u_time*rollSpeed*0.15);
+
+  // fine-tune desync adds diagonal tearing
+  uv.x += u_tuneOffset*0.01*sin(uv.y*40.0+u_time*2.0);
+
+  bool outside = uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0;
+
+  vec3 col;
+  if(outside){
+    col = vec3(0.02,0.02,0.02);
+  } else {
+    col = sampleAberrated(uv, u_aberration, u_bleed);
+  }
+
+  // static noise, more when unlocked / no signal
+  float staticAmt = clamp(u_noise/100.0 + (1.0-u_syncLock)*0.5, 0.0, 1.0);
+  float n = rand(uv*u_resolution*0.75 + u_time*60.0);
+  col = mix(col, vec3(n), staticAmt*0.5);
+  if(outside){
+    col = vec3(n);
+  }
+
+  // scanlines
+  float sl = sin(uv.y * u_resolution.y * 1.05) * 0.5 + 0.5;
+  col *= mix(1.0, sl, u_scanline/100.0);
+
+  // shadow mask / aperture grille
+  if(u_maskType > 0.5){
+    float px = mod(gl_FragCoord.x, 3.0);
+    vec3 maskColor = vec3(1.0);
+    if(u_maskType < 1.5){
+      // aperture grille: RGB stripes
+      if(px < 1.0) maskColor = vec3(1.0,0.55,0.55);
+      else if(px < 2.0) maskColor = vec3(0.55,1.0,0.55);
+      else maskColor = vec3(0.55,0.55,1.0);
+    } else {
+      // shadow mask: dimmer alternating dot grid
+      float py = mod(gl_FragCoord.y, 3.0);
+      float d = (px<1.5 && py<1.5) ? 1.0 : 0.6;
+      maskColor = vec3(d);
+    }
+    col = mix(col, col*maskColor, u_maskIntensity/100.0);
+  }
+
+  // glow/bloom approx: brighten based on luminance
+  float lum = dot(col, vec3(0.299,0.587,0.114));
+  col += col * lum * (u_glow/100.0) * 0.6;
+
+  // flicker
+  float fl = 1.0 + (rand(vec2(floor(u_time*8.0),1.0))-0.5) * (u_flicker/100.0) * 0.25;
+  col *= fl;
+
+  // vignette
+  vec2 vc = v_uv - 0.5;
+  float vig = 1.0 - dot(vc,vc) * (u_vignette/100.0) * 1.4;
+  col *= clamp(vig,0.0,1.0);
+
+  // brightness / contrast / saturation
+  col *= (u_brightness/100.0);
+  col = (col-0.5)*(u_contrast/100.0)+0.5;
+  float g = dot(col, vec3(0.299,0.587,0.114));
+  col = mix(vec3(g), col, u_saturation/100.0);
+
+  outColor = vec4(clamp(col,0.0,1.0), 1.0);
+}`;
+
+function compile(type, src){
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if(!gl.getShaderParameter(sh, gl.COMPILE_STATUS)){
+    console.error(gl.getShaderInfoLog(sh));
+  }
+  return sh;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, vertSrc));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fragSrc));
+gl.linkProgram(prog);
+if(!gl.getProgramParameter(prog, gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+
+const quad = new Float32Array([-1,-1, 1,-1, -1,1, 1,1]);
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+const posLoc = gl.getAttribLocation(prog,'a_pos');
+gl.enableVertexAttribArray(posLoc);
+gl.vertexAttribPointer(posLoc,2,gl.FLOAT,false,0,0);
+
+const tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+const uniforms = {};
+['u_resolution','u_srcAspectFit','u_time','u_curvature','u_scanline','u_maskType',
+ 'u_maskIntensity','u_aberration','u_bleed','u_noise','u_flicker','u_vignette',
+ 'u_brightness','u_contrast','u_saturation','u_jitter','u_roll','u_glow',
+ 'u_syncLock','u_tuneOffset'].forEach(n=> uniforms[n]=gl.getUniformLocation(prog,n));
+
+// ---------- Params (driven by panel) ----------
+const params = {
+  curvature:35, scanline:55, maskType:1, maskIntensity:35,
+  aberration:25, bleed:35, noise:12, flicker:10, vignette:45,
+  brightness:100, contrast:110, saturation:105, jitter:8, roll:0, glow:30
+};
+
+function bindSlider(id, key, transform){
+  const el = document.getElementById(id);
+  el.addEventListener('input', ()=>{
+    params[key] = transform ? transform(+el.value) : +el.value;
+  });
+}
+bindSlider('curvature','curvature');
+bindSlider('scanline','scanline');
+bindSlider('maskIntensity','maskIntensity');
+bindSlider('aberration','aberration');
+bindSlider('bleed','bleed');
+bindSlider('noise','noise');
+bindSlider('flicker','flicker');
+bindSlider('vignette','vignette');
+bindSlider('brightness','brightness');
+bindSlider('contrast','contrast');
+bindSlider('saturation','saturation');
+bindSlider('jitter','jitter');
+bindSlider('roll','roll');
+bindSlider('glow','glow');
+document.getElementById('maskType').addEventListener('change', e=> params.maskType = +e.target.value);
+
+// ---------- Signal state: sync lock + fine tune ----------
+let syncLock = 0.9;       // 0..1, 1 = perfect lock
+let tuneOffset = 0;       // -1..1
+document.getElementById('fineTune').addEventListener('input', e=>{
+  tuneOffset = (+e.target.value)/100;
+  const dist = Math.abs(tuneOffset);
+  syncLock = Math.max(0.15, 1.0 - dist*1.4);
+  updateHUD();
+});
+
+function updateHUD(){
+  const ok = syncLock > 0.75;
+  document.getElementById('statusLabel').innerHTML =
+    `V-SYNC:${ok?'OK':'--'}&nbsp;&nbsp;H-SYNC:${syncLock>0.5?'OK':'--'}<br>`+
+    `${ok?'60.0':(50+Math.random()*15).toFixed(1)}FPS<br>`+
+    `VHF:${(90.83 + tuneOffset*3).toFixed(2)}MHz&nbsp;AUD:95.33MHz<br>`+
+    `DELAY V:${(30+Math.random()*15|0)}ms A:${(80+Math.random()*15|0)}ms`;
+}
+updateHUD();
+
+// ---------- Percussive maintenance ----------
+canvas.addEventListener('click', ()=>{
+  syncLock = Math.min(1.0, syncLock + 0.5);
+  document.getElementById('stage').animate([
+    {transform:'translate(0,0)'},
+    {transform:'translate(-6px,3px)'},
+    {transform:'translate(5px,-4px)'},
+    {transform:'translate(-3px,2px)'},
+    {transform:'translate(0,0)'}
+  ], {duration:220, easing:'ease-out'});
+  updateHUD();
+});
+// gentle decay back toward whatever fine-tune dictates
+setInterval(()=>{
+  const target = Math.max(0.15, 1.0 - Math.abs(tuneOffset)*1.4);
+  syncLock += (target - syncLock) * 0.03;
+}, 200);
+
+// ---------- Channels / sources ----------
+let channel = 1;
+const channels = ['test','video','webcam','external'];
+document.getElementById('sourceSelect').addEventListener('change', e=> setSource(e.target.value));
+document.getElementById('chUp').onclick = ()=> cycleChannel(1);
+document.getElementById('chDown').onclick = ()=> cycleChannel(-1);
+function cycleChannel(dir){
+  let idx = channels.indexOf(currentSourceType);
+  idx = (idx + dir + channels.length) % channels.length;
+  document.getElementById('sourceSelect').value = channels[idx];
+  setSource(channels[idx]);
+}
+
+let currentSourceType = 'test';
+let videoEl = null, webcamEl = null, externalEl = null;
+let srcW = 4, srcH = 3;
+
+function setSource(type){
+  currentSourceType = type;
+  channel = channels.indexOf(type)+1;
+  document.getElementById('chLabel').textContent = 'CH'+channel;
+  document.getElementById('videoFile').style.display = type==='video' ? 'block':'none';
+
+  if(type==='webcam' && !webcamEl){
+    navigator.mediaDevices.getUserMedia({video:true}).then(stream=>{
+      webcamEl = document.createElement('video');
+      webcamEl.srcObject = stream;
+      webcamEl.muted = true;
+      webcamEl.play();
+    }).catch(err=>{
+      alert('Webcam unavailable: '+err.message);
+      document.getElementById('sourceSelect').value = 'test';
+      currentSourceType = 'test';
+    });
+  }
+  // brief static burst on channel change, like real tuning
+  syncLock = 0.2;
+}
+
+document.getElementById('videoFile').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!videoEl){ videoEl = document.createElement('video'); videoEl.loop = true; videoEl.muted = true; }
+  videoEl.src = URL.createObjectURL(file);
+  videoEl.play();
+});
+
+// procedural test pattern, drawn to an offscreen 2D canvas each frame
+const testCanvas = document.createElement('canvas');
+testCanvas.width = 640; testCanvas.height = 480;
+const tctx = testCanvas.getContext('2d');
+function drawTestPattern(t){
+  const w=testCanvas.width, h=testCanvas.height;
+  const bars = ['#c0c0c0','#c0c000','#00c0c0','#00c000','#c000c0','#c00000','#0000c0'];
+  const bw = w/bars.length;
+  bars.forEach((c,i)=>{ tctx.fillStyle=c; tctx.fillRect(i*bw,0,bw,h*0.66); });
+  tctx.fillStyle = '#000'; tctx.fillRect(0,h*0.66,w,h*0.34);
+  tctx.fillStyle = '#fff';
+  tctx.font = 'bold 28px monospace';
+  tctx.fillText('CRT-TV EMULATOR', 30, h*0.66+40);
+  tctx.font = '16px monospace';
+  tctx.fillText('CH1 · NO SIGNAL SOURCE LOADED', 30, h*0.66+70);
+  // bouncing dot, retro-attract-mode style
+  const bx = w*0.5 + Math.sin(t*0.7)*w*0.35;
+  const by = h*0.85 + Math.cos(t*0.9)*h*0.06;
+  tctx.beginPath(); tctx.arc(bx,by,8,0,Math.PI*2); tctx.fillStyle='#fff'; tctx.fill();
+}
+
+// external hook for pairing with e.g. an emulator's own <canvas>
+window.CRTEmulator = {
+  setSource(el){
+    externalEl = el;
+    document.getElementById('sourceSelect').value = 'external';
+    setSource('external');
+  },
+  setChannel(n){ cycleChannel(0); channel=n; document.getElementById('chLabel').textContent='CH'+n; }
+};
+
+// ---------- Presets ----------
+function applyPreset(p){
+  Object.assign(params, p);
+  Object.keys(p).forEach(k=>{
+    const el = document.getElementById(k);
+    if(el) el.value = p[k];
+  });
+  const mtEl = document.getElementById('maskType');
+  if(p.maskType!==undefined) mtEl.value = p.maskType;
+}
+document.getElementById('presetCrisp').onclick = ()=> applyPreset({
+  curvature:15, scanline:35, maskIntensity:25, aberration:8, bleed:10,
+  noise:3, flicker:3, vignette:25, glow:15, jitter:2, roll:0
+});
+document.getElementById('presetBad').onclick = ()=> applyPreset({
+  curvature:55, scanline:70, maskIntensity:50, aberration:45, bleed:55,
+  noise:30, flicker:35, vignette:60, glow:45, jitter:35, roll:5
+});
+document.getElementById('presetGhost').onclick = ()=> applyPreset({
+  curvature:30, scanline:50, maskIntensity:30, aberration:60, bleed:80,
+  noise:18, flicker:15, vignette:40, glow:25, jitter:15, roll:2
+});
+
+// ---------- Panel toggle ----------
+const panel = document.getElementById('panel');
+document.getElementById('togglePanel').addEventListener('click', ()=> panel.classList.toggle('hidden'));
+
+// ---------- Render loop ----------
+function updateTexture(t){
+  let el = null;
+  if(currentSourceType==='test'){ drawTestPattern(t); el = testCanvas; srcW=testCanvas.width; srcH=testCanvas.height; }
+  else if(currentSourceType==='video' && videoEl && videoEl.readyState>=2){ el = videoEl; srcW=videoEl.videoWidth||4; srcH=videoEl.videoHeight||3; }
+  else if(currentSourceType==='webcam' && webcamEl && webcamEl.readyState>=2){ el = webcamEl; srcW=webcamEl.videoWidth||4; srcH=webcamEl.videoHeight||3; }
+  else if(currentSourceType==='external' && externalEl){ el = externalEl; srcW=externalEl.width||externalEl.videoWidth||4; srcH=externalEl.height||externalEl.videoHeight||3; }
+  else { drawTestPattern(t); el = testCanvas; srcW=testCanvas.width; srcH=testCanvas.height; }
+
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  try{
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+  }catch(e){ /* element not ready this frame */ }
+}
+
+let start = performance.now();
+function frame(){
+  const t = (performance.now()-start)/1000;
+  updateTexture(t);
+
+  gl.useProgram(prog);
+  gl.uniform2f(uniforms.u_resolution, canvas.width, canvas.height);
+
+  const canvasAspect = canvas.width/canvas.height;
+  const srcAspect = srcW/srcH;
+  let fitX=1, fitY=1;
+  if(canvasAspect > srcAspect) fitY = canvasAspect/srcAspect; else fitX = srcAspect/canvasAspect;
+  gl.uniform2f(uniforms.u_srcAspectFit, fitX, fitY);
+
+  gl.uniform1f(uniforms.u_time, t);
+  gl.uniform1f(uniforms.u_curvature, params.curvature);
+  gl.uniform1f(uniforms.u_scanline, params.scanline);
+  gl.uniform1f(uniforms.u_maskType, params.maskType);
+  gl.uniform1f(uniforms.u_maskIntensity, params.maskIntensity);
+  gl.uniform1f(uniforms.u_aberration, params.aberration);
+  gl.uniform1f(uniforms.u_bleed, params.bleed);
+  gl.uniform1f(uniforms.u_noise, params.noise);
+  gl.uniform1f(uniforms.u_flicker, params.flicker);
+  gl.uniform1f(uniforms.u_vignette, params.vignette);
+  gl.uniform1f(uniforms.u_brightness, params.brightness);
+  gl.uniform1f(uniforms.u_contrast, params.contrast);
+  gl.uniform1f(uniforms.u_saturation, params.saturation);
+  gl.uniform1f(uniforms.u_jitter, params.jitter);
+  gl.uniform1f(uniforms.u_roll, params.roll);
+  gl.uniform1f(uniforms.u_glow, params.glow);
+  gl.uniform1f(uniforms.u_syncLock, syncLock);
+  gl.uniform1f(uniforms.u_tuneOffset, tuneOffset);
+
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  if(Math.random()<0.02) updateHUD();
+  requestAnimationFrame(frame);
+}
+setSource('test');
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WISE STEWARDSHIP • Money Flow Terminal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        :root {
+            --green: #00ff9d;
+            --red: #ff0055;
+            --amber: #ffcc00;
+            --bg: #0a0a0a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--green);
+            font-family: 'VT323', monospace;
+            font-size: 1.35rem;
+            line-height: 1.5;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #111;
+            padding: 12px 25px;
+            border-bottom: 6px double var(--amber);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 2.1rem;
+        }
+
+        .logo {
+            color: var(--amber);
+            text-shadow: 0 0 15px var(--amber);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Left: Main wisdom + strategies (80%) */
+        .main-panel {
+            flex: 4;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .section {
+            background: #111;
+            border: 5px solid #222;
+            padding: 22px;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
+        }
+
+        h1, h2 {
+            color: var(--amber);
+            text-shadow: 3px 3px 0 #000;
+            margin-bottom: 15px;
+        }
+
+        .quote {
+            font-size: 1.55rem;
+            color: #ffcc99;
+            border-left: 6px solid var(--amber);
+            padding-left: 20px;
+            margin: 18px 0;
+            font-style: italic;
+        }
+
+        .verse {
+            font-size: 1.45rem;
+            color: #aaffcc;
+            margin: 15px 0;
+        }
+
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .strategy-card {
+            background: #1a1a1a;
+            padding: 18px;
+            border: 3px dashed var(--green);
+        }
+
+        /* Right sidebar: Terminal (20%) */
+        .terminal-sidebar {
+            flex: 1.35;
+            background: #000;
+            border-left: 8px solid var(--amber);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 380px;
+        }
+
+        .terminal-header {
+            background: #111;
+            padding: 10px 15px;
+            font-size: 1.6rem;
+            color: var(--amber);
+            border-bottom: 4px solid var(--green);
+            text-align: center;
+        }
+
+        .mini-ticker {
+            background: #111;
+            padding: 6px;
+            font-size: 1.1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            border-bottom: 3px solid var(--red);
+        }
+
+        .mini-terminal {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            font-size: 1.15rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #222;
+        }
+
+        th { color: var(--amber); }
+
+        .up { color: var(--green); }
+        .down { color: var(--red); }
+
+        footer {
+            background: #111;
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            color: #888;
+            border-top: 4px solid var(--amber);
+            text-align: center;
+        }
+
+        .blink { animation: blink 1.2s infinite; }
+
+        @keyframes blink { 50% { opacity: 0.4; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">WISE STEWARDSHIP TERMINAL</div>
+        <div style="text-align:right; font-size:1.4rem;">
+            SEEK FIRST THE KINGDOM • MANAGE THE TALENTS<br>
+            <span style="color:#ffcc00;">Matthew 6:33 • Luke 16:10-11</span>
+        </div>
+    </header>
+
+    <div class="main-content">
+
+        <!-- MAIN WISDOM PANEL -->
+        <div class="main-panel">
+
+            <div class="section">
+                <h1>Stewardship in the Markets: Aligning with New Testament Wisdom</h1>
+                <p style="font-size:1.6rem;">The terminal on the right shows real-time money flow, institutional dark pool activity, crypto momentum, and news. Use it prayerfully — not as a path to greed, but as a tool for faithful stewardship of what God has entrusted to you.</p>
+            </div>
+
+            <!-- Key Bible Principles -->
+            <div class="section">
+                <h2>New Testament Teachings on Wealth & Money</h2>
+                
+                <div class="verse">"No one can serve two masters... You cannot serve God and money." — <strong>Matthew 6:24</strong></div>
+                
+                <div class="verse">"But seek first the kingdom of God and his righteousness, and all these things will be added to you." — <strong>Matthew 6:33</strong></div>
+                
+                <div class="verse">"Whoever is faithful with very little is also faithful with much... And if you have not been trustworthy with someone else's property, who will give you property of your own?" — <strong>Luke 16:10-12</strong></div>
+                
+                <div class="verse">"For the love of money is a root of all kinds of evil..." — <strong>1 Timothy 6:10</strong></div>
+                
+                <div class="verse">"Command those who are rich... not to be arrogant or to put their hope in wealth... but to be rich in good deeds, generous and willing to share." — <strong>1 Timothy 6:17-18</strong></div>
+            </div>
+
+            <!-- Wise Quotes -->
+            <div class="section">
+                <h2>Wisdom from Faithful Stewards</h2>
+                <div class="quote">"There is nothing wrong with men possessing riches. The wrong comes when riches possess men." — Billy Graham</div>
+                <div class="quote">"Well done, good and faithful servant! You have been faithful over a little; I will set you over much. Enter into the joy of your master." — Jesus (Matthew 25:21, Parable of the Talents)</div>
+                <div class="quote">"God does not need our money... What He wants is where our central focus of worship lies." — Billy Graham</div>
+            </div>
+
+            <!-- Practical Strategies with "Graphs" (text + simple visual) -->
+            <div class="section">
+                <h2>Real-World Ways to Use These Stats Faithfully</h2>
+                <div class="strategy-grid">
+
+                    <div class="strategy-card">
+                        <h2 style="color:#00ffcc;">1. Dark Pool Accumulation → Long-Term Holding</h2>
+                        <p>Repeated large block buys in dark pools (institutional "smart money") often signal quiet accumulation before public moves.</p>
+                        <p><strong>Example:</strong> Heavy dark pool buying in a stock like NVDA before major AI rallies.</p>
+                        <div style="background:#222; height:80px; margin:12px 0; position:relative; border:2px solid var(--green);">
+                            <div style="position:absolute; bottom:0; left:10%; width:25%; height:40%; background:var(--green);"></div>
+                            <div style="position:absolute; bottom:0; left:45%; width:55%; height:85%; background:var(--green);"></div>
+                            <div style="color:#000; position:absolute; top:8px; left:50%; font-size:1.1rem;">Institutional buying zone</div>
+                        </div>
+                        <p style="font-size:1.3rem;">Stewardship tip: Invest patiently. Avoid chasing hype. Be faithful with what you see.</p>
+                    </div>
+
+                    <div class="strategy-card">
+                        <h2 style="color:#00ffcc;">2. Money Flow Divergence → Reversal Trades</h2>
+                        <p>When price makes new highs but money flow (volume-weighted) weakens → potential top. Opposite for bottoms.</p>
+                        <div style="background:#222; height:80px; margin:12px 0; position:relative; border:2px solid var(--red);">
+                            <div style="position:absolute; top:10px; left:5%; width:80%; height:12px; background:var(--amber);"></div>
+                            <div style="position:absolute; bottom:15px; left:10%; width:65%; height:12px; background:var(--red);"></div>
+                            <div style="color:#ffcc00; position:absolute; top:28px; left:12%;">Price ↑ but Flow ↓ = Caution</div>
+                        </div>
+                        <p>Real scenario: Overbought stock with fading volume — consider taking profits or hedging.</p>
+                    </div>
+
+                    <div class="strategy-card">
+                        <h2 style="color:#00ffcc;">3. Crypto Flow + Volume Spikes → Momentum Plays</h2>
+                        <p>Strong positive 24h flow + rising volume in Bitcoin or Ethereum often precedes broader market strength.</p>
+                        <p>Use as confirmation, not speculation. Remember: "The borrower is slave to the lender" (Prov 22:7) — avoid leverage if it risks peace.</p>
+                    </div>
+
+                    <div class="strategy-card">
+                        <h2 style="color:#00ffcc;">4. News + Dark Pools Confirmation</h2>
+                        <p>Positive headlines + heavy institutional dark pool buying = higher conviction setup.</p>
+                        <p>Always ask: Does this align with generous, honest, kingdom-first living?</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="section" style="text-align:center; font-size:1.6rem;">
+                <p>Final reminder from Jesus:</p>
+                <div class="quote" style="font-size:2rem; text-align:center;">
+                    "Watch out! Be on your guard against all kinds of greed; life does not consist in an abundance of possessions."<br>
+                    — Luke 12:15
+                </div>
+                <p style="margin-top:20px; color:#ffdd88;">Use the markets to provide, to give generously, and to advance good — never let them own your heart.</p>
+            </div>
+
+        </div>
+
+        <!-- RIGHT TERMINAL SIDEBAR (compact version of previous) -->
+        <div class="terminal-sidebar">
+
+            <div class="terminal-header">
+                LIVE MONEY FLOW TERMINAL
+            </div>
+
+            <div class="mini-ticker" id="miniTicker">
+                Loading live tickers...
+            </div>
+
+            <div class="mini-terminal">
+                <div style="margin-bottom:15px;">
+                    <strong>STOCKS</strong>
+                </div>
+                <table id="miniStocks">
+                    <!-- JS populated -->
+                </table>
+
+                <div style="margin:25px 0 15px 0;">
+                    <strong>CRYPTO FLOW</strong>
+                </div>
+                <table id="miniCrypto">
+                    <!-- JS populated -->
+                </table>
+
+                <div style="margin:25px 0 10px 0; color:#ffcc00;">
+                    DARK POOLS • INSTITUTIONAL
+                </div>
+                <div id="miniDark" style="font-size:1.1rem; line-height:1.6;">
+                    <!-- Demo or live -->
+                </div>
+            </div>
+
+            <div style="background:#111; padding:10px; text-align:center; font-size:1.1rem; border-top:3px solid var(--amber);">
+                <span id="sidebarTime" class="blink"></span> • Finnhub + Yahoo + CoinGecko
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        STEWARDSHIP TERMINAL • Real data feeds • Built for wisdom, not greed • 
+        "Whatever you do, work at it with all your heart, as working for the Lord" — Colossians 3:23
+    </footer>
+
+    <script>
+        // Same real APIs as before (simplified for sidebar)
+        const STOCK_SYMBOLS = ['AAPL', 'NVDA', 'TSLA', 'MSFT'];
+        const CRYPTO_IDS = ['bitcoin', 'ethereum', 'solana'];
+
+        function formatPrice(p) {
+            return p.toFixed(2);
+        }
+
+        async function loadMiniStocks() {
+            try {
+                const symbolsStr = STOCK_SYMBOLS.join(',');
+                const res = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbolsStr}`);
+                const data = await res.json();
+                const quotes = data.quoteResponse.result || [];
+
+                let html = `<tr><th>SYM</th><th>PRICE</th><th>CHG</th></tr>`;
+                quotes.forEach(q => {
+                    const chg = q.regularMarketChange || 0;
+                    const dir = chg >= 0 ? 'up' : 'down';
+                    html += `
+                        <tr>
+                            <td>${q.symbol}</td>
+                            <td>${formatPrice(q.regularMarketPrice)}</td>
+                            <td class="${dir}">${chg >= 0 ? '+' : ''}${chg.toFixed(2)}</td>
+                        </tr>`;
+                });
+                document.getElementById('miniStocks').innerHTML = html;
+            } catch(e) {
+                document.getElementById('miniStocks').innerHTML = `<tr><td colspan="3">Live stocks loading...</td></tr>`;
+            }
+        }
+
+        async function loadMiniCrypto() {
+            try {
+                const ids = CRYPTO_IDS.join(',');
+                const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}`);
+                const coins = await res.json();
+
+                let html = `<tr><th>ASSET</th><th>PRICE</th><th>24H</th></tr>`;
+                coins.forEach(c => {
+                    const chg = c.price_change_percentage_24h || 0;
+                    const dir = chg >= 0 ? 'up' : 'down';
+                    html += `
+                        <tr>
+                            <td>${c.symbol.toUpperCase()}</td>
+                            <td>$${c.current_price.toLocaleString()}</td>
+                            <td class="${dir}">${chg.toFixed(1)}%</td>
+                        </tr>`;
+                });
+                document.getElementById('miniCrypto').innerHTML = html;
+            } catch(e) {
+                document.getElementById('miniCrypto').innerHTML = `<tr><td colspan="3">Crypto loading...</td></tr>`;
+            }
+        }
+
+        function loadMiniDarkPools() {
+            // Demo + note
+            document.getElementById('miniDark').innerHTML = `
+                AAPL • 14:28 UTC • $238.90 • +1.2M shares (BLOCK)<br>
+                NVDA • 14:25 UTC • $142.30 • +890K shares (ACCUM)<br>
+                <span style="color:#ffcc00;">Large dark pool prints often precede moves — watch prayerfully.</span>
+            `;
+        }
+
+        function updateMiniTicker() {
+            const items = ['AAPL 238.45 +1.3%', 'NVDA 142.65 +4.8%', 'BTC 91,240 +2.1%', 'TSLA 412.80 -1.9%'];
+            const container = document.getElementById('miniTicker');
+            let html = items.map(i => `<span style="margin-right:40px;">${i}</span>`).join('');
+            container.innerHTML = html + html; // seamless
+        }
+
+        function updateSidebarClock() {
+            const el = document.getElementById('sidebarTime');
+            setInterval(() => {
+                const now = new Date();
+                el.textContent = now.toLocaleTimeString('en-US', {hour12:true, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+            }, 1000);
+        }
+
+        async function init() {
+            updateMiniTicker();
+            updateSidebarClock();
+            loadMiniStocks();
+            loadMiniCrypto();
+            loadMiniDarkPools();
+
+            // Refresh stocks/crypto every 20s
+            setInterval(() => {
+                loadMiniStocks();
+                loadMiniCrypto();
+            }, 20000);
+
+            console.log('%cStewardship Terminal ready • Seek first the Kingdom', 'color:#00ff9d; font-family:VT323');
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

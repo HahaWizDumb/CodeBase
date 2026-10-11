@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>𒀭𒀀𒀭𒊑𒀀 (X) • 𒀭𒂗𒆤</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative&display=swap');
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .cuneiform {
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 1.1rem;
+            line-height: 1.4;
+            letter-spacing: 2px;
+        }
+        .post-text {
+            font-size: 1.05rem;
+            filter: contrast(1.2) brightness(1.1);
+        }
+        .terminal {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00ff00;
+            border: 2px solid #00ff41;
+        }
+        .hieroglyph {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+        .equation {
+            background: #111;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #1d9bf0;
+        }
+    </style>
+</head>
+<body class="bg-black text-white min-h-screen overflow-hidden">
+    <div class="flex max-w-7xl mx-auto h-screen">
+        <!-- LEFT NAV -->
+        <div class="w-64 border-r border-gray-800 p-4 flex flex-col">
+            <div class="text-4xl mb-8 cuneiform text-sky-400">𒀭𒊑𒀀</div>
+            
+            <nav class="space-y-2">
+                <a href="#" onclick="fakeNavigate(this)" class="flex items-center gap-4 text-xl p-3 rounded-3xl hover:bg-gray-900 cuneiform">
+                    <i class="fa-solid fa-house w-6"></i> <span>𒄿𒈾 𒂗𒆤</span>
+                </a>
+                <a href="#" onclick="fakeNavigate(this)" class="flex items-center gap-4 text-xl p-3 rounded-3xl hover:bg-gray-900 cuneiform">
+                    <i class="fa-solid fa-magnifying-glass w-6"></i> <span>𒊭 𒀀𒈾</span>
+                </a>
+                <a href="#" onclick="fakeNavigate(this)" class="flex items-center gap-4 text-xl p-3 rounded-3xl hover:bg-gray-900 cuneiform">
+                    <i class="fa-solid fa-bell w-6"></i> <span>𒀭𒈪 𒀭𒂗</span>
+                </a>
+                <a href="#" onclick="fakeNavigate(this)" class="flex items-center gap-4 text-xl p-3 rounded-3xl hover:bg-gray-900 cuneiform">
+                    <i class="fa-solid fa-envelope w-6"></i> <span>𒀭𒈪𒂗</span>
+                </a>
+                <a href="#" onclick="openFalloutTerminal()" class="flex items-center gap-4 text-xl p-3 rounded-3xl hover:bg-gray-900 cuneiform bg-sky-900">
+                    <i class="fa-solid fa-bolt w-6"></i> <span>ABS&lt;&gt;ANA{}</span>
+                </a>
+            </nav>
+
+            <button onclick="postSomething()" 
+                    class="mt-auto bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 rounded-3xl text-xl cuneiform">
+                𒀭𒁺𒌑 𒀭𒂗𒆤
+            </button>
+        </div>
+
+        <!-- MAIN FEED -->
+        <div class="flex-1 border-r border-gray-800 overflow-y-auto">
+            <!-- Header -->
+            <div class="sticky top-0 bg-black/80 backdrop-blur-md border-b border-gray-800 p-4 flex items-center justify-between">
+                <div class="text-2xl font-bold cuneiform">𒄿𒈾 𒂗𒆤</div>
+                <div class="text-sky-400 text-xl cuneiform">𒀭𒊑𒀀</div>
+            </div>
+
+            <!-- Compose -->
+            <div class="border-b border-gray-800 p-4">
+                <div class="flex gap-4">
+                    <div class="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-3xl">𒀭</div>
+                    <div class="flex-1">
+                        <textarea id="compose" rows="3" 
+                            class="w-full bg-transparent text-xl outline-none resize-none cuneiform post-text"
+                            placeholder="𒀭𒁺𒌑 𒀭𒂗𒆤..."></textarea>
+                        <button onclick="postSomething()" 
+                            class="float-right mt-3 bg-sky-500 px-8 py-2 rounded-full font-bold cuneiform">
+                            𒀭𒁺𒌑
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feed -->
+            <div id="feed" class="divide-y divide-gray-800">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="w-96 p-4 overflow-y-auto space-y-6 bg-black">
+            <!-- Search -->
+            <div class="bg-gray-900 rounded-3xl p-4">
+                <div class="relative">
+                    <input type="text" placeholder="𒊭 𒀀𒈾..." 
+                           class="w-full bg-gray-800 rounded-3xl py-3 px-6 outline-none cuneiform">
+                </div>
+            </div>
+
+            <!-- Equations Panel -->
+            <div class="bg-gray-900 rounded-3xl p-5">
+                <div class="font-bold text-xl mb-4 cuneiform border-b border-gray-700 pb-2">𒀭𒈪𒂗 𒀭𒂗𒆤</div>
+                
+                <div class="equation mb-6">
+                    <div class="text-sky-400 text-sm mb-1 cuneiform">Calculus II • 𒀭𒊑</div>
+                    <div id="eq1" class="text-sm"></div>
+                </div>
+                
+                <div class="equation mb-6">
+                    <div class="text-sky-400 text-sm mb-1 cuneiform">Calculus III • 𒀭𒊑</div>
+                    <div id="eq2" class="text-sm"></div>
+                </div>
+                
+                <div class="equation">
+                    <div class="text-sky-400 text-sm mb-1 cuneiform">Physics • Maxwell</div>
+                    <div id="eq3" class="text-sm"></div>
+                </div>
+            </div>
+
+            <!-- Greek & Hieroglyph Wall -->
+            <div class="bg-gray-900 rounded-3xl p-5">
+                <div class="font-bold text-xl mb-4 cuneiform">𒀭𒈪 𒀭𒂗𒆤 𒀭𒊑</div>
+                <div class="space-y-6 text-gray-300 text-sm leading-relaxed">
+                    <div class="hieroglyph">𓂀 𓁿 𓂋 𓇌 𓆣</div>
+                    <p class="italic">"Πάντα ῥεῖ καὶ οὐδὲν μένει." — Ἡράκλειτος</p>
+                    
+                    <div class="hieroglyph">𓊖 𓉔 𓏏 𓇋 𓆑</div>
+                    <p class="italic">"Ὁ βίος βραχύς, ἡ δὲ τέχνη μακρή." — Ἱπποκράτης</p>
+                    
+                    <div class="hieroglyph">𓃭 𓂝 𓆑 𓏲 𓈖</div>
+                    <p class="italic">∫∫∫ ∇·F dV = ∯ F·dS (Gauss)</p>
+                </div>
+            </div>
+
+            <!-- Trending -->
+            <div class="bg-gray-900 rounded-3xl p-5">
+                <div class="font-bold text-xl mb-4 cuneiform">𒀭𒈪 𒀭𒊑</div>
+                <div class="space-y-4">
+                    <div class="hover:bg-gray-800 p-2 rounded-xl cursor-pointer">
+                        <div class="text-sky-400 cuneiform">#𒀭𒂗𒆤𒀭</div>
+                        <div class="text-xs text-gray-400">𒈪𒂗 𒀭𒊑 • 𒀭𒈪 𒀭</div>
+                    </div>
+                    <div class="hover:bg-gray-800 p-2 rounded-xl cursor-pointer">
+                        <div class="text-sky-400 cuneiform">#∫∫∫∇²φ</div>
+                        <div class="text-xs text-gray-400">𒀭𒊑 • 𒀭𒂗</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FALLOUT TERMINAL MODAL -->
+    <div id="terminalModal" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-50">
+        <div class="terminal w-full max-w-2xl mx-4 p-8 rounded-xl shadow-2xl">
+            <div class="flex justify-between mb-6">
+                <div class="text-lg font-bold">ABS&lt;&gt;ANA{} v1.337 • VAULT-TEK</div>
+                <button onclick="closeTerminal()" class="text-red-500 hover:text-red-400">X</button>
+            </div>
+            
+            <div id="terminalOutput" class="h-96 overflow-y-auto text-sm leading-relaxed mb-6">
+                <p>ACCESSING NEURAL NET... OK</p>
+                <p>SELECT MATCHING SEQUENCE:</p>
+                <br>
+                <p onclick="hackSuccess(this)" class="cursor-pointer hover:bg-green-900 p-1 inline-block">abs&lt;&gt;ana{integrate}</p><br>
+                <p onclick="hackSuccess(this)" class="cursor-pointer hover:bg-green-900 p-1 inline-block">calculus{divergence}</p><br>
+                <p onclick="hackFail(this)" class="cursor-pointer hover:bg-red-900 p-1 inline-block">physics{entropy}</p><br>
+                <p onclick="hackSuccess(this)" class="cursor-pointer hover:bg-green-900 p-1 inline-block">maxwell{faraday}</p><br>
+                <p onclick="hackFail(this)" class="cursor-pointer hover:bg-red-900 p-1 inline-block">greek{heraclitus}</p>
+            </div>
+            
+            <div class="text-center text-xs text-gray-500">
+                CLICK MATCHING WORDS • REMAINING ATTEMPTS: <span id="attempts" class="text-green-400">4</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tailwind script already included
+
+        // Sample cuneiform posts
+        const samplePosts = [
+            {
+                user: "𒀭𒂗𒆤",
+                handle: "@enlil",
+                time: "2m",
+                text: "The volume of the solid of revolution using shells: 𒀭𒊑",
+                eq: "\\int_{a}^{b} 2\\pi x f(x) \\, dx"
+            },
+            {
+                user: "𓁿 𓂀",
+                handle: "@thoth",
+                time: "17m",
+                text: "Stokes' theorem in vector calculus proves the universe is consistent.",
+                eq: "\\oint_C \\mathbf{F} \\cdot d\\mathbf{r} = \\iint_S (\\nabla \\times \\mathbf{F}) \\cdot d\\mathbf{S}"
+            },
+            {
+                user: "𒀭𒊑",
+                handle: "@gauss",
+                time: "41m",
+                text: "Divergence theorem applied to electromagnetic fields.",
+                eq: "\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\epsilon_0}"
+            }
+        ];
+
+        function renderMath() {
+            MathJax.typesetPromise().catch(err => console.log(err));
+        }
+
+        function addPost(post) {
+            const feed = document.getElementById('feed');
+            const div = document.createElement('div');
+            div.className = "p-4 hover:bg-gray-900 border-b border-gray-800";
+            div.innerHTML = `
+                <div class="flex gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-amber-900 to-gray-700 rounded-full flex items-center justify-center text-4xl flex-shrink-0">𒀭</div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold cuneiform">${post.user}</span>
+                            <span class="text-gray-500">${post.handle}</span>
+                            <span class="text-gray-500">· ${post.time}</span>
+                        </div>
+                        <div class="post-text cuneiform leading-relaxed">${post.text}</div>
+                        ${post.eq ? `<div class="equation mt-3"><span class="mathjax">$$${post.eq}$$</span></div>` : ''}
+                        <div class="flex justify-between mt-4 text-gray-500 max-w-md">
+                            <i onclick="like(this)" class="fa-solid fa-heart hover:text-red-500 cursor-pointer"></i>
+                            <i onclick="reply(this)" class="fa-solid fa-comment hover:text-sky-400 cursor-pointer"></i>
+                            <i onclick="openFalloutTerminal()" class="fa-solid fa-bolt cursor-pointer hover:text-yellow-400"></i>
+                        </div>
+                    </div>
+                </div>
+            `;
+            feed.prepend(div);
+            renderMath();
+        }
+
+        function populateFeed() {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '';
+            samplePosts.forEach(post => addPost(post));
+        }
+
+        function postSomething() {
+            const textarea = document.getElementById('compose');
+            if (textarea.value.trim()) {
+                addPost({
+                    user: "𒀭𒀀",
+                    handle: "@you",
+                    time: "now",
+                    text: textarea.value + " 𒀭𒊑",
+                    eq: "\\frac{d}{dx} \\int_{a}^{x} f(t) dt = f(x)"
+                });
+                textarea.value = '';
+            }
+        }
+
+        function like(el) {
+            el.classList.toggle('text-red-500');
+        }
+
+        function reply(el) {
+            alert("𒀭𒁺𒌑 𒀭𒂗𒆤 𒀭𒊑");
+        }
+
+        function fakeNavigate(el) {
+            el.style.transition = 'all 0.2s';
+            el.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                el.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        // Fallout Terminal
+        let attempts = 4;
+
+        function openFalloutTerminal() {
+            document.getElementById('terminalModal').classList.remove('hidden');
+            attempts = 4;
+            document.getElementById('attempts').textContent = attempts;
+        }
+
+        function closeTerminal() {
+            document.getElementById('terminalModal').classList.add('hidden');
+        }
+
+        function hackSuccess(el) {
+            el.style.color = '#00ff00';
+            el.style.background = '#003300';
+            setTimeout(() => {
+                alert("ACCESS GRANTED • EQUATION UNLOCKED: ∇×(∇×F) = ∇(∇·F) - ∇²F");
+                closeTerminal();
+            }, 600);
+        }
+
+        function hackFail(el) {
+            attempts--;
+            document.getElementById('attempts').textContent = attempts;
+            el.style.color = '#ff4444';
+            if (attempts <= 0) {
+                setTimeout(() => {
+                    alert("LOCKOUT • SYSTEM RESET");
+                    closeTerminal();
+                }, 400);
+            }
+        }
+
+        // Initialize
+        window.onload = function() {
+            populateFeed();
+            
+            // Render initial MathJax
+            setTimeout(() => {
+                const eq1 = document.getElementById('eq1');
+                const eq2 = document.getElementById('eq2');
+                const eq3 = document.getElementById('eq3');
+                
+                eq1.innerHTML = `$$\\int u \\, dv = uv - \\int v \\, du$$`;
+                eq2.innerHTML = `$$\\iiint_V \\nabla^2 f \\, dV = \\iint_S \\nabla f \\cdot d\\mathbf{S}$$`;
+                eq3.innerHTML = `$$\\nabla \\times \\mathbf{B} = \\mu_0\\mathbf{J} + \\mu_0\\epsilon_0 \\frac{\\partial \\mathbf{E}}{\\partial t}$$`;
+                
+                renderMath();
+            }, 300);
+        };
+    </script>
+</body>
+</html>
