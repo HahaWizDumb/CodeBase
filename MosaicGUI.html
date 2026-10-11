@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mosaic Maker</title>
+<style>
+:root{
+  --bg:#0e0d0b; --panel:#16140f; --panel2:#1d1a14; --line:#2e2920;
+  --ink:#eee7d7; --dim:#9b927f; --acc:#e7a23b; --acc-ink:#1a1206; --ok:#7fb8a4; --bad:#e2735a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font:13px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.app{display:grid;grid-template-columns:330px 1fr;height:100vh}
+aside{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:20px 18px 30px}
+h1{font:600 22px/1.1 Georgia,"Times New Roman",serif;margin:0 0 4px;letter-spacing:.01em}
+h1 span{color:var(--acc)}
+.sub{color:var(--dim);margin:0 0 16px;font-size:12px}
+section{border-top:1px solid var(--line);padding:14px 0 12px}
+h2{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc);margin:0 0 10px;font-weight:650}
+label{display:block;margin:10px 0 4px;color:var(--dim);font-size:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grow{flex:1}
+input[type=number],select{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+  border-radius:6px;padding:6px 8px;font:inherit;width:90px}
+select{width:auto}
+input[type=range]{width:100%;accent-color:var(--acc)}
+button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;
+  padding:7px 11px;font:inherit;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--acc)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.primary{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:650;width:100%;padding:9px}
+button.primary:hover:not(:disabled){filter:brightness(1.08)}
+input[type=file]{display:none}
+.drop{border:1px dashed var(--line);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:center;min-height:62px}
+.drop.over{border-color:var(--acc);background:#e7a23b12}
+.drop img{width:56px;height:56px;object-fit:cover;border-radius:4px;background:#000;display:none}
+.info{color:var(--dim);font-size:12px;margin-top:6px}
+.info b{color:var(--ink);font-weight:600}
+.warn{color:var(--bad)}
+.good{color:var(--ok)}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .15s}
+#status{min-height:18px}
+main{position:relative;overflow:hidden;background:
+  radial-gradient(circle at 50% 40%,#1a1812 0,#0b0a08 70%)}
+#view{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#view.drag{cursor:grabbing}
+.tools{position:absolute;top:12px;right:12px;display:flex;gap:6px}
+.tools button{background:#16140fd9;backdrop-filter:blur(6px)}
+.tools button.on{border-color:var(--acc);color:var(--acc)}
+.hud{position:absolute;left:12px;bottom:12px;right:12px;display:flex;justify-content:space-between;
+  gap:12px;color:var(--dim);font:12px/1.3 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;pointer-events:none}
+.hud span{background:#0e0d0bcc;padding:4px 8px;border-radius:5px;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--dim);text-align:center;pointer-events:none;padding:20px}
+.empty div{max-width:380px}
+.empty h3{font:500 18px Georgia,serif;color:var(--ink);margin:0 0 6px}
+kbd{font:11px ui-monospace,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px}
+@media (max-width:820px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto 70vh;height:auto}
+  aside{border-right:0;border-bottom:1px solid var(--line)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <h1>Mosaic <span>Maker</span></h1>
+  <p class="sub">Every tile stays a full-resolution original. Zoom in and they're all there.</p>
+
+  <section>
+    <h2>1 · Target image</h2>
+    <div class="drop" id="targetDrop">
+      <img id="targetThumb" alt="">
+      <div class="grow">
+        <button id="targetBtn">Choose image…</button>
+        <div class="info" id="targetInfo">or drop one here</div>
+      </div>
+    </div>
+    <input type="file" id="targetInput" accept="image/*">
+  </section>
+
+  <section>
+    <h2>2 · Tile pictures</h2>
+    <div class="drop" id="tileDrop">
+      <div class="grow">
+        <div class="row">
+          <button id="folderBtn">Choose folder…</button>
+          <button id="filesBtn">Add files…</button>
+          <button id="clearBtn">Clear</button>
+        </div>
+        <div class="info" id="tileInfo">or drop a folder here</div>
+      </div>
+    </div>
+    <input type="file" id="folderInput" webkitdirectory directory multiple>
+    <input type="file" id="filesInput" accept="image/png,image/jpeg,image/webp" multiple>
+  </section>
+
+  <section>
+    <h2>3 · Grid &amp; matching</h2>
+    <div class="row">
+      <div><label for="cols">Columns</label><input type="number" id="cols" min="1" max="1000" value="40"></div>
+      <div><label for="maxUses">Max uses / tile</label><input type="number" id="maxUses" min="0" value="0" title="0 = unlimited"></div>
+      <div><label for="radius">No-repeat radius</label><input type="number" id="radius" min="0" max="8" value="3"></div>
+    </div>
+    <div class="info" id="gridInfo">—</div>
+    <label for="tint">Color tint toward target: <b id="tintVal">15%</b></label>
+    <input type="range" id="tint" min="0" max="60" value="15">
+    <div class="info">Tint washes each tile slightly toward the target's color there, so the big picture reads better. 0% keeps tiles untouched.</div>
+    <div class="row" style="margin-top:12px">
+      <button class="primary grow" id="buildBtn" disabled>Build mosaic</button>
+      <button id="shuffleBtn" disabled title="Re-run with a different random order">Shuffle</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>4 · Export</h2>
+    <label for="outScale">Tile size in the exported file</label>
+    <select id="outScale">
+      <option value="1">100% — full resolution</option>
+      <option value="0.5">50%</option>
+      <option value="0.25">25%</option>
+      <option value="0.125">12.5%</option>
+    </select>
+    <div class="info" id="exportInfo">—</div>
+    <div class="row" style="margin-top:10px">
+      <button id="exportBtn" disabled>Export PNG</button>
+      <button id="previewBtn" disabled>Save preview</button>
+      <button id="csvBtn" disabled>Tile map CSV</button>
+    </div>
+  </section>
+
+  <section>
+    <div id="status" class="info"></div>
+    <div class="bar"><i id="prog"></i></div>
+  </section>
+</aside>
+
+<main id="stage">
+  <canvas id="view"></canvas>
+  <div class="empty" id="empty"><div>
+    <h3>Nothing built yet</h3>
+    Pick a target image and a folder of tiles, then press <b>Build mosaic</b>.<br><br>
+    Scroll or pinch to zoom · drag to pan · <kbd>0</kbd> fit · <kbd>1</kbd> 100% · <kbd>O</kbd> original
+  </div></div>
+  <div class="tools">
+    <button id="fitBtn">Fit</button>
+    <button id="oneBtn">100%</button>
+    <button id="origBtn">Original</button>
+  </div>
+  <div class="hud"><span id="hudL">—</span><span id="hudR"></span></div>
+</main>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const TH = 64;          // thumbnail size used for matching + far-zoom rendering
+const S = 6;            // target samples per cell side
+const G = 3;            // 3x3 color regions per tile
+const D = G * G * 3;    // feature length (Lab per region)
+
+const state = {
+  tiles: [],            // {file, name, crop:{x,y,s}, thumb, feat}
+  tileSize: 800,
+  target: null, targetName: '',
+  grid: null,           // {cols, rows, assign:Int32Array, cellRGB:Uint8ClampedArray}
+  overview: null,       // {canvas, P}
+  seed: 1, busy: false
+};
+
+/* ---------- color ---------- */
+const LIN = new Float64Array(256);
+for (let i = 0; i < 256; i++) { const c = i / 255; LIN[i] = c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+function lab(r, g, b, out, k) {
+  const R = LIN[r|0], Gc = LIN[g|0], B = LIN[b|0];
+  let x = (R * 0.4124 + Gc * 0.3576 + B * 0.1805) / 0.95047;
+  let y =  R * 0.2126 + Gc * 0.7152 + B * 0.0722;
+  let z = (R * 0.0193 + Gc * 0.1192 + B * 0.9505) / 1.08883;
+  const f = t => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116;
+  x = f(x); y = f(y); z = f(z);
+  out[k] = 116 * y - 16; out[k + 1] = 500 * (x - y); out[k + 2] = 200 * (y - z);
+}
+// 3x3 grid of average Lab colors over a region of RGBA data
+function featuresInto(data, w, x0, y0, cw, ch, out, off) {
+  let k = off;
+  for (let gy = 0; gy < G; gy++) {
+    const ya = y0 + Math.floor(gy * ch / G), yb = y0 + Math.floor((gy + 1) * ch / G);
+    for (let gx = 0; gx < G; gx++) {
+      const xa = x0 + Math.floor(gx * cw / G), xb = x0 + Math.floor((gx + 1) * cw / G);
+      let r = 0, g = 0, b = 0, n = 0;
+      for (let y = ya; y < yb; y++) {
+        let p = (y * w + xa) * 4;
+        for (let x = xa; x < xb; x++, p += 4) { r += data[p]; g += data[p + 1]; b += data[p + 2]; n++; }
+      }
+      n = n || 1;
+      lab(Math.round(r / n), Math.round(g / n), Math.round(b / n), out, k);
+      k += 3;
+    }
+  }
+}
+
+/* ---------- helpers ---------- */
+function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const tick = () => new Promise(r => setTimeout(r, 0));
+const fmt = n => n.toLocaleString('en-US');
+function fmtBytes(b) { const u = ['B','KB','MB','GB','TB']; let i = 0; while (b >= 1024 && i < 4) { b /= 1024; i++; } return b.toFixed(i > 1 ? 1 : 0) + ' ' + u[i]; }
+function setStatus(msg, cls) { const s = $('status'); s.textContent = msg; s.className = 'info ' + (cls || ''); }
+function setProg(f) { $('prog').style.width = (Math.max(0, Math.min(1, f)) * 100).toFixed(1) + '%'; }
+function isImage(f) { return /^image\/(png|jpeg|webp)$/.test(f.type) || /\.(png|jpe?g|webp)$/i.test(f.name); }
+function download(blob, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}
+// high-quality downscale by repeated halving
+function downscale(src, w, h) {
+  let cw = src.width, ch = src.height, cur = src;
+  while (cw / 2 >= w && ch / 2 >= h) {
+    cw = Math.max(w, cw >> 1); ch = Math.max(h, ch >> 1);
+    const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+    const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(cur, 0, 0, cw, ch); cur = c;
+  }
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d', { willReadFrequently: true });
+  x.fillStyle = '#000'; x.fillRect(0, 0, w, h);
+  x.imageSmoothingQuality = 'high'; x.drawImage(cur, 0, 0, w, h);
+  return c;
+}
+
+/* ---------- target ---------- */
+async function setTarget(file) {
+  try {
+    const bmp = await createImageBitmap(file);
+    if (state.target) state.target.close();
+    state.target = bmp; state.targetName = file.name.replace(/\.[^.]+$/, '');
+    const t = $('targetThumb'); t.src = URL.createObjectURL(file); t.style.display = 'block';
+    $('targetInfo').innerHTML = `<b>${file.name}</b><br>${fmt(bmp.width)} × ${fmt(bmp.height)}`;
+    updateInfo();
+  } catch (e) { $('targetInfo').innerHTML = `<span class="warn">Couldn't read that image.</span>`; }
+}
+
+/* ---------- tiles ---------- */
+async function addTiles(fileList) {
+  const files = [...fileList].filter(isImage);
+  if (!files.length) { setStatus('No PNG/JPEG/WebP images found there.', 'warn'); return; }
+  state.busy = true; updateButtons();
+  let i = 0, done = 0, skipped = 0;
+  const sizes = new Map();
+  async function worker() {
+    const c = document.createElement('canvas'); c.width = c.height = TH;
+    const x = c.getContext('2d', { willReadFrequently: true }); x.imageSmoothingQuality = 'high';
+    while (i < files.length) {
+      const f = files[i++];
+      try {
+        const bmp = await createImageBitmap(f);
+        const s = Math.min(bmp.width, bmp.height);
+        const crop = { x: (bmp.width - s) >> 1, y: (bmp.height - s) >> 1, s };
+        const small = downscale(bmp.width === s && bmp.height === s ? bmp : cropTo(bmp, crop), TH, TH);
+        bmp.close();
+        x.drawImage(small, 0, 0);
+        const data = x.getImageData(0, 0, TH, TH).data;
+        const feat = new Float32Array(D); featuresInto(data, TH, 0, 0, TH, TH, feat, 0);
+        const thumb = await createImageBitmap(c);
+        state.tiles.push({ file: f, name: f.webkitRelativePath || f.name, crop, thumb, feat });
+        sizes.set(s, (sizes.get(s) || 0) + 1);
+      } catch (e) { skipped++; }
+      done++;
+      if (done % 8 === 0 || done === files.length) { setProg(done / files.length); setStatus(`Indexing tiles… ${fmt(done)} / ${fmt(files.length)}`); }
+    }
+  }
+  await Promise.all(Array.from({ length: 4 }, worker));
+  // native tile size = most common side length across all tiles
+  let best = 0, bestN = -1;
+  for (const [s, n] of sizes) if (n > bestN) { best = s; bestN = n; }
+  if (best) state.tileSize = best;
+  setStatus(`Indexed ${fmt(done - skipped)} tiles` + (skipped ? ` · skipped ${skipped} unreadable` : ''), skipped ? 'warn' : 'good');
+  setProg(0);
+  state.busy = false; updateInfo();
+}
+function cropTo(bmp, c) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = c.s;
+  cv.getContext('2d').drawImage(bmp, c.x, c.y, c.s, c.s, 0, 0, c.s, c.s); return cv;
+}
+function clearTiles() {
+  for (const t of state.tiles) t.thumb.close && t.thumb.close();
+  state.tiles = []; state.grid = null; state.overview = null; clearCache();
+  $('empty').style.display = ''; updateInfo(); requestRender();
+}
+
+/* ---------- build ---------- */
+function gridDims() {
+  if (!state.target) return null;
+  const cols = Math.max(1, Math.min(1000, parseInt($('cols').value) || 40));
+  const rows = Math.max(1, Math.round(cols * state.target.height / state.target.width));
+  return { cols, rows };
+}
+async function build() {
+  const dims = gridDims(); if (!dims || !state.tiles.length) return;
+  state.busy = true; updateButtons();
+  const { cols, rows } = dims, N = cols * rows, T = state.tiles.length;
+  setStatus('Sampling target…'); await tick();
+
+  const samp = downscale(state.target, cols * S, rows * S);
+  const sd = samp.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, cols * S, rows * S).data;
+  const sw = cols * S;
+  const cellFeat = new Float32Array(N * D), cellRGB = new Uint8ClampedArray(N * 3);
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const i = r * cols + c;
+    featuresInto(sd, sw, c * S, r * S, S, S, cellFeat, i * D);
+    let R = 0, Gc = 0, B = 0;
+    for (let y = r * S; y < r * S + S; y++) for (let x = c * S; x < c * S + S; x++) { const p = (y * sw + x) * 4; R += sd[p]; Gc += sd[p + 1]; B += sd[p + 2]; }
+    cellRGB[i * 3] = R / (S * S); cellRGB[i * 3 + 1] = Gc / (S * S); cellRGB[i * 3 + 2] = B / (S * S);
+  }
+
+  const tf = new Float32Array(T * D);
+  state.tiles.forEach((t, j) => tf.set(t.feat, j * D));
+
+  // random fill order so repeat limits don't bias one corner
+  const rnd = mulberry32(state.seed);
+  const order = new Int32Array(N); for (let i = 0; i < N; i++) order[i] = i;
+  for (let i = N - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = order[i]; order[i] = order[j]; order[j] = t; }
+
+  const maxUses = Math.max(0, parseInt($('maxUses').value) || 0);
+  const R = Math.max(0, Math.min(8, parseInt($('radius').value) || 0));
+  const assign = new Int32Array(N).fill(-1), uses = new Int32Array(T), blocked = new Int32Array(T).fill(-1);
+  let t0 = performance.now();
+
+  for (let o = 0; o < N; o++) {
+    const idx = order[o], cx = idx % cols, cy = (idx / cols) | 0;
+    for (let dy = -R; dy <= R; dy++) {
+      const y = cy + dy; if (y < 0 || y >= rows) continue;
+      for (let dx = -R; dx <= R; dx++) {
+        const x = cx + dx; if (x < 0 || x >= cols) continue;
+        const a = assign[y * cols + x]; if (a >= 0) blocked[a] = idx;
+      }
+    }
+    const fo = idx * D;
+    let best = -1, bd = Infinity, bestU = -1, bdU = Infinity, bestA = -1, bdA = Infinity;
+    for (let t = 0, to = 0; t < T; t++, to += D) {
+      let d = 0;
+      for (let k = 0; k < D; k++) { const e = cellFeat[fo + k] - tf[to + k]; d += e * e; }
+      if (d < bdA) { bdA = d; bestA = t; }
+      if (maxUses && uses[t] >= maxUses) continue;
+      if (d < bdU) { bdU = d; bestU = t; }
+      if (blocked[t] !== idx && d < bd) { bd = d; best = t; }
+    }
+    const pick = best >= 0 ? best : bestU >= 0 ? bestU : bestA;
+    assign[idx] = pick; uses[pick]++;
+    if (performance.now() - t0 > 40) { setProg(o / N); setStatus(`Matching… ${fmt(o)} / ${fmt(N)} cells`); await tick(); t0 = performance.now(); }
+  }
+
+  let distinct = 0; for (let t = 0; t < T; t++) if (uses[t]) distinct++;
+  state.grid = { cols, rows, assign, cellRGB };
+  clearCache(); buildOverview(); fit();
+  $('empty').style.display = 'none';
+  setProg(0);
+  setStatus(`Built ${cols} × ${rows} = ${fmt(N)} cells using ${fmt(distinct)} of ${fmt(T)} tiles.`, 'good');
+  state.busy = false; updateInfo(); requestRender();
+}
+
+function tintAlpha() { return (parseInt($('tint').value) || 0) / 100; }
+function buildOverview() {
+  const g = state.grid; if (!g) return;
+  let P = Math.min(TH, Math.floor(8192 / Math.max(g.cols, g.rows)), Math.floor(Math.sqrt(48e6 / (g.cols * g.rows))));
+  P = Math.max(2, P);
+  const c = document.createElement('canvas'); c.width = g.cols * P; c.height = g.rows * P;
+  const x = c.getContext('2d'); x.imageSmoothingQuality = 'high';
+  const a = tintAlpha();
+  for (let i = 0; i < g.assign.length; i++) {
+    const cx = (i % g.cols) * P, cy = ((i / g.cols) | 0) * P;
+    x.drawImage(state.tiles[g.assign[i]].thumb, cx, cy, P, P);
+    if (a > 0) { x.fillStyle = `rgba(${g.cellRGB[i*3]},${g.cellRGB[i*3+1]},${g.cellRGB[i*3+2]},${a})`; x.fillRect(cx, cy, P, P); }
+  }
+  state.overview = { canvas: c, P };
+}
+
+/* ---------- viewer ---------- */
+const cv = $('view'), ctx = cv.getContext('2d');
+const view = { scale: 1, ox: 0, oy: 0 };
+let showOrig = false, needs = false, hover = -1;
+const cache = new Map(), loading = new Set(); let want = [], visibleSet = new Set();
+
+function dpr() { return window.devicePixelRatio || 1; }
+function resize() {
+  const r = cv.getBoundingClientRect(), d = dpr();
+  const w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
+  if (cv.width !== w || cv.height !== h) {
+    const cxw = cv.width / 2, cxh = cv.height / 2;
+    view.ox += w / 2 - cxw; view.oy += h / 2 - cxh;
+    cv.width = w; cv.height = h; requestRender();
+  }
+}
+new ResizeObserver(resize).observe(cv);
+function worldSize() { const g = state.grid, T = state.tileSize; return g ? [g.cols * T, g.rows * T] : [1, 1]; }
+function fitScale() { const [W, H] = worldSize(); return Math.min(cv.width / W, cv.height / H) * 0.94; }
+function fit() {
+  const [W, H] = worldSize(); view.scale = fitScale();
+  view.ox = (cv.width - W * view.scale) / 2; view.oy = (cv.height - H * view.scale) / 2; requestRender();
+}
+function zoomAt(f, px, py) {
+  const ns = Math.max(fitScale() * 0.4, Math.min(8, view.scale * f));
+  const k = ns / view.scale;
+  view.ox = px - (px - view.ox) * k; view.oy = py - (py - view.oy) * k; view.scale = ns; requestRender();
+}
+function requestRender() { if (!needs) { needs = true; requestAnimationFrame(render); } }
+
+function clearCache() { for (const b of cache.values()) b.close(); cache.clear(); want = []; }
+function getFull(t) {
+  const b = cache.get(t);
+  if (b) { cache.delete(t); cache.set(t, b); return b; }
+  return null;
+}
+function pumpLoads() {
+  while (loading.size < 4 && want.length) {
+    const t = want.shift();
+    if (cache.has(t) || loading.has(t)) continue;
+    const tl = state.tiles[t]; if (!tl) continue;
+    loading.add(t);
+    createImageBitmap(tl.file, tl.crop.x, tl.crop.y, tl.crop.s, tl.crop.s)
+      .then(b => { if (state.tiles[t] === tl) { cache.set(t, b); trimCache(); requestRender(); } else b.close(); })
+      .catch(() => {})
+      .finally(() => { loading.delete(t); pumpLoads(); });
+  }
+}
+function trimCache() {
+  const cap = Math.max(96, Math.ceil(visibleSet.size * 1.5) + 16);
+  let guard = cache.size;
+  while (cache.size > cap && guard-- > 0) {
+    const k = cache.keys().next().value, b = cache.get(k);
+    cache.delete(k);
+    if (visibleSet.has(k)) cache.set(k, b); else b.close();
+  }
+}
+
+function render() {
+  needs = false;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const g = state.grid;
+  if (!g) { $('hudL').textContent = '—'; return; }
+  const T = state.tileSize, s = T * view.scale;
+  const [W, H] = worldSize();
+  ctx.imageSmoothingEnabled = true;
+
+  if (showOrig) {
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(state.target, view.ox, view.oy, W * view.scale, H * view.scale);
+  } else if (s <= state.overview.P * 1.25) {
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(state.overview.canvas, view.ox, view.oy, W * view.scale, H * view.scale);
+    visibleSet = new Set(); want = [];
+  } else {
+    const c0 = Math.max(0, Math.floor(-view.ox / s)), c1 = Math.min(g.cols - 1, Math.floor((cv.width - view.ox) / s));
+    const r0 = Math.max(0, Math.floor(-view.oy / s)), r1 = Math.min(g.rows - 1, Math.floor((cv.height - view.oy) / s));
+    const useFull = s > TH * 1.15, a = tintAlpha();
+    ctx.imageSmoothingQuality = s < T ? 'medium' : 'low';
+    const vis = [];
+    visibleSet = new Set();
+    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+      const i = r * g.cols + c, t = g.assign[i];
+      const x0 = Math.round(view.ox + c * s), x1 = Math.round(view.ox + (c + 1) * s);
+      const y0 = Math.round(view.oy + r * s), y1 = Math.round(view.oy + (r + 1) * s);
+      let img = null;
+      if (useFull) { visibleSet.add(t); img = getFull(t); if (!img) vis.push([t, (c - (c0 + c1) / 2) ** 2 + (r - (r0 + r1) / 2) ** 2]); }
+      ctx.drawImage(img || state.tiles[t].thumb, x0, y0, x1 - x0, y1 - y0);
+      if (a > 0) { ctx.fillStyle = `rgba(${g.cellRGB[i*3]},${g.cellRGB[i*3+1]},${g.cellRGB[i*3+2]},${a})`; ctx.fillRect(x0, y0, x1 - x0, y1 - y0); }
+    }
+    vis.sort((p, q) => p[1] - q[1]);
+    want = [...new Set(vis.map(v => v[0]))];
+    pumpLoads();
+  }
+  const z = view.scale * 100;
+  $('hudL').textContent = `${z >= 10 ? z.toFixed(0) : z.toFixed(1)}% · ${fmt(W)} × ${fmt(H)} px` + (showOrig ? ' · ORIGINAL' : '') + (loading.size ? ' · loading…' : '');
+  $('hudR').textContent = hover >= 0 ? state.tiles[g.assign[hover]].name : '';
+}
+
+// pointer / wheel
+const ptrs = new Map(); let pinch = null;
+function local(e) { const r = cv.getBoundingClientRect(), d = dpr(); return [(e.clientX - r.left) * d, (e.clientY - r.top) * d]; }
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+  const [x, y] = local(e); zoomAt(Math.exp(-dy * 0.0015), x, y);
+}, { passive: false });
+cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, local(e)); cv.classList.add('drag'); if (ptrs.size === 2) startPinch(); });
+cv.addEventListener('pointermove', e => {
+  const p = local(e);
+  if (ptrs.has(e.pointerId)) {
+    const prev = ptrs.get(e.pointerId); ptrs.set(e.pointerId, p);
+    if (ptrs.size === 1) { view.ox += p[0] - prev[0]; view.oy += p[1] - prev[1]; requestRender(); }
+    else if (ptrs.size === 2 && pinch) {
+      const [a, b] = [...ptrs.values()];
+      const dist = Math.hypot(a[0] - b[0], a[1] - b[1]), mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+      view.ox += mx - pinch.mx; view.oy += my - pinch.my;
+      zoomAt(dist / pinch.dist, mx, my);
+      pinch = { dist, mx, my };
+    }
+  }
+  const g = state.grid;
+  if (g) {
+    const s = state.tileSize * view.scale;
+    const c = Math.floor((p[0] - view.ox) / s), r = Math.floor((p[1] - view.oy) / s);
+    const h = c >= 0 && r >= 0 && c < g.cols && r < g.rows ? r * g.cols + c : -1;
+    if (h !== hover) { hover = h; requestRender(); }
+  }
+});
+function startPinch() { const [a, b] = [...ptrs.values()]; pinch = { dist: Math.hypot(a[0] - b[0], a[1] - b[1]), mx: (a[0] + b[0]) / 2, my: (a[1] + b[1]) / 2 }; }
+function endPtr(e) { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (!ptrs.size) cv.classList.remove('drag'); }
+cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
+cv.addEventListener('pointerleave', () => { if (hover !== -1) { hover = -1; requestRender(); } });
+cv.addEventListener('dblclick', e => { const [x, y] = local(e); zoomAt(e.shiftKey ? 0.5 : 2.5, x, y); });
+function oneToOne() { zoomAt(1 / view.scale, cv.width / 2, cv.height / 2); }
+function toggleOrig() { showOrig = !showOrig; $('origBtn').classList.toggle('on', showOrig); requestRender(); }
+$('fitBtn').onclick = fit; $('oneBtn').onclick = oneToOne; $('origBtn').onclick = toggleOrig;
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === '0') fit(); else if (e.key === '1') oneToOne();
+  else if (e.key === 'o' || e.key === 'O') toggleOrig();
+  else if (e.key === '+' || e.key === '=') zoomAt(1.5, cv.width / 2, cv.height / 2);
+  else if (e.key === '-') zoomAt(1 / 1.5, cv.width / 2, cv.height / 2);
+});
+
+/* ---------- streaming PNG export ---------- */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(buf) { let c = 0xFFFFFFFF; for (let i = 0; i < buf.length; i++) c = CRC_T[(c ^ buf[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function pngChunk(type, data) {
+  const out = new Uint8Array(12 + data.length), dv = new DataView(out.buffer);
+  dv.setUint32(0, data.length);
+  for (let i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
+  out.set(data, 8);
+  dv.setUint32(8 + data.length, crc32(out.subarray(4, 8 + data.length)));
+  return out;
+}
+function ihdr(w, h) {
+  const d = new Uint8Array(13), dv = new DataView(d.buffer);
+  dv.setUint32(0, w); dv.setUint32(4, h); d[8] = 8; d[9] = 2; // 8-bit RGB
+  return pngChunk('IHDR', d);
+}
+
+async function openSink(name) {
+  if (window.showSaveFilePicker) {
+    const handle = await window.showSaveFilePicker({ suggestedName: name, types: [{ description: 'PNG image', accept: { 'image/png': ['.png'] } }] });
+    const w = await handle.createWritable();
+    return { write: d => w.write(d), close: () => w.close(), abort: () => w.abort(), streamed: true };
+  }
+  const parts = [];
+  return { write: async d => { parts.push(d); }, close: async () => download(new Blob(parts, { type: 'image/png' }), name), abort: async () => { parts.length = 0; }, streamed: false };
+}
+
+async function loadScaled(tl, outT) {
+  const c = tl.crop;
+  if (outT === c.s) return createImageBitmap(tl.file, c.x, c.y, c.s, c.s);
+  try { return await createImageBitmap(tl.file, c.x, c.y, c.s, c.s, { resizeWidth: outT, resizeHeight: outT, resizeQuality: 'high' }); }
+  catch (e) { return createImageBitmap(tl.file, c.x, c.y, c.s, c.s); }
+}
+
+async function exportPNG() {
+  const g = state.grid; if (!g) return;
+  const outT = Math.max(1, Math.round(state.tileSize * parseFloat($('outScale').value)));
+  const W = g.cols * outT, H = g.rows * outT;
+  const name = `${state.targetName || 'mosaic'}_${g.cols}x${g.rows}_${outT}px.png`;
+  let sink;
+  try { sink = await openSink(name); } catch (e) { return; } // user cancelled the save dialog
+  state.busy = true; updateButtons();
+  const started = performance.now();
+  try {
+    await sink.write(new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]));
+    await sink.write(ihdr(W, H));
+    const cs = new CompressionStream('deflate');     // zlib stream, exactly what PNG IDAT wants
+    const writer = cs.writable.getWriter(), reader = cs.readable.getReader();
+    const pump = (async () => { for (;;) { const { value, done } = await reader.read(); if (done) break; await sink.write(pngChunk('IDAT', value)); } })();
+
+    const stride = 1 + W * 3;
+    const PW = Math.max(outT, Math.floor(8192 / outT) * outT);   // piece canvas width, whole tiles
+    const piece = document.createElement('canvas');
+    const pctx = piece.getContext('2d', { willReadFrequently: true });
+    const a = tintAlpha();
+    const tilesPerPiece = PW / outT;
+
+    for (let r = 0; r < g.rows; r++) {
+      const band = new Uint8Array(outT * stride);
+      for (let c0 = 0; c0 < g.cols; c0 += tilesPerPiece) {
+        const c1 = Math.min(g.cols, c0 + tilesPerPiece), pw = (c1 - c0) * outT;
+        if (piece.width !== pw || piece.height !== outT) { piece.width = pw; piece.height = outT; }
+        pctx.fillStyle = '#000'; pctx.fillRect(0, 0, pw, outT);
+        pctx.imageSmoothingQuality = 'high';
+        const bms = await Promise.all(Array.from({ length: c1 - c0 }, (_, k) => loadScaled(state.tiles[g.assign[r * g.cols + c0 + k]], outT)));
+        bms.forEach((b, k) => {
+          const i = r * g.cols + c0 + k;
+          pctx.drawImage(b, k * outT, 0, outT, outT); b.close();
+          if (a > 0) { pctx.fillStyle = `rgba(${g.cellRGB[i*3]},${g.cellRGB[i*3+1]},${g.cellRGB[i*3+2]},${a})`; pctx.fillRect(k * outT, 0, outT, outT); }
+        });
+        const px = pctx.getImageData(0, 0, pw, outT).data;
+        const xOff = c0 * outT * 3;
+        for (let y = 0; y < outT; y++) {
+          let o = y * stride + 1 + xOff, p = y * pw * 4;
+          for (let x = 0; x < pw; x++, p += 4) { band[o++] = px[p]; band[o++] = px[p + 1]; band[o++] = px[p + 2]; }
+        }
+      }
+      // PNG "Sub" filter per scanline (better compression for photos); backwards so left pixels stay original
+      for (let y = 0; y < outT; y++) {
+        const s0 = y * stride; band[s0] = 1;
+        for (let i = s0 + stride - 1; i >= s0 + 4; i--) band[i] = band[i] - band[i - 3];
+      }
+      const CH = Math.max(1, Math.floor(16e6 / stride));
+      for (let y = 0; y < outT; y += CH) await writer.write(band.subarray(y * stride, Math.min(outT, y + CH) * stride));
+
+      const f = (r + 1) / g.rows, el = (performance.now() - started) / 1000;
+      setProg(f);
+      setStatus(`Exporting row ${r + 1} / ${g.rows} · ${Math.round(el / f - el)}s left`);
+    }
+    await writer.close(); await pump;
+    await sink.write(pngChunk('IEND', new Uint8Array(0)));
+    await sink.close();
+    setStatus(`Saved ${name} (${fmt(W)} × ${fmt(H)} px) in ${Math.round((performance.now() - started) / 1000)}s.`, 'good');
+  } catch (e) {
+    console.error(e); try { await sink.abort(); } catch (_) {}
+    setStatus('Export failed: ' + (e && e.message || e) + '. Try a smaller tile size.', 'warn');
+  }
+  setProg(0); state.busy = false; updateButtons();
+}
+
+function savePreview() { state.overview && state.overview.canvas.toBlob(b => download(b, `${state.targetName || 'mosaic'}_preview.png`), 'image/png'); }
+function saveCSV() {
+  const g = state.grid; if (!g) return;
+  const lines = ['row,col,file'];
+  for (let i = 0; i < g.assign.length; i++) lines.push(`${(i / g.cols) | 0},${i % g.cols},"${state.tiles[g.assign[i]].name.replace(/"/g, '""')}"`);
+  download(new Blob([lines.join('\n')], { type: 'text/csv' }), `${state.targetName || 'mosaic'}_tilemap.csv`);
+}
+
+/* ---------- UI wiring ---------- */
+function updateButtons() {
+  const ready = state.target && state.tiles.length && !state.busy;
+  $('buildBtn').disabled = !ready; $('shuffleBtn').disabled = !(ready && state.grid);
+  const built = state.grid && !state.busy;
+  $('exportBtn').disabled = !built; $('previewBtn').disabled = !built; $('csvBtn').disabled = !built;
+  ['folderBtn', 'filesBtn', 'clearBtn', 'targetBtn'].forEach(id => $(id).disabled = state.busy);
+}
+function updateInfo() {
+  const n = state.tiles.length;
+  $('tileInfo').innerHTML = n ? `<b>${fmt(n)}</b> tiles · native ${state.tileSize} × ${state.tileSize}` : 'or drop a folder here';
+  const d = gridDims();
+  if (d) {
+    const cells = d.cols * d.rows;
+    let msg = `${d.cols} × ${d.rows} = <b>${fmt(cells)}</b> cells`;
+    if (n) msg += cells > n ? ` · each tile used ~${(cells / n).toFixed(1)}×` : ` · ${fmt(n - cells)} tiles spare`;
+    $('gridInfo').innerHTML = msg;
+  } else $('gridInfo').textContent = 'Choose a target image first.';
+  const g = state.grid || d;
+  if (g) {
+    const outT = Math.max(1, Math.round(state.tileSize * parseFloat($('outScale').value)));
+    const W = g.cols * outT, H = g.rows * outT, mp = W * H / 1e6, raw = W * H * 3;
+    let msg = `${fmt(W)} × ${fmt(H)} px · ${fmt(Math.round(mp))} MP · roughly ${fmtBytes(raw * 0.35)}–${fmtBytes(raw * 0.7)}`;
+    if (mp > 500) msg += `<br><span class="warn">Most image viewers choke above ~500 MP. The zoom view here handles any size.</span>`;
+    if (!window.showSaveFilePicker && raw > 1.5e9) msg += `<br><span class="warn">This browser can't stream to disk; big exports may run out of memory. Chrome or Edge recommended.</span>`;
+    $('exportInfo').innerHTML = msg;
+  }
+  updateButtons();
+}
+
+$('targetBtn').onclick = () => $('targetInput').click();
+$('targetInput').onchange = e => { if (e.target.files[0]) setTarget(e.target.files[0]); e.target.value = ''; };
+$('folderBtn').onclick = () => $('folderInput').click();
+$('filesBtn').onclick = () => $('filesInput').click();
+$('folderInput').onchange = e => { addTiles(e.target.files); e.target.value = ''; };
+$('filesInput').onchange = e => { addTiles(e.target.files); e.target.value = ''; };
+$('clearBtn').onclick = clearTiles;
+$('buildBtn').onclick = build;
+$('shuffleBtn').onclick = () => { state.seed++; build(); };
+$('exportBtn').onclick = exportPNG;
+$('previewBtn').onclick = savePreview;
+$('csvBtn').onclick = saveCSV;
+['cols', 'outScale', 'maxUses', 'radius'].forEach(id => $(id).addEventListener('input', updateInfo));
+$('tint').addEventListener('input', () => {
+  $('tintVal').textContent = $('tint').value + '%';
+  if (state.grid) { buildOverview(); requestRender(); }
+});
+
+// drag & drop (folders supported)
+async function readEntry(entry, out) {
+  if (entry.isFile) { await new Promise(r => entry.file(f => { out.push(f); r(); }, r)); }
+  else if (entry.isDirectory) {
+    const rd = entry.createReader();
+    for (;;) { const batch = await new Promise(r => rd.readEntries(r, () => r([]))); if (!batch.length) break; for (const e of batch) await readEntry(e, out); }
+  }
+}
+function dropZone(el, onFiles) {
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('over'); });
+  el.addEventListener('dragleave', () => el.classList.remove('over'));
+  el.addEventListener('drop', async e => {
+    e.preventDefault(); el.classList.remove('over');
+    const items = [...(e.dataTransfer.items || [])].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+    let files = [];
+    if (items.length) for (const en of items) await readEntry(en, files);
+    else files = [...e.dataTransfer.files];
+    onFiles(files);
+  });
+}
+dropZone($('targetDrop'), fs => { const f = fs.find(isImage); if (f) setTarget(f); });
+dropZone($('tileDrop'), fs => { if (!state.busy) addTiles(fs); });
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => e.preventDefault());
+
+updateInfo(); resize();
+</script>
+</body>
+</html>
