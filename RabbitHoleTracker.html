@@ -1,0 +1,796 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Warren</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --night:#140e0a;
+  --soil:#2a1c12;
+  --loam:#4a3220;
+  --card:#211710;
+  --card-2:#2d1f15;
+  --line:#5a4130;
+  --ink:#f1e7d6;
+  --muted:#bba88c;
+  --lantern:#f0c96a;
+  --thread:#e3d3b4;
+  --copper:#e08f4f;
+  --lichen:#86cbbd;
+  --grass:#6d8a3a;
+  --danger:#e07a63;
+  --display:'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --body:'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+html,body{background:var(--night);color:var(--ink);}
+body{font-family:var(--body);font-size:15px;line-height:1.45;}
+html.field-mode,html.field-mode body{overflow:hidden;height:100%;}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;}
+#spacer{width:1px;height:0;}
+button,input,textarea{font:inherit;color:inherit;}
+button{cursor:pointer;}
+:focus-visible{outline:2px solid var(--lantern);outline-offset:2px;}
+
+/* ---------- field UI ---------- */
+#fieldUI{position:fixed;inset:0;pointer-events:none;}
+.survey{
+  pointer-events:auto;position:absolute;left:16px;top:calc(12px + env(safe-area-inset-top,0px));
+  width:min(340px, calc(100% - 32px));
+  background:rgba(33,23,16,.9);border:1px solid var(--line);border-radius:10px;
+  padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);backdrop-filter:blur(4px);
+}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+.brand h1{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-.02em;margin:0;line-height:1;color:var(--lantern);}
+.brand p{margin:0;color:var(--muted);font-size:13px;}
+.dig{display:flex;gap:8px;}
+.dig input{flex:1;min-width:0;background:#150e09;border:1px solid var(--line);border-radius:7px;padding:8px 10px;}
+.dig input::placeholder{color:#8d7a62;}
+.btn{border:1px solid var(--line);background:var(--card-2);border-radius:7px;padding:8px 12px;font-weight:700;white-space:nowrap;}
+.btn:hover{border-color:var(--muted);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn.primary{background:var(--lantern);color:#2a1a0c;border-color:var(--lantern);}
+.btn.primary:hover{background:#f6d88a;}
+.btn.tangent{background:#3b2213;border-color:var(--copper);color:#ffd2ae;}
+.btn.notice{background:#16302b;border-color:var(--lichen);color:#c9f0e7;}
+.btn.ghost{background:transparent;}
+details.holes summary{cursor:pointer;color:var(--muted);font-size:13px;list-style:none;display:flex;justify-content:space-between;}
+details.holes summary::-webkit-details-marker{display:none;}
+details.holes summary::after{content:"▸";}
+details.holes[open] summary::after{content:"▾";}
+.hole-list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:34vh;overflow:auto;}
+.hole-list button{width:100%;text-align:left;background:transparent;border:1px solid transparent;border-radius:6px;padding:6px 8px;display:flex;justify-content:space-between;gap:10px;}
+.hole-list button:hover{background:var(--card-2);border-color:var(--line);}
+.hole-list .meta{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;}
+.status{font-family:var(--mono);font-size:11px;color:#8d7a62;}
+.status.err{color:var(--danger);}
+.tip{
+  position:absolute;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:8px;
+  padding:8px 10px;max-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:3;
+}
+.tip b{font-family:var(--display);font-size:15px;display:block;margin-bottom:2px;}
+.tip span{font-family:var(--mono);font-size:11px;color:var(--muted);display:block;}
+.legend{
+  position:absolute;right:16px;bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 32px);
+  font-family:var(--mono);font-size:11px;color:var(--muted);
+  background:rgba(20,14,10,.6);padding:6px 10px;border-radius:6px;
+}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px;}
+
+/* ---------- tunnel UI ---------- */
+#tunnelUI{position:fixed;inset:0;pointer-events:none;}
+.topbar{
+  pointer-events:auto;position:absolute;left:0;right:0;top:0;
+  padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(rgba(20,14,10,.95),rgba(20,14,10,.7) 70%,rgba(20,14,10,0));
+}
+.topbar h2{font-family:var(--display);font-weight:700;font-size:20px;margin:0;flex:1;min-width:160px;text-wrap:balance;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;width:100%;}
+.chip{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px;font-variant-numeric:tabular-nums;}
+.chip.warm{color:#ffd2ae;border-color:#7a4a2a;}
+.chip.cool{color:#c9f0e7;border-color:#3d6b62;}
+.fill-confirm{display:flex;gap:6px;align-items:center;}
+.btn.danger{border-color:var(--danger);color:#ffc2b3;background:#3a1a12;}
+#mini{pointer-events:auto;position:absolute;right:16px;top:132px;border:1px solid var(--line);border-radius:8px;background:rgba(20,14,10,.75);cursor:pointer;}
+.where{
+  position:absolute;left:16px;top:132px;font-family:var(--mono);font-size:11px;color:var(--muted);
+  background:rgba(20,14,10,.7);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:210px;
+  font-variant-numeric:tabular-nums;
+}
+.where b{color:var(--ink);font-weight:600;}
+.dock{
+  pointer-events:auto;position:absolute;left:50%;transform:translateX(-50%);
+  bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  width:min(760px, calc(100% - 32px));
+  background:rgba(33,23,16,.94);border:1px solid var(--line);border-radius:12px;padding:10px;
+  display:flex;flex-direction:column;gap:8px;box-shadow:0 -10px 40px rgba(0,0,0,.45);
+}
+.dock-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;}
+.depth-read{font-family:var(--mono);font-size:12px;color:var(--muted);}
+.depth-read b{color:var(--ink);}
+.pips{display:inline-flex;gap:3px;margin-left:6px;vertical-align:1px;}
+.pips i{width:7px;height:7px;border-radius:2px;background:#4a3220;}
+.pips i.on{background:var(--copper);}
+.pips i.zero{background:var(--lantern);}
+.dock textarea{width:100%;box-sizing:border-box;resize:none;background:#150e09;border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:44px;}
+.dock textarea::placeholder{color:#8d7a62;}
+.actions{display:flex;gap:6px;flex-wrap:wrap;}
+.actions .spacer{flex:1;}
+.hint{font-family:var(--mono);font-size:10.5px;color:#8d7a62;}
+.face{
+  pointer-events:auto;position:absolute;left:50%;transform:translateX(-50%);
+  bottom:calc(var(--dockH, 170px) + 22px + env(safe-area-inset-bottom,0px));
+  background:var(--lantern);color:#2a1a0c;border:none;border-radius:999px;padding:6px 14px;font-weight:700;font-size:13px;
+  box-shadow:0 4px 18px rgba(0,0,0,.4);
+}
+.scrollhint{
+  position:absolute;left:50%;transform:translateX(-50%);top:100px;white-space:nowrap;
+  font-family:var(--mono);font-size:12px;color:var(--muted);background:rgba(20,14,10,.6);padding:4px 10px;border-radius:999px;
+  transition:opacity .6s;
+}
+@media (max-width:640px){
+  .brand h1{font-size:24px;}
+  #mini{top:150px;right:12px;}
+  .where{top:150px;left:12px;max-width:150px;}
+  .legend{gap:8px;}
+}
+@media (prefers-reduced-motion: reduce){ .scrollhint{transition:none;} }
+</style>
+
+<canvas id="scene" aria-label="Rabbit hole field and tunnels"></canvas>
+<div id="spacer"></div>
+
+<div id="fieldUI">
+  <section class="survey" aria-label="Warren controls">
+    <div class="brand">
+      <h1>Warren</h1>
+      <p>Each topic is a hole. Each tangent digs deeper.</p>
+    </div>
+    <form class="dig" id="digForm">
+      <input id="digInput" type="text" maxlength="120" placeholder="What are you talking about?" aria-label="New topic" autocomplete="off">
+      <button class="btn primary" type="submit">Dig</button>
+    </form>
+    <details class="holes" id="holesDetails">
+      <summary id="holesSummary">All holes</summary>
+      <ul class="hole-list" id="holeList"></ul>
+    </details>
+    <div class="status" id="status">Surveying the field…</div>
+  </section>
+  <div class="tip" id="tip" hidden></div>
+  <div class="legend" aria-hidden="true">
+    <span><i style="background:var(--lantern)"></i>Topic</span>
+    <span><i style="background:var(--thread)"></i>Kept going</span>
+    <span><i style="background:var(--copper)"></i>Tangent</span>
+    <span><i style="background:var(--lichen)"></i>Noticed · returned</span>
+  </div>
+</div>
+
+<div id="tunnelUI" hidden>
+  <header class="topbar">
+    <button class="btn ghost" id="climbOut" type="button">↑ Climb out</button>
+    <h2 id="tTitle"></h2>
+    <div class="fill-confirm" id="fillWrap">
+      <button class="btn ghost" id="fillBtn" type="button">Fill in hole</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </header>
+  <div class="where" id="where"></div>
+  <canvas id="mini" width="96" height="240" aria-label="Cross-section of this hole. Click to jump."></canvas>
+  <div class="scrollhint" id="scrollHint">Scroll to travel back toward the entrance</div>
+  <button class="face" id="toFace" type="button" hidden>↓ Back to the dig face</button>
+  <section class="dock" id="dock" aria-label="Add to this conversation">
+    <div class="dock-head">
+      <div class="depth-read" id="depthRead"></div>
+      <div class="hint">Enter · keep going &nbsp; Ctrl+Enter · tangent</div>
+    </div>
+    <textarea id="thought" rows="2" placeholder="Where did the conversation go next?" aria-label="Next thought"></textarea>
+    <div class="actions">
+      <button class="btn primary" id="aKeep" type="button">Keep going</button>
+      <button class="btn tangent" id="aTangent" type="button">↘ Tangent</button>
+      <button class="btn notice" id="aUp" type="button">Noticed · back up a level</button>
+      <button class="btn notice" id="aTop" type="button">Noticed · back to topic</button>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="aUndo" type="button">Undo last</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const cv = $('#scene'), ctx = cv.getContext('2d');
+const mini = $('#mini'), mctx = mini.getContext('2d');
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let W = 0, H = 0, DPR = 1, bg = null, G = {};
+let holes = [], mode = 'field', curId = null, hoverKey = null;
+let fieldHits = [], bubbleHits = [];
+let db = null, backend = 'pending';
+const LS = 'warren-holes-v1';
+const S = 6, ZREF = 5.5, PXU = 64, RT = 3.4;
+const KC = {origin:'#f0c96a', thread:'#e3d3b4', tangent:'#e08f4f', resurface:'#86cbbd'};
+const KL = {origin:'Topic', thread:'Kept going', tangent:'Tangent', resurface:'Noticed · returned'};
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function hash(k){ const h = Math.sin(k * 12.9898 + 78.233) * 43758.5453; return h - Math.floor(h); }
+function rng(seed){ let a = seed >>> 0; return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const fmtTime = t => new Date(t).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+const fmtDate = t => new Date(t).toLocaleDateString([], {month:'short', day:'numeric'});
+function levelWord(d){ return d === 0 ? 'on topic' : d === 1 ? '1 tangent deep' : d + ' tangents deep'; }
+
+/* ---------------- example holes (only used when this page has no shared storage) ---------------- */
+function examples(){
+  const mk = (title, base, rows) => { let t = base; return {id: 'ex-' + uid(), title, created: base, example: true,
+    nodes: rows.map(([kind, depth, text, min]) => ({id: uid(), kind, depth, text, t: (t += min * 60000)}))}; };
+  const b = Date.UTC(2026, 8, 26, 1, 10);
+  return [
+    mk('Weekend camping trip', b, [
+      ['origin',0,'Weekend camping trip',0],
+      ['thread',0,'Which campsite along the Duck River?',3],
+      ['tangent',1,'Is the river name a translation of a Cherokee word?',4],
+      ['tangent',2,'How Sequoyah built the Cherokee syllabary on his own',6],
+      ['tangent',3,'Other writing systems invented by a single person',9],
+      ['thread',3,'Hangul was a king’s project, so maybe it doesn’t count',5],
+      ['resurface',0,'Wait, we were picking a campsite',2],
+      ['thread',0,'Booking site 14 for Saturday night',4]
+    ]),
+    mk('Fixing the kitchen faucet', b + 86400000, [
+      ['origin',0,'Fixing the kitchen faucet',0],
+      ['tangent',1,'Why old houses had lead pipes',3],
+      ['tangent',2,'Plumbum is Latin for lead, so a plumber is a lead worker',4],
+      ['thread',2,'Other trade names hiding Latin roots',6],
+      ['resurface',1,'Back to pipes: ours are copper, so not a lead problem',3],
+      ['resurface',0,'Back to the faucet itself',2],
+      ['thread',0,'Replace the cartridge instead of the whole faucet',5]
+    ]),
+    mk('October book club pick', b + 2 * 86400000, [
+      ['origin',0,'October book club pick',0],
+      ['thread',0,'Something spooky but short',2],
+      ['tangent',1,'Why so many classic horror stories are Victorian short fiction',7],
+      ['resurface',0,'Back to the list: three candidates',3]
+    ])
+  ];
+}
+
+/* ---------------- storage ---------------- */
+function loadLocal(){ try{ const s = localStorage.getItem(LS); if(s) return JSON.parse(s); }catch(e){} return null; }
+function saveLocal(){ try{ localStorage.setItem(LS, JSON.stringify(holes)); }catch(e){} }
+const chains = {};
+function setStatus(msg, err){ const el = $('#status'); el.textContent = msg; el.classList.toggle('err', !!err); }
+function statusDefault(){
+  if(backend === 'db') setStatus('Saved to this page');
+  else if(backend === 'local') setStatus('Saved in this browser only');
+}
+function persist(h){
+  if(backend === 'db'){
+    const body = JSON.parse(JSON.stringify(h)); delete body.id;
+    chains[h.id] = (chains[h.id] || Promise.resolve())
+      .then(() => db.doc('holes/' + h.id).set(body))
+      .then(() => statusDefault())
+      .catch(e => setStatus(e && e.code === 'quota_exceeded' ? 'Storage is full. Fill in an old hole to make room.' : 'Couldn’t save that change. Try again in a moment.', true));
+  } else saveLocal();
+}
+function removeHole(id){
+  holes = holes.filter(h => h.id !== id);
+  if(backend === 'db'){
+    (chains[id] || Promise.resolve()).then(() => db.doc('holes/' + id).delete()).catch(() => setStatus('Couldn’t fill in that hole. Try again.', true));
+  } else saveLocal();
+}
+async function initStore(){
+  let d = null;
+  try{ if(window.claude && typeof window.claude.use === 'function') d = await window.claude.use('db'); }catch(e){ d = null; }
+  if(!d){ backend = 'local'; holes = loadLocal() || examples(); statusDefault(); afterData(); return; }
+  db = d; backend = 'db'; statusDefault();
+  db.collection('holes').onSnapshot(snap => {
+    holes = snap.docs.map(x => Object.assign({id: x.id}, JSON.parse(JSON.stringify(x.data()))))
+      .filter(h => Array.isArray(h.nodes) && h.nodes.length);
+    afterData();
+  }, () => { setStatus('Lost the connection to saved holes. Reload to try again.', true); });
+}
+function afterData(){
+  if(mode === 'tunnel' && !curHole()) leaveTunnel();
+  renderList(); syncTunnelUI(); resizeSpacer(); invalidate();
+}
+const curHole = () => holes.find(h => h.id === curId);
+
+function stats(h){
+  const N = h.nodes, n = N.length; let md = 0, ret = 0, off = 0;
+  for(const x of N){ md = Math.max(md, x.depth); if(x.kind === 'resurface') ret++; if(x.depth > 0) off++; }
+  const mins = Math.round((N[n-1].t - N[0].t) / 60000);
+  return {n, md, ret, off: Math.round(off / n * 100), mins};
+}
+
+/* ---------------- layout & background ---------------- */
+function resize(){
+  W = window.innerWidth; H = window.innerHeight; DPR = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  G.hz = Math.round(H * 0.13);
+  G.cut = Math.round(H * (W < 640 ? 0.5 : 0.56));
+  buildBg(); resizeSpacer(); sizeMini(); invalidate();
+}
+function buildBg(){
+  bg = document.createElement('canvas'); bg.width = cv.width; bg.height = cv.height;
+  const c = bg.getContext('2d'); c.scale(DPR, DPR); const R = rng(1987);
+  let g = c.createLinearGradient(0, 0, 0, G.hz);
+  g.addColorStop(0, '#9fb2b3'); g.addColorStop(1, '#e7dcb8'); c.fillStyle = g; c.fillRect(0, 0, W, G.hz + 2);
+  c.fillStyle = '#3d5030'; c.beginPath(); c.moveTo(0, G.hz + 2);
+  for(let x = 0; x <= W + 6; x += 6) c.lineTo(x, G.hz - 3 - Math.abs(Math.sin(x * 0.011) * 9 + Math.sin(x * 0.047) * 4) - R() * 2);
+  c.lineTo(W, G.hz + 2); c.closePath(); c.fill();
+  g = c.createLinearGradient(0, G.hz, 0, G.cut);
+  g.addColorStop(0, '#8f9d62'); g.addColorStop(0.3, '#77913f'); g.addColorStop(1, '#55712a');
+  c.fillStyle = g; c.fillRect(0, G.hz, W, G.cut - G.hz);
+  // mow stripes converging to the horizon
+  for(let i = -8; i <= 8; i++){
+    if(i % 2) continue;
+    c.fillStyle = 'rgba(255,255,220,0.035)';
+    const xn = W / 2 + i * W * 0.09, xf = W / 2 + i * W * 0.03;
+    c.beginPath(); c.moveTo(xf, G.hz); c.lineTo(xf + W * 0.03, G.hz); c.lineTo(xn + W * 0.09, G.cut); c.lineTo(xn, G.cut); c.fill();
+  }
+  const count = Math.floor(W * (G.cut - G.hz) / 55);
+  for(let i = 0; i < count; i++){
+    const t = Math.pow(R(), 0.65), y = G.hz + (G.cut - G.hz) * t, x = R() * W, len = 2 + t * 11;
+    c.strokeStyle = `rgba(${40 + R() * 55 | 0},${72 + R() * 55 | 0},${18 + R() * 22 | 0},${0.3 + 0.45 * t})`;
+    c.lineWidth = 0.5 + t * 1.0; c.beginPath(); c.moveTo(x, y);
+    c.quadraticCurveTo(x + (R() - .5) * len * .6, y - len * .6, x + (R() - .5) * len * .9, y - len); c.stroke();
+  }
+  // soil cross-section
+  g = c.createLinearGradient(0, G.cut, 0, H);
+  g.addColorStop(0, '#6e4a2c'); g.addColorStop(0.1, '#573a22'); g.addColorStop(0.5, '#3a2616'); g.addColorStop(1, '#1d130b');
+  c.fillStyle = g; c.fillRect(0, G.cut, W, H - G.cut);
+  for(let k = 0; k < 6; k++){
+    const y0 = G.cut + (H - G.cut) * (0.1 + k * 0.16);
+    c.strokeStyle = `rgba(0,0,0,${0.1 + R() * 0.1})`; c.lineWidth = 1 + R() * 2.5; c.beginPath();
+    const ph = R() * 10;
+    for(let x = 0; x <= W; x += 8) c.lineTo(x, y0 + Math.sin(x * 0.012 + ph) * 5 + Math.sin(x * 0.041 + ph) * 2);
+    c.stroke();
+  }
+  const peb = Math.floor(W * (H - G.cut) / 700);
+  for(let i = 0; i < peb; i++){
+    const x = R() * W, y = G.cut + 8 + R() * (H - G.cut), r = 0.8 + R() * 3.2;
+    c.fillStyle = R() < 0.5 ? 'rgba(170,140,105,0.22)' : 'rgba(10,6,3,0.3)';
+    c.beginPath(); c.ellipse(x, y, r * 1.3, r, R() * 3, 0, Math.PI * 2); c.fill();
+  }
+  c.strokeStyle = 'rgba(38,24,12,0.65)';
+  for(let i = 0; i < W / 45; i++){
+    let x = R() * W, y = G.cut; const L = 18 + R() * 60; c.lineWidth = 0.6 + R() * 1.2; c.beginPath(); c.moveTo(x, y);
+    for(let s = 0; s < L; s += 6){ x += (R() - .5) * 6; y += 5; c.lineTo(x, y); } c.stroke();
+  }
+  g = c.createLinearGradient(0, G.cut, 0, G.cut + 22); g.addColorStop(0, 'rgba(0,0,0,.4)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = g; c.fillRect(0, G.cut, W, 22);
+  c.fillStyle = '#4c6823'; c.fillRect(0, G.cut - 3, W, 5);
+  c.strokeStyle = '#5d7c2b'; c.lineWidth = 1;
+  for(let x = 0; x < W; x += 3){ c.beginPath(); c.moveTo(x, G.cut); c.lineTo(x + (R() - .5) * 5, G.cut - 3 - R() * 6); c.stroke(); }
+}
+
+/* ---------------- field (homepage) ---------------- */
+function layoutHoles(){
+  const list = [...holes].sort((a, b) => a.created - b.created), n = list.length;
+  const m = Math.max(36, W * 0.06), fzs = [0.2, 0.62, 0.38, 0.82, 0.28, 0.52, 0.72];
+  return list.map((h, k) => {
+    const sx = n === 1 ? W / 2 : m + (W - 2 * m) * (k + 0.5) / n;
+    const fz = fzs[k % fzs.length], p = 1 / (1 + fz * 3), t = (p - 0.25) / 0.75;
+    const sy = G.hz + 10 + (G.cut - G.hz - 24) * t;
+    const r = (13 + Math.min(h.nodes.length, 40) * 0.9) * p * (W < 640 ? 0.75 : 1) + 5;
+    return {h, sx, sy, s: p, t, r, k};
+  });
+}
+function sectionPoints(h, x0, y0, dy, dx, dir){
+  return h.nodes.map((nd, i) => ({x: x0 + dir * nd.depth * dx, y: y0 + (i + 1) * dy, nd, i}));
+}
+function strokeSection(c, pts, x0, y0, dy, w, hot, focusIdx){
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  const path = () => { c.beginPath(); c.moveTo(x0, y0 - 2);
+    let px = x0, py = y0;
+    for(const p of pts){ c.bezierCurveTo(px, py + dy * 0.5, p.x, p.y - dy * 0.5, p.x, p.y); px = p.x; py = p.y; } };
+  path(); c.strokeStyle = '#0c0704'; c.lineWidth = w; c.stroke();
+  path(); c.strokeStyle = hot ? '#6a4a2c' : '#2f2016'; c.lineWidth = Math.max(1.2, w * 0.4); c.stroke();
+  const cr = Math.max(2.2, w * 0.52);
+  for(const p of pts){
+    const col = KC[p.nd.kind] || KC.thread;
+    if(p.nd.kind === 'resurface'){ c.strokeStyle = col; c.lineWidth = 1.5; c.beginPath(); c.arc(p.x, p.y, cr + 3, 0, Math.PI * 2); c.stroke(); }
+    c.fillStyle = col; c.globalAlpha = hot ? 1 : 0.82;
+    c.beginPath(); c.arc(p.x, p.y, cr, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1;
+    if(p.i === focusIdx){ c.strokeStyle = '#fff4d6'; c.lineWidth = 2; c.beginPath(); c.arc(p.x, p.y, cr + 5, 0, Math.PI * 2); c.stroke(); }
+  }
+}
+function drawField(){
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bg, 0, 0); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  fieldHits = [];
+  const L = layoutHoles(), n = L.length;
+  // soil labels
+  ctx.font = '600 10.5px ' + getComputedStyle(document.documentElement).getPropertyValue('--mono');
+  ctx.fillStyle = 'rgba(241,231,214,.55)'; ctx.textAlign = 'left';
+  ctx.fillText('SURFACE · topic opened', 16, G.cut + 18);
+  ctx.save(); ctx.translate(16, H - 60); ctx.rotate(-Math.PI / 2); ctx.fillText('LATER IN THE CONVERSATION →', 0, 8); ctx.restore();
+
+  if(backend === 'pending' || n === 0){
+    ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(241,231,214,.85)';
+    ctx.font = '700 18px Bricolage Grotesque, system-ui, sans-serif';
+    ctx.fillText(backend === 'pending' ? 'Surveying the field…' : 'No holes yet. Dig one to start tracking a conversation.', W / 2, (G.hz + G.cut) / 2 + (W < 640 ? 70 : 0));
+    return;
+  }
+  const maxN = Math.max(4, ...L.map(o => o.h.nodes.length));
+  const maxD = Math.max(1, ...L.map(o => Math.max(...o.h.nodes.map(x => x.depth))));
+  const colW = (W - 2 * Math.max(36, W * 0.06)) / n;
+  const dy = clamp((H - G.cut - 40) / (maxN + 0.5), 4, 28);
+  const dx = Math.min(24, colW * 0.4 / maxD);
+  const w = clamp(Math.min(dy * 0.6, colW * 0.14), 4, 11);
+
+  ctx.save(); ctx.beginPath(); ctx.rect(0, G.cut, W, H - G.cut); ctx.clip();
+  for(const o of L){
+    const hot = hoverKey === o.h.id, dir = o.sx > W / 2 ? -1 : 1;
+    const pts = sectionPoints(o.h, o.sx, G.cut, dy, dx, dir);
+    if(hot){ ctx.shadowColor = 'rgba(240,201,106,.45)'; ctx.shadowBlur = 16; }
+    strokeSection(ctx, pts, o.sx, G.cut, dy, w, hot, -1);
+    ctx.shadowBlur = 0;
+    for(const p of pts) fieldHits.push({type:'node', id:o.h.id, x:p.x, y:p.y, r:Math.max(9, w)});
+  }
+  ctx.restore();
+
+  const byDepth = [...L].sort((a, b) => a.sy - b.sy);
+  for(const o of byDepth){
+    const hot = hoverKey === o.h.id, rx = o.r, ry = o.r * (0.26 + 0.18 * o.t);
+    if(hot){
+      ctx.setLineDash([4, 5]); ctx.strokeStyle = 'rgba(240,201,106,.75)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(o.sx, o.sy + ry); ctx.lineTo(o.sx, G.cut); ctx.stroke(); ctx.setLineDash([]);
+    }
+    ctx.fillStyle = 'rgba(40,28,14,.35)'; ctx.beginPath(); ctx.ellipse(o.sx + rx * 0.12, o.sy + ry * 0.35, rx * 1.35, ry * 1.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = hot ? '#8a6038' : '#6b4a2c'; ctx.beginPath(); ctx.ellipse(o.sx, o.sy, rx * 1.22, ry * 1.35, 0, 0, Math.PI * 2); ctx.fill();
+    const g = ctx.createRadialGradient(o.sx, o.sy + ry * 0.3, 1, o.sx, o.sy, rx);
+    g.addColorStop(0, '#000'); g.addColorStop(0.7, '#140b05'); g.addColorStop(1, '#3a2615');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(o.sx, o.sy, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+    // label
+    const fs = Math.round(clamp(13 * (0.6 + o.s * 0.6), 10, 15));
+    ctx.font = `700 ${fs}px Bricolage Grotesque, system-ui, sans-serif`;
+    let label = o.h.title; if(label.length > 26) label = label.slice(0, 25) + '…';
+    if(o.h.example) label = 'example · ' + label;
+    const tw = ctx.measureText(label).width, ly = o.sy - ry * 1.4 - fs * 0.9;
+    ctx.fillStyle = hot ? 'rgba(240,201,106,.95)' : 'rgba(33,23,16,.82)';
+    roundRect(ctx, o.sx - tw / 2 - 7, ly - fs * 0.8, tw + 14, fs * 1.55, 5); ctx.fill();
+    ctx.fillStyle = hot ? '#2a1a0c' : '#f1e7d6'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, o.sx, ly - fs * 0.02); ctx.textBaseline = 'alphabetic';
+    fieldHits.push({type:'hole', id:o.h.id, x:o.sx, y:o.sy, rx:rx * 1.3 + 6, ry:ry * 1.4 + 8, lx:o.sx - tw / 2 - 7, ly:ly - fs * 0.8, lw:tw + 14, lh:fs * 1.55});
+  }
+}
+function roundRect(c, x, y, w, h, r){ c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function fieldHitTest(x, y){
+  for(let i = fieldHits.length - 1; i >= 0; i--){
+    const h = fieldHits[i];
+    if(h.type === 'hole'){
+      const e = ((x - h.x) / h.rx) ** 2 + ((y - h.y) / h.ry) ** 2;
+      if(e <= 1 || (x >= h.lx && x <= h.lx + h.lw && y >= h.ly && y <= h.ly + h.lh)) return h.id;
+    } else if((x - h.x) ** 2 + (y - h.y) ** 2 <= h.r * h.r) return h.id;
+  }
+  return null;
+}
+function showTip(id, x, y){
+  const tip = $('#tip'), h = holes.find(o => o.id === id);
+  if(!h){ tip.hidden = true; return; }
+  const s = stats(h);
+  tip.innerHTML = '';
+  const b = document.createElement('b'); b.textContent = h.title; tip.appendChild(b);
+  const a = document.createElement('span'); a.textContent = `${s.n} thoughts · deepest level ${s.md}`; tip.appendChild(a);
+  const c = document.createElement('span'); c.textContent = `noticed & returned ${s.ret}× · ${s.off}% off-topic`; tip.appendChild(c);
+  const d = document.createElement('span'); d.textContent = `opened ${fmtDate(h.created)}${h.example ? ' · example' : ''} · click to enter`; tip.appendChild(d);
+  tip.hidden = false;
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  tip.style.left = clamp(x + 14, 16, W - tw - 16) + 'px';
+  tip.style.top = clamp(y + 14, 16, H - th - 16) + 'px';
+}
+
+/* ---------------- tunnel ---------------- */
+const wrapCache = new Map();
+function wrap(text, maxW, font){
+  const key = font + '|' + maxW + '|' + text;
+  if(wrapCache.has(key)) return wrapCache.get(key);
+  ctx.font = font; const words = String(text).split(/\s+/); const lines = []; let line = '';
+  for(const w of words){ const t = line ? line + ' ' + w : w; if(ctx.measureText(t).width > maxW && line){ lines.push(line); line = w; } else line = t; }
+  if(line) lines.push(line);
+  if(lines.length > 6){ lines.length = 6; lines[5] = lines[5].replace(/\s*\S*$/, '') + ' …'; }
+  wrapCache.set(key, lines); return lines;
+}
+function tunnelGeom(h){
+  const N = h.nodes, n = N.length;
+  const dAt = z => { const u = z / S;
+    if(u <= 0) return N[n - 1].depth;
+    if(u >= n - 1) return N[0].depth * (1 - Math.min(1, u - (n - 1)));
+    const j = Math.floor(u), fr = u - j, a = N[n - 1 - j].depth, b = N[n - 2 - j].depth, s = fr * fr * (3 - 2 * fr);
+    return a + (b - a) * s; };
+  const off = d => { const a = d * 0.95, r = d * 2.3; return [r * Math.sin(a), r * (1 - Math.cos(a)) * 0.9]; };
+  const zE = (n - 1) * S + S * 1.3;
+  return {N, n, dAt, off, C: z => off(dAt(z)), zE, scrollMax: (zE - 3 + ZREF) * PXU};
+}
+function camZNow(){ return -ZREF + window.scrollY / PXU; }
+function nearestIndex(h){ const n = h.nodes.length; return clamp(Math.round((camZNow() + ZREF) / S), 0, n - 1); }
+
+function drawTunnel(){
+  const h = curHole(); if(!h) return;
+  const T = tunnelGeom(h), {N, n, dAt, C, zE} = T;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const f = Math.min(W, H) * 0.95, cx = W / 2, cy = H * (W < 640 ? 0.4 : 0.44);
+  const camZ = camZNow(); const cam = C(camZ + 1.2);
+  const P = (x, y, z) => { const zr = z - camZ; return [cx + (x - cam[0]) * f / zr, cy + (y - cam[1]) * f / zr, zr]; };
+
+  ctx.fillStyle = '#100a06'; ctx.fillRect(0, 0, W, H);
+  const far = P(...C(camZ + 30), camZ + 30);
+  const vg = ctx.createRadialGradient(far[0], far[1], 10, far[0], far[1], Math.max(W, H) * 0.75);
+  vg.addColorStop(0, '#060302'); vg.addColorStop(1, '#2a1a10'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+  const items = [];
+  const step = 0.9, zMax = Math.min(camZ + 72, zE - 0.2);
+  for(let z = Math.ceil((camZ + 0.35) / step) * step; z < zMax; z += step) items.push({z, type:'ring', k: Math.round(z / step)});
+  for(let j = 0; j < n; j++){ const z = j * S; if(z - camZ > 0.5 && z - camZ < 80) items.push({z: z + 0.001, type:'node', j}); }
+  if(zE - camZ < 95 && zE - camZ > 0.3) items.push({z: zE, type:'sky'});
+  items.sort((a, b) => b.z - a.z);
+  bubbleHits = [];
+  const narrow = W < 640, BW = narrow ? 236 : 300;
+
+  for(const it of items){
+    if(it.type === 'sky'){
+      const [sx, sy, zr] = P(0, 0, zE), rr = RT * f / zr;
+      const glow = ctx.createRadialGradient(sx, sy, rr * 0.5, sx, sy, rr * 3.2);
+      glow.addColorStop(0, 'rgba(240,226,180,.28)'); glow.addColorStop(1, 'rgba(240,226,180,0)');
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(sx, sy, rr * 3.2, 0, Math.PI * 2); ctx.fill();
+      const g = ctx.createRadialGradient(sx, sy - rr * 0.2, 1, sx, sy, rr);
+      g.addColorStop(0, '#f7f1d8'); g.addColorStop(0.5, '#d9e0b8'); g.addColorStop(0.85, '#7f9a48'); g.addColorStop(1, '#4b6326');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(sx, sy, rr, rr * 0.92, 0, 0, Math.PI * 2); ctx.fill();
+      const k = clamp(ZREF / zr, 0.2, 2.4);
+      if(k > 0.28){
+        ctx.save(); ctx.translate(sx, sy); ctx.scale(k, k); ctx.textAlign = 'center';
+        ctx.fillStyle = '#3a4a1c'; ctx.font = '600 11px JetBrains Mono, monospace'; ctx.fillText('ENTRANCE · ' + fmtDate(h.created).toUpperCase() + ' ' + fmtTime(h.created), 0, -6);
+        ctx.fillStyle = '#23300f'; ctx.font = '800 20px Bricolage Grotesque, system-ui, sans-serif';
+        const lines = wrap(h.title, 240, '800 20px Bricolage Grotesque, system-ui, sans-serif');
+        lines.slice(0, 3).forEach((l, i) => ctx.fillText(l, 0, 18 + i * 22));
+        ctx.restore();
+      }
+      continue;
+    }
+    if(it.type === 'ring'){
+      const c = C(it.z), [sx, sy, zr] = P(c[0], c[1], it.z);
+      if(zr < 0.35) continue;
+      const rr = RT * f / zr, fog = Math.pow(Math.max(0, 1 - zr / 72), 1.2), lamp = Math.max(0, 1 - zr / 20), tint = Math.min(1, dAt(it.z) / 3);
+      const r = Math.round(74 + 70 * lamp + 55 * tint), g = Math.round(50 + 45 * lamp - 4 * tint), b = Math.round(32 + 26 * lamp - 12 * tint);
+      ctx.strokeStyle = `rgba(${r},${g},${b},${fog})`;
+      ctx.lineWidth = Math.max(0.6, 0.3 * f / zr * 0.35);
+      ctx.beginPath(); ctx.ellipse(sx, sy, rr, rr * 0.92, 0, 0, Math.PI * 2); ctx.stroke();
+      for(let m = 0; m < 4; m++){
+        const a = hash(it.k * 4 + m) * Math.PI * 2, pr = Math.max(0.6, (0.05 + hash(it.k * 7 + m) * 0.08) * f / zr);
+        ctx.fillStyle = `rgba(${r + 35},${g + 28},${b + 18},${fog * 0.75})`;
+        ctx.beginPath(); ctx.arc(sx + Math.cos(a) * rr * 0.98, sy + Math.sin(a) * rr * 0.9, pr, 0, Math.PI * 2); ctx.fill();
+      }
+      continue;
+    }
+    // node
+    const j = it.j, i = n - 1 - j, nd = N[i], z = j * S;
+    const pos = T.off(nd.depth), [sx, sy, zr] = P(pos[0], pos[1], z);
+    const fog = Math.max(0, 1 - zr / 70), near = clamp((zr - 0.6) / 1.6, 0, 1), alpha = fog * near;
+    if(alpha <= 0.02) continue;
+    if(nd.kind === 'resurface'){
+      const rr = RT * f / zr;
+      ctx.save(); ctx.shadowColor = 'rgba(134,203,189,.9)'; ctx.shadowBlur = 24;
+      ctx.strokeStyle = `rgba(134,203,189,${alpha})`; ctx.lineWidth = Math.max(1.5, 0.12 * f / zr);
+      ctx.beginPath(); ctx.ellipse(sx, sy, rr * 1.02, rr * 0.94, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+    if(i > 0){
+      const po = T.off(N[i - 1].depth), [ox, oy, ozr] = P(po[0], po[1], z + S);
+      if(ozr > 0.3){
+        ctx.strokeStyle = `rgba(240,201,106,${0.55 * alpha})`; ctx.lineWidth = Math.max(1, 0.05 * f / zr);
+        ctx.setLineDash(nd.kind === 'tangent' ? [] : [6, 6]);
+        ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ox, oy); ctx.stroke(); ctx.setLineDash([]);
+      }
+    }
+    const k = Math.min(1.7, ZREF / zr * (narrow ? 0.9 : 1));
+    if(k < 0.1) continue;
+    const bodyFont = '400 16px Atkinson Hyperlegible, system-ui, sans-serif';
+    const lines = wrap(nd.text, BW - 28, bodyFont);
+    const bh = 40 + lines.length * 21 + 10;
+    ctx.save(); ctx.globalAlpha = alpha; ctx.translate(sx, sy); ctx.scale(k, k);
+    const x0 = -BW / 2, y0 = -bh / 2, col = KC[nd.kind] || KC.thread;
+    ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6;
+    ctx.fillStyle = nd.kind === 'origin' ? '#3a2a12' : '#22170f'; roundRect(ctx, x0, y0, BW, bh, 14); ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.strokeStyle = col; ctx.lineWidth = nd.kind === 'thread' ? 1 : 2; roundRect(ctx, x0, y0, BW, bh, 14); ctx.stroke();
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x0 + 18, y0 + 20, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '600 11px JetBrains Mono, monospace'; ctx.textAlign = 'left'; ctx.fillStyle = col;
+    ctx.fillText(KL[nd.kind].toUpperCase() + (nd.depth ? ' · L' + nd.depth : ''), x0 + 30, y0 + 24);
+    ctx.textAlign = 'right'; ctx.fillStyle = '#a8957a'; ctx.fillText(fmtTime(nd.t), x0 + BW - 14, y0 + 24);
+    ctx.textAlign = 'left'; ctx.fillStyle = '#f1e7d6'; ctx.font = bodyFont;
+    lines.forEach((l, li) => ctx.fillText(l, x0 + 14, y0 + 48 + li * 21));
+    ctx.restore();
+    bubbleHits.push({j, x: sx - BW * k / 2, y: sy - bh * k / 2, w: BW * k, h: bh * k});
+  }
+  drawMini(h, T);
+  updateWhere(h);
+}
+function sizeMini(){
+  const w = W < 640 ? 64 : 96, hh = Math.round(clamp(H * 0.42, 140, 380));
+  mini.style.width = w + 'px'; mini.style.height = hh + 'px';
+  mini.width = w * DPR; mini.height = hh * DPR;
+}
+let miniPts = [];
+function drawMini(h, T){
+  const w = mini.width / DPR, hh = mini.height / DPR, c = mctx;
+  c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, w, hh);
+  c.fillStyle = '#4c6823'; c.fillRect(0, 0, w, 6);
+  const g = c.createLinearGradient(0, 6, 0, hh); g.addColorStop(0, '#5a3b22'); g.addColorStop(1, '#22160d'); c.fillStyle = g; c.fillRect(0, 6, w, hh - 6);
+  const md = Math.max(1, ...T.N.map(x => x.depth));
+  const dy = (hh - 22) / (T.n + 0.5), dx = (w - 26) / md, x0 = 13;
+  const pts = sectionPoints(h, x0, 6, dy, dx, 1);
+  const focus = T.n - 1 - nearestIndex(h);
+  strokeSection(c, pts, x0, 6, dy, clamp(dy * 0.55, 3, 8), true, focus);
+  miniPts = pts;
+}
+function updateWhere(h){
+  const j = nearestIndex(h), i = h.nodes.length - 1 - j, nd = h.nodes[i];
+  const el = $('#where'); el.innerHTML = '';
+  const add = (lab, val) => { const d = document.createElement('div'); d.append(lab + ' '); const b = document.createElement('b'); b.textContent = val; d.appendChild(b); el.appendChild(d); };
+  add('Thought', `${i + 1} of ${h.nodes.length}`);
+  add('At', `${fmtDate(nd.t)} ${fmtTime(nd.t)}`);
+  add('Level', `${nd.depth} · ${levelWord(nd.depth)}`);
+  $('#toFace').hidden = window.scrollY < S * PXU * 0.6;
+}
+
+/* ---------------- tunnel UI ---------------- */
+function resizeSpacer(){
+  const sp = $('#spacer');
+  if(mode !== 'tunnel' || !curHole()){ sp.style.height = '0px'; return; }
+  sp.style.height = Math.round(tunnelGeom(curHole()).scrollMax + H) + 'px';
+}
+function syncTunnelUI(){
+  const h = curHole(); if(mode !== 'tunnel' || !h) return;
+  $('#tTitle').textContent = (h.example ? 'Example · ' : '') + h.title;
+  const s = stats(h), chips = $('#chips'); chips.innerHTML = '';
+  const chip = (t, cls) => { const e = document.createElement('span'); e.className = 'chip' + (cls ? ' ' + cls : ''); e.textContent = t; chips.appendChild(e); };
+  chip(`${s.n} thoughts`); chip(`deepest: level ${s.md}`, 'warm'); chip(`noticed & returned ${s.ret}×`, 'cool');
+  chip(`${s.off}% off-topic`); chip(`${s.mins} min`);
+  const d = h.nodes[h.nodes.length - 1].depth;
+  const dr = $('#depthRead'); dr.innerHTML = '';
+  dr.append('Dig face: ');
+  const b = document.createElement('b'); b.textContent = 'level ' + d; dr.appendChild(b);
+  dr.append(' · ' + levelWord(d));
+  const pips = document.createElement('span'); pips.className = 'pips';
+  for(let k = 0; k <= Math.max(3, d); k++){ const p = document.createElement('i'); if(k === 0) p.className = 'zero'; else if(k <= d) p.className = 'on'; pips.appendChild(p); }
+  dr.appendChild(pips);
+  $('#aUp').disabled = d === 0; $('#aTop').disabled = d === 0;
+  $('#aUndo').disabled = h.nodes.length <= 1;
+  document.documentElement.style.setProperty('--dockH', $('#dock').offsetHeight + 'px');
+}
+function enterTunnel(id){
+  curId = id; mode = 'tunnel'; hoverKey = null;
+  document.documentElement.classList.remove('field-mode');
+  $('#fieldUI').hidden = true; $('#tunnelUI').hidden = false; $('#tip').hidden = true;
+  resetFill(); resizeSpacer(); syncTunnelUI(); window.scrollTo(0, 0);
+  $('#scrollHint').style.opacity = '1';
+  invalidate();
+  setTimeout(() => { try{ $('#thought').focus({preventScroll:true}); }catch(e){} }, 50);
+}
+function leaveTunnel(){
+  mode = 'field'; curId = null;
+  $('#tunnelUI').hidden = true; $('#fieldUI').hidden = false;
+  resizeSpacer(); window.scrollTo(0, 0);
+  document.documentElement.classList.add('field-mode');
+  renderList(); invalidate();
+}
+function scrollToNode(j){ window.scrollTo({top: j * S * PXU, behavior: reduceMotion ? 'auto' : 'smooth'}); }
+
+function addNode(kind){
+  const h = curHole(); if(!h) return;
+  const ta = $('#thought'), text = ta.value.trim(), last = h.nodes[h.nodes.length - 1];
+  let depth = last.depth, body = text;
+  if(kind === 'thread' || kind === 'tangent'){
+    if(!text){ ta.focus(); ta.placeholder = 'Type the thought first, then choose where it goes'; return; }
+    if(kind === 'tangent') depth = last.depth + 1;
+  } else if(kind === 'up'){
+    if(last.depth === 0) return;
+    depth = last.depth - 1; kind = 'resurface';
+    if(!body){ const back = [...h.nodes].reverse().find(x => x.depth === depth); body = 'Noticed the drift. Back up to: ' + (back ? back.text : h.title); }
+  } else if(kind === 'top'){
+    if(last.depth === 0) return;
+    depth = 0; kind = 'resurface';
+    if(!body) body = 'Noticed the drift. Back to ' + h.title;
+  }
+  h.nodes.push({id: uid(), kind, depth, text: body.slice(0, 600), t: Date.now(), from: last.depth});
+  ta.value = ''; ta.placeholder = 'Where did the conversation go next?';
+  persist(h); resizeSpacer(); syncTunnelUI(); window.scrollTo(0, 0); invalidate();
+}
+function undo(){ const h = curHole(); if(!h || h.nodes.length <= 1) return; h.nodes.pop(); persist(h); resizeSpacer(); syncTunnelUI(); invalidate(); }
+function resetFill(){
+  const w = $('#fillWrap'); w.innerHTML = '';
+  const b = document.createElement('button'); b.className = 'btn ghost'; b.type = 'button'; b.textContent = 'Fill in hole';
+  b.onclick = () => {
+    w.innerHTML = '';
+    const q = document.createElement('span'); q.className = 'chip'; q.textContent = 'Delete this hole for good?';
+    const y = document.createElement('button'); y.className = 'btn danger'; y.type = 'button'; y.textContent = 'Fill it in';
+    const n = document.createElement('button'); n.className = 'btn ghost'; n.type = 'button'; n.textContent = 'Keep it';
+    y.onclick = () => { const id = curId; leaveTunnel(); removeHole(id); renderList(); invalidate(); };
+    n.onclick = resetFill;
+    w.append(q, y, n); n.focus();
+  };
+  w.appendChild(b);
+}
+
+/* ---------------- field UI ---------------- */
+function renderList(){
+  const ul = $('#holeList'); ul.innerHTML = '';
+  const list = [...holes].sort((a, b) => (b.nodes[b.nodes.length - 1].t) - (a.nodes[a.nodes.length - 1].t));
+  $('#holesSummary').textContent = `All holes (${list.length})`;
+  for(const h of list){
+    const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button';
+    const t = document.createElement('span'); t.textContent = (h.example ? 'example · ' : '') + h.title;
+    const s = stats(h), m = document.createElement('span'); m.className = 'meta'; m.textContent = `${s.n} · L${s.md}`;
+    b.append(t, m); b.onclick = () => enterTunnel(h.id); b.onmouseenter = () => { hoverKey = h.id; invalidate(); }; b.onmouseleave = () => { hoverKey = null; invalidate(); };
+    li.appendChild(b); ul.appendChild(li);
+  }
+}
+$('#digForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = $('#digInput').value.trim(); if(!v) { $('#digInput').focus(); return; }
+  if(backend === 'pending') return;
+  const now = Date.now();
+  const h = {id: 'h-' + uid(), title: v.slice(0, 120), created: now, nodes: [{id: uid(), kind:'origin', depth:0, text: v.slice(0, 600), t: now}]};
+  holes.push(h); persist(h); $('#digInput').value = ''; renderList(); enterTunnel(h.id);
+});
+
+/* ---------------- events ---------------- */
+let dirty = false;
+function invalidate(){ if(!dirty){ dirty = true; requestAnimationFrame(frame); } }
+function frame(){ dirty = false; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); if(mode === 'field') drawField(); else drawTunnel(); }
+
+window.addEventListener('resize', resize);
+window.addEventListener('scroll', () => {
+  if(mode !== 'tunnel') return;
+  if(window.scrollY > 40) $('#scrollHint').style.opacity = '0';
+  invalidate();
+}, {passive: true});
+cv.addEventListener('mousemove', e => {
+  if(mode === 'field'){
+    const id = fieldHitTest(e.clientX, e.clientY);
+    if(id !== hoverKey){ hoverKey = id; invalidate(); }
+    cv.style.cursor = id ? 'pointer' : 'default';
+    if(id) showTip(id, e.clientX, e.clientY); else $('#tip').hidden = true;
+  } else {
+    const over = bubbleHits.some(b => e.clientX >= b.x && e.clientX <= b.x + b.w && e.clientY >= b.y && e.clientY <= b.y + b.h);
+    cv.style.cursor = over ? 'pointer' : 'default';
+  }
+});
+cv.addEventListener('mouseleave', () => { if(mode === 'field'){ hoverKey = null; $('#tip').hidden = true; invalidate(); } });
+cv.addEventListener('click', e => {
+  if(mode === 'field'){ const id = fieldHitTest(e.clientX, e.clientY); if(id) enterTunnel(id); return; }
+  for(let k = bubbleHits.length - 1; k >= 0; k--){
+    const b = bubbleHits[k];
+    if(e.clientX >= b.x && e.clientX <= b.x + b.w && e.clientY >= b.y && e.clientY <= b.y + b.h){ scrollToNode(b.j); return; }
+  }
+});
+mini.addEventListener('click', e => {
+  const h = curHole(); if(!h || !miniPts.length) return;
+  const r = mini.getBoundingClientRect(), y = e.clientY - r.top;
+  let best = 0, bd = Infinity; miniPts.forEach(p => { const d = Math.abs(p.y - y); if(d < bd){ bd = d; best = p.i; } });
+  scrollToNode(h.nodes.length - 1 - best);
+});
+$('#climbOut').onclick = leaveTunnel;
+$('#toFace').onclick = () => scrollToNode(0);
+$('#aKeep').onclick = () => addNode('thread');
+$('#aTangent').onclick = () => addNode('tangent');
+$('#aUp').onclick = () => addNode('up');
+$('#aTop').onclick = () => addNode('top');
+$('#aUndo').onclick = undo;
+$('#thought').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); addNode('tangent'); }
+  else if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); addNode('thread'); }
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && mode === 'tunnel' && document.activeElement !== $('#thought')) leaveTunnel(); });
+
+document.documentElement.classList.add('field-mode');
+resize();
+initStore();
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => { wrapCache.clear(); invalidate(); });
+})();
+</script>
+
+</body></html>
